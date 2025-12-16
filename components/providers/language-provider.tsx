@@ -128,10 +128,6 @@ const translations = {
     'profile.avatar.title': 'Personalizza Avatar',
     'profile.avatar.description': 'Personalizza il tuo avatar 3D con outfit e accessori',
     'profile.avatar.open': 'Apri Fitting Room',
-    'avatar.itemNotOwned': 'Devi acquistare questo item prima di usarlo',
-    'avatar.purchaseSuccess': 'Acquisto completato',
-    'avatar.purchaseSuccessDesc': 'Item acquistato con successo!',
-    'avatar.purchaseError': 'Errore durante l\'acquisto',
     
     // Portfolio
     'portfolio.title': 'Portfolio',
@@ -377,10 +373,6 @@ const translations = {
     'profile.avatar.title': 'Customize Avatar',
     'profile.avatar.description': 'Customize your 3D avatar with outfits and accessories',
     'profile.avatar.open': 'Open Fitting Room',
-    'avatar.itemNotOwned': 'You must purchase this item before using it',
-    'avatar.purchaseSuccess': 'Purchase completed',
-    'avatar.purchaseSuccessDesc': 'Item purchased successfully!',
-    'avatar.purchaseError': 'Error during purchase',
     
     // Portfolio
     'portfolio.title': 'Portfolio',
