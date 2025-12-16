@@ -5,6 +5,16 @@ import bcrypt from 'bcryptjs'
 
 type UserRole = 'DEFAULT' | 'ARTIST' | 'RECRUITER' | 'ARTIST_RECRUITER'
 
+// Validate required environment variables
+if (!process.env.NEXTAUTH_SECRET) {
+  console.error('❌ NEXTAUTH_SECRET is not set. This will cause authentication to fail.')
+  console.error('Generate one with: openssl rand -base64 32')
+}
+
+if (!process.env.NEXTAUTH_URL && process.env.NODE_ENV === 'production') {
+  console.warn('⚠️ NEXTAUTH_URL is not set in production. This may cause issues.')
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -91,6 +101,7 @@ export const authOptions: NextAuthOptions = {
       return session
     },
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || 'fallback-secret-for-development-only',
+  debug: process.env.NODE_ENV === 'development',
 }
 
