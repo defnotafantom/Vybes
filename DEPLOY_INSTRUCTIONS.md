@@ -90,3 +90,5 @@ Se hai problemi:
 2. Verifica che tutte le variabili d'ambiente siano configurate
 3. Assicurati che il database sia accessibile da internet
 
+
+

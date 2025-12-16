@@ -59,3 +59,5 @@ Una volta configurato, il link sarà:
 **Vuoi davvero continuare con GitHub Pages e perdere tutte le funzionalità?**
 Se sì, segui le istruzioni sopra. Altrimenti, usa Vercel! 🚀
 
+
+

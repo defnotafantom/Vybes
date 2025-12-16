@@ -36,3 +36,5 @@ SSL viene attivato automaticamente! ✅
 
 Per dettagli completi: vedi `DOMAIN_SETUP.md`
 
+
+
