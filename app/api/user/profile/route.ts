@@ -63,8 +63,15 @@ export async function GET() {
     })
   } catch (error) {
     console.error('Error fetching profile:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const errorStack = error instanceof Error ? error.stack : undefined
+    console.error('Error details:', { message: errorMessage, stack: errorStack })
+    
     return NextResponse.json(
-      { error: 'Errore nel caricamento del profilo' },
+      { 
+        error: 'Errore nel caricamento del profilo',
+        ...(process.env.NODE_ENV === 'development' && { details: errorMessage, stack: errorStack })
+      },
       { status: 500 }
     )
   }
