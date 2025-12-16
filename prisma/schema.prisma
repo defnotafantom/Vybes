@@ -1,0 +1,377 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  DEFAULT
+  ARTIST
+  RECRUITER
+  ARTIST_RECRUITER
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum PostType {
+  POST
+  COLLABORATION
+  EVENT
+  ANNOUNCEMENT
+}
+
+enum MessageStatus {
+  SENT
+  DELIVERED
+  READ
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  password      String
+  name          String?
+  username      String?   @unique
+  image         String?
+  role          UserRole  @default(DEFAULT)
+  bio           String?
+  location      String?
+  website       String?
+  
+  // Gamification
+  level         Int       @default(1)
+  experience    Int       @default(0)
+  reputation    Int       @default(0)
+  coins         Int       @default(0) // Monete per acquisti
+  
+  // Avatar 3D
+  avatar        Avatar?   // Avatar 3D personalizzato
+  useAvatar     Boolean   @default(false) // Se true, usa avatar invece di image
+  
+  // Social
+  followers     User[]    @relation("UserFollows")
+  following     User[]    @relation("UserFollows")
+  
+  // Artist specific
+  portfolio     PortfolioItem[]
+  collaborations Post[]   @relation("ArtistCollaborations")
+  
+  // Recruiter specific
+  events        Event[]
+  
+  // User content
+  posts         Post[]
+  comments      Comment[]
+  likes         Like[]
+  savedPosts    SavedPost[]
+  
+  // Events participation
+  eventParticipants EventParticipant[]
+  savedEvents       SavedEvent[]
+  
+  // Quest system
+  questProgress QuestProgress[]
+  completedQuests Quest[] @relation("CompletedQuests")
+  
+  // Chat
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+  conversations    ConversationParticipant[]
+  
+  // Notifications
+  notifications    Notification[]
+  avatarItems     UserAvatarItem[]
+  transactions    Transaction[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PortfolioItem {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  imageUrl    String?
+  videoUrl    String?
+  tags        String[]
+  type        String   // image, video, text, etc.
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Post {
+  id            String   @id @default(cuid())
+  authorId      String
+  author        User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  type          PostType @default(POST)
+  content       String
+  images        String[]
+  tags          String[] // Art tags for filtering
+  location      String?
+  latitude      Float?
+  longitude     Float?
+  
+  // Collaboration specific
+  collaborationArtists User[] @relation("ArtistCollaborations")
+  
+  // Social engagement
+  likes         Like[]
+  comments      Comment[]
+  savedBy       SavedPost[]
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Event {
+  id            String      @id @default(cuid())
+  recruiterId   String
+  recruiter     User        @relation(fields: [recruiterId], references: [id], onDelete: Cascade)
+  title         String
+  description   String
+  type          String      // event, job, training, etc.
+  status        EventStatus @default(DRAFT)
+  
+  // Location
+  address       String
+  city          String
+  country       String
+  latitude      Float
+  longitude     Float
+  
+  // Date & Time
+  startDate     DateTime
+  endDate       DateTime?
+  
+  // Details
+  imageUrl      String?
+  requirements  String?
+  compensation  String?
+  maxParticipants Int?
+  
+  // Participants
+  participants  EventParticipant[]
+  savedBy       SavedEvent[]
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model EventParticipant {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status    String   @default("PENDING") // PENDING, ACCEPTED, REJECTED
+  createdAt DateTime @default(now())
+  
+  @@unique([eventId, userId])
+}
+
+model SavedEvent {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  
+  @@unique([eventId, userId])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  
+  @@unique([postId, userId])
+}
+
+model SavedPost {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  
+  @@unique([postId, userId])
+}
+
+model Quest {
+  id            String   @id @default(cuid())
+  title         String
+  description   String
+  type          String   @unique // profile_complete, first_post, first_event, collaboration, etc.
+  role          UserRole[] // Which roles can complete this quest
+  experienceReward Int   @default(100)
+  reputationReward  Int  @default(10)
+  
+  completedBy   User[]   @relation("CompletedQuests")
+  progress      QuestProgress[]
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model QuestProgress {
+  id        String   @id @default(cuid())
+  questId   String
+  quest     Quest    @relation(fields: [questId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  progress  Int      @default(0)
+  maxProgress Int    @default(1)
+  completed Boolean  @default(false)
+  completedAt DateTime?
+  
+  @@unique([questId, userId])
+}
+
+model Conversation {
+  id        String   @id @default(cuid())
+  participants ConversationParticipant[]
+  messages  Message[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ConversationParticipant {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lastReadAt     DateTime?
+  
+  @@unique([conversationId, userId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User         @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  recipientId    String
+  recipient      User         @relation("ReceivedMessages", fields: [recipientId], references: [id], onDelete: Cascade)
+  content        String
+  status         MessageStatus @default(SENT)
+  createdAt      DateTime     @default(now())
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  
+  @@unique([identifier, token])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // message, follow, comment, event, quest
+  title     String
+  content   String
+  link      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  
+  @@index([userId, read])
+  @@index([userId, createdAt])
+}
+
+model Avatar {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Avatar parts configuration (JSON stored as string, parsed on frontend)
+  face        String?  // Face ID
+  eyes        String?  // Eyes ID
+  hair        String?  // Hair ID
+  top         String?  // Top/Busto ID
+  bottom      String?  // Bottom/Pantaloni ID
+  accessories String?  // Accessories IDs (comma-separated)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AvatarItem {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  category    String   // face, eyes, hair, top, bottom, accessory
+  previewUrl  String?  // Preview image URL
+  modelUrl    String?  // 3D model URL (if needed)
+  priceCoins  Int      @default(0) // Prezzo in monete
+  priceReal   Float?   // Prezzo reale (opzionale)
+  rarity      String   @default("common") // common, rare, epic, legendary
+  available   Boolean  @default(true)
+  
+  // User ownership (many-to-many)
+  ownedBy     UserAvatarItem[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model UserAvatarItem {
+  id          String     @id @default(cuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itemId      String
+  item        AvatarItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  purchasedAt DateTime   @default(now())
+  
+  @@unique([userId, itemId])
+  @@index([userId])
+}
+
+model Transaction {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String   // quest_reward, purchase, refund, etc.
+  amount      Int      // Positivo per crediti, negativo per debiti
+  description String
+  metadata    String?  // JSON con dettagli aggiuntivi
+  createdAt   DateTime @default(now())
+  
+  @@index([userId])
+  @@index([userId, createdAt])
+}
+
