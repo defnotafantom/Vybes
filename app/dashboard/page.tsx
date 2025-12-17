@@ -470,14 +470,23 @@ export default function DashboardFeed() {
                   {post.images.length > 0 && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-xl overflow-hidden">
                       {post.images.map((image, idx) => (
-                        <Image
-                          key={idx}
-                          src={image}
-                          alt={`Post image ${idx + 1}`}
-                          width={500}
-                          height={500}
-                          className="rounded-xl w-full h-auto object-cover hover:scale-105 transition-transform duration-300"
-                        />
+                        /\.(mp4|webm)(\?|$)/i.test(image) ? (
+                          <video
+                            key={idx}
+                            src={image}
+                            controls
+                            className="rounded-xl w-full h-auto object-cover"
+                          />
+                        ) : (
+                          <Image
+                            key={idx}
+                            src={image}
+                            alt={`Post media ${idx + 1}`}
+                            width={500}
+                            height={500}
+                            className="rounded-xl w-full h-auto object-cover hover:scale-105 transition-transform duration-300"
+                          />
+                        )
                       ))}
                     </div>
                   )}

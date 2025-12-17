@@ -56,6 +56,7 @@ export function PostCard({
 }: PostCardProps) {
   const imageUrl = post.imageUrl || post.image_url || post.media_url || (post.images && post.images[0])
   const mediaType = post.media_type || post.type
+  const isVideo = typeof imageUrl === 'string' && /\.(mp4|webm)(\?|$)/i.test(imageUrl)
   const authorName = post.author?.name || post.author?.username || post.author_name || "Utente"
   const authorImage = post.author?.image
   const tags = post.tags || (post.art_tag ? post.art_tag.split(", ") : [])
@@ -65,12 +66,16 @@ export function PostCard({
       <article className="flex flex-col rounded-2xl shadow-lg hover:shadow-xl transition-all duration-500 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-sky-100 dark:border-sky-900 overflow-hidden group">
         {imageUrl && (
           <div className="relative w-full aspect-[4/3] overflow-hidden">
-            <Image
-              src={imageUrl}
-              alt={post.title || post.content || "Post"}
-              fill
-              className="object-cover group-hover:scale-110 transition-transform duration-700"
-            />
+            {isVideo ? (
+              <video src={imageUrl} controls className="w-full h-full object-cover" />
+            ) : (
+              <Image
+                src={imageUrl}
+                alt={post.title || post.content || "Post"}
+                fill
+                className="object-cover group-hover:scale-110 transition-transform duration-700"
+              />
+            )}
           </div>
         )}
         <div className="p-4 flex-1 flex flex-col justify-between">
@@ -135,7 +140,11 @@ export function PostCard({
         </div>
         {imageUrl && (
           <div className="relative w-full aspect-video rounded-xl overflow-hidden">
-            <Image src={imageUrl} alt={post.title || ""} fill className="object-cover" />
+            {isVideo ? (
+              <video src={imageUrl} controls className="w-full h-full object-cover" />
+            ) : (
+              <Image src={imageUrl} alt={post.title || ""} fill className="object-cover" />
+            )}
           </div>
         )}
         <p className="text-slate-700 dark:text-slate-300">{post.description || post.content}</p>
@@ -173,12 +182,16 @@ export function PostCard({
       <article className="break-inside-avoid mb-4 rounded-2xl overflow-hidden shadow-lg bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-sky-100 dark:border-sky-900 group">
         {imageUrl && (
           <div className="relative w-full aspect-square overflow-hidden">
-            <Image
-              src={imageUrl}
-              alt={post.title || ""}
-              fill
-              className="object-cover group-hover:scale-110 transition-transform duration-500"
-            />
+            {isVideo ? (
+              <video src={imageUrl} controls className="w-full h-full object-cover" />
+            ) : (
+              <Image
+                src={imageUrl}
+                alt={post.title || ""}
+                fill
+                className="object-cover group-hover:scale-110 transition-transform duration-500"
+              />
+            )}
           </div>
         )}
         <div className="p-3">

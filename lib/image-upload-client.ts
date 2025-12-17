@@ -7,6 +7,10 @@ type PresetConfig = {
   quality: number // 0..1 for canvas
   allowedMime: string[]
   outputMime: 'image/webp'
+  // media
+  maxGifBytes?: number
+  maxVideoBytes?: number
+  allowedVideoMime?: string[]
 }
 
 const PRESETS: Record<ImageUploadPreset, PresetConfig> = {
@@ -25,6 +29,9 @@ const PRESETS: Record<ImageUploadPreset, PresetConfig> = {
     quality: 0.82,
     allowedMime: ['image/jpeg', 'image/png', 'image/webp'],
     outputMime: 'image/webp',
+    maxGifBytes: 10 * 1024 * 1024,
+    maxVideoBytes: 50 * 1024 * 1024,
+    allowedVideoMime: ['video/mp4', 'video/webm'],
   },
   events: {
     maxBytes: 6 * 1024 * 1024,
@@ -33,6 +40,7 @@ const PRESETS: Record<ImageUploadPreset, PresetConfig> = {
     quality: 0.85,
     allowedMime: ['image/jpeg', 'image/png', 'image/webp'],
     outputMime: 'image/webp',
+    maxGifBytes: 10 * 1024 * 1024,
   },
   portfolio: {
     maxBytes: 12 * 1024 * 1024,
@@ -41,6 +49,9 @@ const PRESETS: Record<ImageUploadPreset, PresetConfig> = {
     quality: 0.9,
     allowedMime: ['image/jpeg', 'image/png', 'image/webp'],
     outputMime: 'image/webp',
+    maxGifBytes: 15 * 1024 * 1024,
+    maxVideoBytes: 150 * 1024 * 1024,
+    allowedVideoMime: ['video/mp4', 'video/webm'],
   },
 }
 
@@ -72,6 +83,9 @@ export async function prepareImageForUpload(file: File, preset: ImageUploadPrese
 
   if (!file.type?.startsWith('image/')) {
     throw new Error('Seleziona un\'immagine (JPG/PNG/WebP).')
+  }
+  if (file.type === 'image/gif') {
+    throw new Error('GIF non supportata in questa funzione. Usa prepareMediaForUpload().')
   }
   if (!cfg.allowedMime.includes(file.type)) {
     throw new Error('Formato non supportato. Usa JPG, PNG o WebP.')
@@ -106,4 +120,25 @@ export async function prepareImageForUpload(file: File, preset: ImageUploadPrese
   const blob = await toBlob(canvas, cfg.outputMime, cfg.quality)
   const outName = extToFilename(file.name || 'image', 'webp')
   return new File([blob], outName, { type: cfg.outputMime })
+}
+
+export async function prepareMediaForUpload(file: File, preset: ImageUploadPreset): Promise<File> {
+  const cfg = PRESETS[preset]
+
+  if (file.type?.startsWith('video/')) {
+    const allowed = cfg.allowedVideoMime || []
+    const maxV = cfg.maxVideoBytes || 0
+    if (!allowed.includes(file.type) || maxV <= 0) throw new Error('Video non supportato qui.')
+    if (file.size > maxV) throw new Error(`Video troppo grande (max ${formatBytes(maxV)}).`)
+    return file
+  }
+
+  if (file.type === 'image/gif') {
+    const maxG = cfg.maxGifBytes || cfg.maxBytes
+    if (file.size > maxG) throw new Error(`GIF troppo grande (max ${formatBytes(maxG)}).`)
+    return file
+  }
+
+  // normal image -> optimize
+  return await prepareImageForUpload(file, preset)
 }

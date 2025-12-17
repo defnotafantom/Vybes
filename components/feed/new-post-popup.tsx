@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { motion, AnimatePresence } from "framer-motion"
 import { useLanguage } from "@/components/providers/language-provider"
 import { useToast } from "@/hooks/use-toast"
-import { prepareImageForUpload } from "@/lib/image-upload-client"
+import { prepareMediaForUpload } from "@/lib/image-upload-client"
 
 interface Tag {
   id: number | string
@@ -41,7 +41,7 @@ export function NewPostPopup({ isOpen, onClose, artTags = [], onPostSubmit }: Ne
       
       // Upload file if present
       if (file) {
-        const prepared = await prepareImageForUpload(file, 'posts')
+        const prepared = await prepareMediaForUpload(file, 'posts')
         const uploadFormData = new FormData()
         uploadFormData.append('file', prepared)
         uploadFormData.append('folder', 'posts')
@@ -127,11 +127,11 @@ export function NewPostPopup({ isOpen, onClose, artTags = [], onPostSubmit }: Ne
                   <input
                     type="file"
                     onChange={(e) => setFile(e.target.files?.[0] || null)}
-                    accept="image/jpeg,image/png,image/webp"
+                    accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
                     className="block w-full text-sm text-slate-600 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-sky-500 file:to-blue-600 file:text-white hover:file:from-sky-600 hover:file:to-blue-700 file:cursor-pointer"
                   />
                   <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-                    {t('common.image') || 'Immagine'}: JPG/PNG/WebP • max 6MB • ottimizzata automaticamente.
+                    Media: immagini (JPG/PNG/WebP/GIF) o video (MP4/WebM). Ottimizzazione automatica per le immagini.
                   </div>
                 </label>
 
