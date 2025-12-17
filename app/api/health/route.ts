@@ -14,11 +14,14 @@ export async function GET() {
     
     // Get basic stats
     const userCount = await prisma.user.count()
+    const blobConfigured = !!process.env.BLOB_READ_WRITE_TOKEN
     
     return NextResponse.json({
       status: 'healthy',
       database: 'connected',
       userCount,
+      blobConfigured,
+      vercel: process.env.VERCEL === '1',
       timestamp: new Date().toISOString(),
     })
   } catch (error) {
