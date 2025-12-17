@@ -27,7 +27,7 @@ export default function PortfolioPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (session?.user?.role === 'ARTIST') {
+    if (session?.user?.role === 'ARTIST' || session?.user?.role === 'ARTIST_RECRUITER') {
       fetchPortfolio()
     }
   }, [session])
@@ -46,7 +46,7 @@ export default function PortfolioPage() {
     }
   }
 
-  if (session?.user?.role !== 'ARTIST') {
+  if (session?.user?.role !== 'ARTIST' && session?.user?.role !== 'ARTIST_RECRUITER') {
     return (
       <div className="text-center py-12">
         <p className="text-muted-foreground">

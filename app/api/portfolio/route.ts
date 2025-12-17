@@ -17,7 +17,7 @@ export async function GET() {
       )
     }
 
-    if (session.user.role !== 'ARTIST') {
+    if (!['ARTIST', 'ARTIST_RECRUITER'].includes(session.user.role)) {
       return NextResponse.json(
         { error: 'Solo gli artisti possono accedere al portfolio' },
         { status: 403 }
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
       )
     }
 
-    if (session.user.role !== 'ARTIST') {
+    if (!['ARTIST', 'ARTIST_RECRUITER'].includes(session.user.role)) {
       return NextResponse.json(
         { error: 'Solo gli artisti possono aggiungere al portfolio' },
         { status: 403 }

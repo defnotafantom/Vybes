@@ -88,7 +88,7 @@ export default function ProfilePage() {
   }, [eventsTab, profile?.isOwnProfile])
 
   const fetchPortfolio = useCallback(async () => {
-    if (profile?.role !== 'ARTIST') return
+    if (profile?.role !== 'ARTIST' && profile?.role !== 'ARTIST_RECRUITER') return
 
     setLoadingPortfolio(true)
     try {
@@ -108,7 +108,7 @@ export default function ProfilePage() {
     if (profile?.isOwnProfile) {
       fetchEvents()
     }
-    if (profile?.role === 'ARTIST') {
+    if (profile?.role === 'ARTIST' || profile?.role === 'ARTIST_RECRUITER') {
       fetchPortfolio()
     }
   }, [eventsTab, profile, fetchEvents, fetchPortfolio])
@@ -231,7 +231,7 @@ export default function ProfilePage() {
                     <div className="text-sm text-slate-500 dark:text-slate-400">Post</div>
                   </div>
                 )}
-                {profile.portfolioCount !== undefined && profile.role === 'ARTIST' && (
+                {profile.portfolioCount !== undefined && (profile.role === 'ARTIST' || profile.role === 'ARTIST_RECRUITER') && (
                   <div className="text-center">
                     <div className="text-3xl font-bold text-slate-800 dark:text-slate-100">{profile.portfolioCount}</div>
                     <div className="text-sm text-slate-500 dark:text-slate-400">Portfolio</div>
@@ -334,7 +334,7 @@ export default function ProfilePage() {
       )}
 
       {/* Portfolio - Only for artists */}
-      {profile.role === 'ARTIST' && (
+      {(profile.role === 'ARTIST' || profile.role === 'ARTIST_RECRUITER') && (
         <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-sky-100 dark:border-sky-900 shadow-xl">
           <CardHeader className="bg-gradient-to-r from-purple-100/50 to-pink-100/50 dark:from-purple-900/30 dark:to-pink-900/30 rounded-t-xl">
             <div className="flex items-center justify-between">
@@ -474,7 +474,7 @@ export default function ProfilePage() {
           <CardContent className="space-y-4">
             {/* Tabs */}
             <div className="flex gap-2 border-b border-sky-200 dark:border-sky-800 overflow-x-auto">
-              {profile.role === 'ARTIST' && (
+              {(profile.role === 'ARTIST' || profile.role === 'ARTIST_RECRUITER') && (
                 <>
                   <button
                     onClick={() => setEventsTab('completed')}

@@ -106,7 +106,7 @@ export default function CreatePortfolioPage() {
     }
   }
 
-  if (session?.user?.role !== 'ARTIST') {
+  if (session?.user?.role !== 'ARTIST' && session?.user?.role !== 'ARTIST_RECRUITER') {
     return (
       <div className="text-center py-12">
         <p className="text-slate-500 dark:text-slate-400 mb-4">
