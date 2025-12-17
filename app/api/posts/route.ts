@@ -27,6 +27,7 @@ export async function GET(request: Request) {
               name: true,
               image: true,
               username: true,
+              role: true,
             },
           },
           likes: {
@@ -127,6 +128,7 @@ export async function POST(request: Request) {
             name: true,
             image: true,
             username: true,
+          role: true,
           },
         },
       },

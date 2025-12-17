@@ -6,6 +6,8 @@ import { Heart, Bookmark, Share2, MoreVertical } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { PostTags } from "./tag-filters"
 import { cn } from "@/lib/utils"
+import Link from "next/link"
+import { RoleBadge } from "@/components/ui/role-badge"
 
 interface Post {
   id: string
@@ -13,9 +15,11 @@ interface Post {
   content?: string
   description?: string
   author?: {
+    id?: string
     name?: string | null
     username?: string | null
     image?: string | null
+    role?: string | null
   }
   author_name?: string
   imageUrl?: string
@@ -59,6 +63,7 @@ export function PostCard({
   const isVideo = typeof imageUrl === 'string' && /\.(mp4|webm)(\?|$)/i.test(imageUrl)
   const authorName = post.author?.name || post.author?.username || post.author_name || "Utente"
   const authorImage = post.author?.image
+  const authorRole = post.author?.role
   const tags = post.tags || (post.art_tag ? post.art_tag.split(", ") : [])
 
   if (mode === "cover") {
@@ -96,7 +101,12 @@ export function PostCard({
                   {authorName.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">{authorName}</span>
+              <div className="flex items-center gap-2 min-w-0">
+                <Link href={post.author?.id ? `/dashboard/users/${post.author.id}` : '#'} className="text-sm font-semibold text-slate-700 dark:text-slate-300 hover:underline truncate">
+                  {authorName}
+                </Link>
+                <RoleBadge role={authorRole} />
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -129,7 +139,12 @@ export function PostCard({
             </AvatarFallback>
           </Avatar>
           <div className="flex-1">
-            <div className="font-semibold text-slate-800 dark:text-slate-100">{authorName}</div>
+            <div className="flex items-center gap-2">
+              <Link href={post.author?.id ? `/dashboard/users/${post.author.id}` : '#'} className="font-semibold text-slate-800 dark:text-slate-100 hover:underline">
+                {authorName}
+              </Link>
+              <RoleBadge role={authorRole} />
+            </div>
             {post.title && (
               <div className="text-sm font-medium text-slate-600 dark:text-slate-400">{post.title}</div>
             )}
