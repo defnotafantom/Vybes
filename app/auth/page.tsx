@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast'
 import { useLanguage } from '@/components/providers/language-provider'
 import { LoginForm } from '@/components/auth/login-form'
 import { ArrowLeft } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 type AuthMode = 'login' | 'register'
 
@@ -26,6 +27,8 @@ export default function AuthPage() {
 
   const [mode, setMode] = useState<AuthMode>('login')
   const [loading, setLoading] = useState(false)
+  const [showRole, setShowRole] = useState(false)
+  const [fieldError, setFieldError] = useState<{ password?: string; confirmPassword?: string }>({})
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -64,12 +67,15 @@ export default function AuthPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
+    setFieldError({})
 
     if (formData.password !== formData.confirmPassword) {
+      setFieldError({ confirmPassword: t('toast.passwordMismatch') })
       toast({ title: t('toast.validationError'), description: t('toast.passwordMismatch'), variant: 'destructive' })
       return
     }
     if (formData.password.length < 8) {
+      setFieldError({ password: t('toast.passwordTooShort') })
       toast({ title: t('toast.validationError'), description: t('toast.passwordTooShort'), variant: 'destructive' })
       return
     }
@@ -194,20 +200,36 @@ export default function AuthPage() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="role">{t('auth.register.roleLabel')}</Label>
-                <select
-                  id="role"
-                  className="flex h-10 w-full rounded-xl border-2 border-sky-200 dark:border-sky-800 bg-white/90 dark:bg-gray-700/90 backdrop-blur-sm px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:border-sky-500 dark:focus-visible:border-sky-500 transition-all duration-200 shadow-sm hover:shadow-md focus-visible:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
-                  value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
-                  required
-                  disabled={loading}
+              <div className="rounded-xl border border-sky-200 dark:border-sky-800 bg-white/60 dark:bg-gray-900/30 p-3">
+                <button
+                  type="button"
+                  onClick={() => setShowRole((v) => !v)}
+                  className="w-full flex items-center justify-between text-sm font-semibold text-slate-800 dark:text-slate-100"
                 >
-                  <option value="DEFAULT">{t('auth.register.role.viewer')}</option>
-                  <option value="ARTIST">{t('auth.register.role.artist')}</option>
-                  <option value="RECRUITER">{t('auth.register.role.recruiter')}</option>
-                </select>
+                  <span>Opzioni avanzate</span>
+                  <span className="text-slate-500 dark:text-slate-400">{showRole ? 'Nascondi' : 'Mostra'}</span>
+                </button>
+                {showRole && (
+                  <div className="mt-3 space-y-2">
+                    <Label htmlFor="role" className="text-slate-700 dark:text-slate-300">
+                      {t('auth.register.roleLabel')}
+                    </Label>
+                    <select
+                      id="role"
+                      className="flex h-10 w-full rounded-xl border-2 border-sky-200 dark:border-sky-800 bg-white/90 dark:bg-gray-700/90 backdrop-blur-sm px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:border-sky-500 dark:focus-visible:border-sky-500 transition-all duration-200 shadow-sm hover:shadow-md focus-visible:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
+                      value={formData.role}
+                      onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
+                      disabled={loading}
+                    >
+                      <option value="DEFAULT">{t('auth.register.role.viewer')}</option>
+                      <option value="ARTIST">{t('auth.register.role.artist')}</option>
+                      <option value="RECRUITER">{t('auth.register.role.recruiter')}</option>
+                    </select>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                      Puoi cambiare questo anche più avanti dalle impostazioni.
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -222,6 +244,8 @@ export default function AuthPage() {
                   disabled={loading}
                   autoComplete="new-password"
                 />
+                <PasswordStrength password={formData.password} />
+                {fieldError.password && <div className="text-xs text-red-600 dark:text-red-400">{fieldError.password}</div>}
               </div>
 
               <div className="space-y-2">
@@ -236,6 +260,11 @@ export default function AuthPage() {
                   disabled={loading}
                   autoComplete="new-password"
                 />
+                {fieldError.confirmPassword && <div className="text-xs text-red-600 dark:text-red-400">{fieldError.confirmPassword}</div>}
+              </div>
+
+              <div className="text-xs text-slate-500 dark:text-slate-400">
+                Registrandoti accetti i termini e riceverai un’email di verifica.
               </div>
 
               <Button type="submit" disabled={loading} className="w-full">
@@ -245,6 +274,38 @@ export default function AuthPage() {
           )}
         </motion.div>
       </AnimatePresence>
+    </div>
+  )
+}
+
+function PasswordStrength({ password }: { password: string }) {
+  const score = (() => {
+    let s = 0
+    if (!password) return 0
+    if (password.length >= 8) s += 1
+    if (password.length >= 12) s += 1
+    if (/[A-Z]/.test(password)) s += 1
+    if (/[0-9]/.test(password)) s += 1
+    if (/[^A-Za-z0-9]/.test(password)) s += 1
+    return Math.min(5, s)
+  })()
+
+  const label =
+    score <= 1 ? 'Debole' : score === 2 ? 'Ok' : score === 3 ? 'Buona' : score === 4 ? 'Forte' : 'Molto forte'
+
+  const width = `${(score / 5) * 100}%`
+  const color =
+    score <= 1 ? 'bg-red-500' : score === 2 ? 'bg-amber-500' : score === 3 ? 'bg-yellow-500' : score === 4 ? 'bg-sky-500' : 'bg-emerald-500'
+
+  return (
+    <div className="space-y-1">
+      <div className="h-2 w-full rounded-full bg-slate-200/70 dark:bg-gray-700/70 overflow-hidden">
+        <div className={cn('h-full rounded-full transition-all', color)} style={{ width }} />
+      </div>
+      <div className="flex justify-between text-[11px] text-slate-500 dark:text-slate-400">
+        <span>Sicurezza password</span>
+        <span className="font-semibold">{label}</span>
+      </div>
     </div>
   )
 }

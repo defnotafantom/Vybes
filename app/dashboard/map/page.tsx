@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { MapPin, Calendar, Users, Search, Plus, X, Loader2 } from 'lucide-react'
+import { MapPin, Calendar, Users, Search, Plus, X, Loader2, SlidersHorizontal } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { useToast } from '@/hooks/use-toast'
 import { useLanguage } from '@/components/providers/language-provider'
@@ -33,6 +33,31 @@ interface Event {
 
 type FilterKind = 'all' | 'opportunity' | 'collaboration' | 'events'
 
+function FilterChip({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'shrink-0 px-3 md:px-4 py-2 rounded-xl shadow font-semibold transition-all duration-200 text-sm md:text-base border-2',
+        active
+          ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/30 border-transparent'
+          : 'bg-white/80 dark:bg-gray-900/40 text-slate-700 dark:text-slate-200 border-sky-200 dark:border-sky-800 hover:border-sky-500'
+      )}
+    >
+      {children}
+    </button>
+  )
+}
+
 export default function MapPage() {
   const { data: session } = useSession()
   const { toast } = useToast()
@@ -41,6 +66,7 @@ export default function MapPage() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
   const [loading, setLoading] = useState(true)
   const [showNewPost, setShowNewPost] = useState(false)
+  const [showFilters, setShowFilters] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [filterKind, setFilterKind] = useState<FilterKind>('all')
   const [artTag, setArtTag] = useState<string>('all')
@@ -161,85 +187,176 @@ export default function MapPage() {
   return (
     <div className="relative w-full h-[calc(100vh-8rem)] p-2 md:p-4 flex flex-col gap-2 md:gap-4">
       {/* TOP BAR */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2 sm:gap-3 bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl p-3 md:p-4 rounded-2xl md:rounded-3xl shadow-xl border border-sky-200 dark:border-sky-800 z-20">
-        {/* Nuovo Marker (LEFT) */}
-        {canCreateMarker && (
-          <button
-            onClick={() => {
-              setShowNewPost(true)
-              setSelectedLocation(null)
-            }}
-            className="px-3 md:px-4 py-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white rounded-xl shadow-lg shadow-sky-500/30 flex items-center justify-center gap-2 transition-all hover:scale-105 text-sm md:text-base whitespace-nowrap order-1"
-          >
-            <Plus size={18} /> <span className="hidden sm:inline">{t('map.newMarker')}</span>
-            <span className="sm:hidden">{t('map.newMarkerShort')}</span>
-          </button>
-        )}
+      <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl p-3 md:p-4 rounded-2xl md:rounded-3xl shadow-xl border border-sky-200 dark:border-sky-800 z-20">
+        {/* Mobile-first row */}
+        <div className="flex items-center gap-2">
+          {canCreateMarker && (
+            <button
+              onClick={() => {
+                setShowNewPost(true)
+                setSelectedLocation(null)
+              }}
+              className="px-3 md:px-4 py-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white rounded-xl shadow-lg shadow-sky-500/30 flex items-center justify-center gap-2 transition-all hover:scale-105 text-sm md:text-base whitespace-nowrap"
+            >
+              <Plus size={18} /> <span className="hidden sm:inline">{t('map.newMarker')}</span>
+              <span className="sm:hidden">{t('map.newMarkerShort')}</span>
+            </button>
+          )}
 
-        {/* Search */}
-        <div className="relative flex-1 max-w-2xl mx-2 order-2">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
-          <Input
-            type="text"
-            placeholder={t('map.searchPlaceholder')}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white dark:bg-gray-900 rounded-xl pl-10 pr-4 py-2 border-2 border-sky-200 dark:border-sky-800 shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
-          />
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
+            <Input
+              type="text"
+              placeholder={t('map.searchPlaceholder')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-white dark:bg-gray-900 rounded-xl pl-10 pr-4 py-2 border-2 border-sky-200 dark:border-sky-800 shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+            />
+          </div>
+
+          {/* Desktop filters inline, mobile -> panel */}
+          <button
+            type="button"
+            onClick={() => setShowFilters(true)}
+            className="sm:hidden px-3 py-2 rounded-xl border-2 border-sky-200 dark:border-sky-800 bg-white/80 dark:bg-gray-900/40 text-slate-700 dark:text-slate-200 shadow-sm flex items-center gap-2"
+          >
+            <SlidersHorizontal size={18} />
+            Filtri
+          </button>
+
+          <div className="hidden sm:flex flex-wrap gap-2 justify-center">
+            <FilterChip active={filterKind === 'opportunity'} onClick={() => setFilterKind(filterKind === 'opportunity' ? 'all' : 'opportunity')}>
+              Opportunità
+            </FilterChip>
+            <FilterChip active={filterKind === 'collaboration'} onClick={() => setFilterKind(filterKind === 'collaboration' ? 'all' : 'collaboration')}>
+              Collaborazione
+            </FilterChip>
+            <FilterChip active={filterKind === 'events'} onClick={() => setFilterKind(filterKind === 'events' ? 'all' : 'events')}>
+              Eventi
+            </FilterChip>
+            <select
+              value={artTag}
+              onChange={(e) => setArtTag(e.target.value)}
+              className="h-10 px-3 rounded-xl border-2 border-sky-200 dark:border-sky-800 bg-white dark:bg-gray-900 text-slate-700 dark:text-slate-200 shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm md:text-base"
+              title="Art Tags"
+            >
+              <option value="all">Art Tags</option>
+              <option value="danza">Danza</option>
+              <option value="canto">Canto</option>
+              <option value="teatro">Teatro</option>
+              <option value="musica">Musica</option>
+              <option value="fotografia">Fotografia</option>
+              <option value="pittura">Pittura</option>
+            </select>
+          </div>
         </div>
 
-        {/* Filtri (RIGHT) */}
-        <div className="flex flex-wrap gap-2 justify-center order-3">
-          <button
-            className={cn(
-              "px-3 md:px-4 py-2 rounded-xl shadow font-semibold transition-all duration-200 text-sm md:text-base",
-              filterKind === "opportunity"
-                ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/30"
-                : "bg-white dark:bg-gray-800 text-slate-700 dark:text-slate-300 border-2 border-sky-200 dark:border-sky-800 hover:border-sky-500"
-            )}
-            onClick={() => setFilterKind(filterKind === "opportunity" ? "all" : "opportunity")}
-          >
-            Opportunità Lavorativa
-          </button>
-          <button
-            className={cn(
-              "px-3 md:px-4 py-2 rounded-xl shadow font-semibold transition-all duration-200 text-sm md:text-base",
-              filterKind === "collaboration"
-                ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/30"
-                : "bg-white dark:bg-gray-800 text-slate-700 dark:text-slate-300 border-2 border-sky-200 dark:border-sky-800 hover:border-sky-500"
-            )}
-            onClick={() => setFilterKind(filterKind === "collaboration" ? "all" : "collaboration")}
-          >
+        {/* Mobile quick chips row */}
+        <div className="sm:hidden mt-2 flex gap-2 overflow-x-auto pb-1">
+          <FilterChip active={filterKind === 'opportunity'} onClick={() => setFilterKind(filterKind === 'opportunity' ? 'all' : 'opportunity')}>
+            Opportunità
+          </FilterChip>
+          <FilterChip active={filterKind === 'collaboration'} onClick={() => setFilterKind(filterKind === 'collaboration' ? 'all' : 'collaboration')}>
             Collaborazione
-          </button>
-          <button
-            className={cn(
-              "px-3 md:px-4 py-2 rounded-xl shadow font-semibold transition-all duration-200 text-sm md:text-base",
-              filterKind === "events"
-                ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/30"
-                : "bg-white dark:bg-gray-800 text-slate-700 dark:text-slate-300 border-2 border-sky-200 dark:border-sky-800 hover:border-sky-500"
-            )}
-            onClick={() => setFilterKind(filterKind === "events" ? "all" : "events")}
-          >
+          </FilterChip>
+          <FilterChip active={filterKind === 'events'} onClick={() => setFilterKind(filterKind === 'events' ? 'all' : 'events')}>
             Eventi
-          </button>
-
-          <select
-            value={artTag}
-            onChange={(e) => setArtTag(e.target.value)}
-            className="h-10 px-3 rounded-xl border-2 border-sky-200 dark:border-sky-800 bg-white dark:bg-gray-900 text-slate-700 dark:text-slate-200 shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm md:text-base"
-            title="Art Tags"
+          </FilterChip>
+          <button
+            type="button"
+            onClick={() => setShowFilters(true)}
+            className="shrink-0 px-3 py-2 rounded-xl border-2 border-sky-200 dark:border-sky-800 bg-white/80 dark:bg-gray-900/40 text-slate-700 dark:text-slate-200 shadow-sm"
           >
-            <option value="all">Art Tags</option>
-            <option value="danza">Danza</option>
-            <option value="canto">Canto</option>
-            <option value="teatro">Teatro</option>
-            <option value="musica">Musica</option>
-            <option value="fotografia">Fotografia</option>
-            <option value="pittura">Pittura</option>
-          </select>
+            Art tags…
+          </button>
         </div>
       </div>
+
+      {/* Mobile Filters Panel */}
+      <AnimatePresence>
+        {showFilters && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm sm:hidden"
+            onClick={() => setShowFilters(false)}
+          >
+            <motion.div
+              initial={{ y: 40, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 40, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="absolute left-0 right-0 bottom-0 bg-white/90 dark:bg-gray-900/90 border-t border-sky-200 dark:border-sky-800 rounded-t-3xl p-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="font-bold text-slate-800 dark:text-slate-100">Filtri</div>
+                <button type="button" onClick={() => setShowFilters(false)} className="p-2 rounded-xl border border-sky-200 dark:border-sky-800">
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">Tipo</div>
+                  <div className="flex flex-wrap gap-2">
+                    <FilterChip active={filterKind === 'opportunity'} onClick={() => setFilterKind(filterKind === 'opportunity' ? 'all' : 'opportunity')}>
+                      Opportunità
+                    </FilterChip>
+                    <FilterChip active={filterKind === 'collaboration'} onClick={() => setFilterKind(filterKind === 'collaboration' ? 'all' : 'collaboration')}>
+                      Collaborazione
+                    </FilterChip>
+                    <FilterChip active={filterKind === 'events'} onClick={() => setFilterKind(filterKind === 'events' ? 'all' : 'events')}>
+                      Eventi
+                    </FilterChip>
+                    <FilterChip active={filterKind === 'all'} onClick={() => setFilterKind('all')}>
+                      Tutto
+                    </FilterChip>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">Art tags</div>
+                  <select
+                    value={artTag}
+                    onChange={(e) => setArtTag(e.target.value)}
+                    className="h-11 w-full px-3 rounded-xl border-2 border-sky-200 dark:border-sky-800 bg-white dark:bg-gray-900 text-slate-700 dark:text-slate-200 shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  >
+                    <option value="all">Tutti</option>
+                    <option value="danza">Danza</option>
+                    <option value="canto">Canto</option>
+                    <option value="teatro">Teatro</option>
+                    <option value="musica">Musica</option>
+                    <option value="fotografia">Fotografia</option>
+                    <option value="pittura">Pittura</option>
+                  </select>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">
+                    Suggerimento: usa hashtag nei marker (es. <span className="font-semibold">#danza</span>) per filtri più precisi.
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => {
+                      setFilterKind('all')
+                      setArtTag('all')
+                    }}
+                  >
+                    Reset
+                  </Button>
+                  <Button type="button" className="flex-1" onClick={() => setShowFilters(false)}>
+                    Applica
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* MAIN LAYOUT */}
       <div className="relative flex-1 flex items-stretch justify-center gap-4">
@@ -295,10 +412,29 @@ export default function MapPage() {
               initial={{ scale: 0, opacity: 0, x: 100 }}
               animate={{ scale: 1, opacity: 1, x: 0 }}
               exit={{ scale: 0, opacity: 0, x: 100 }}
-              className="absolute right-0 top-0 h-full w-full sm:w-[350px] bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-xl border border-sky-200 dark:border-sky-800 p-4 z-20 flex flex-col gap-3"
+              className="absolute right-0 top-0 h-full w-full sm:w-[380px] bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-xl border border-sky-200 dark:border-sky-800 p-4 z-20 flex flex-col gap-3"
             >
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="font-bold text-xl text-slate-800 dark:text-slate-100">{selectedEvent.title}</h2>
+              <div className="flex justify-between items-start gap-3">
+                <div className="min-w-0">
+                  <h2 className="font-bold text-xl text-slate-800 dark:text-slate-100 truncate">{selectedEvent.title}</h2>
+                  <div className="mt-1 flex flex-wrap gap-2">
+                    <span
+                      className={cn(
+                        'px-2 py-1 rounded-full text-xs font-semibold border',
+                        (selectedEvent.type || '').toUpperCase() === 'COLLABORATION'
+                          ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+                          : 'bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30'
+                      )}
+                    >
+                      {(selectedEvent.type || '').toUpperCase() === 'COLLABORATION' ? 'Collaborazione' : 'Evento / Opportunità'}
+                    </span>
+                    {selectedEvent.city && (
+                      <span className="px-2 py-1 rounded-full text-xs font-semibold border border-sky-200 dark:border-sky-800 bg-white/60 dark:bg-gray-900/30 text-slate-700 dark:text-slate-200">
+                        {selectedEvent.city}
+                      </span>
+                    )}
+                  </div>
+                </div>
                 <X 
                   size={20} 
                   className="cursor-pointer text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors" 
@@ -314,16 +450,23 @@ export default function MapPage() {
                 imageUrl={selectedEvent.imageUrl || undefined}
               />
 
-              <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center gap-3">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center text-white font-bold text-xl">
                   {selectedEvent.recruiter.name?.charAt(0).toUpperCase() || 'E'}
                 </div>
                 <div>
                   <p className="font-semibold text-slate-800 dark:text-slate-100">{selectedEvent.recruiter.name || t('map.detail.organizer')}</p>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">{selectedEvent.type}</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">Creatore</p>
                 </div>
               </div>
-              <p className="text-slate-700 dark:text-slate-300 leading-relaxed">{selectedEvent.description}</p>
+
+              <div className="rounded-2xl border border-sky-200 dark:border-sky-800 bg-white/60 dark:bg-gray-900/30 p-3">
+                <div className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-1">Descrizione</div>
+                <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed line-clamp-6">
+                  {selectedEvent.description}
+                </p>
+              </div>
+
               <div className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-sky-500" />
@@ -337,12 +480,6 @@ export default function MapPage() {
                     })}
                   </span>
                 </div>
-                {selectedEvent.city && (
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-sky-500" />
-                    <span>{selectedEvent.city}</span>
-                  </div>
-                )}
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-sky-500" />
                   <span className="text-xs">
@@ -350,7 +487,8 @@ export default function MapPage() {
                   </span>
                 </div>
               </div>
-              <div className="mt-auto flex gap-2 pt-4">
+
+              <div className="mt-auto flex gap-2 pt-3 border-t border-sky-200/60 dark:border-sky-800/60">
                 {session?.user?.role === 'ARTIST' && (
                   <button className="flex-1 px-3 py-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white rounded-xl shadow-lg shadow-sky-500/30 hover:scale-105 transition-all font-semibold">
                     {t('map.detail.apply')}
@@ -458,7 +596,7 @@ function MarkerGallery({
         <img
           src={current}
           alt={title}
-          className="w-full h-40 object-cover"
+          className="w-full h-48 object-cover"
           loading="lazy"
           referrerPolicy="no-referrer"
         />
