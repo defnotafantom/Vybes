@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { HelpCircle, Search, X, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -13,6 +14,8 @@ type Lang = 'it' | 'en'
 type GuideItem = {
   id: string
   selector: string
+  href?: string
+  where?: Record<Lang, string>
   title: Record<Lang, string>
   body: Record<Lang, string>
   keywords: string[]
@@ -26,6 +29,8 @@ function getLang(code: string): Lang {
 export function AIGuideButton() {
   const { language } = useLanguage()
   const lang = getLang(language)
+  const router = useRouter()
+  const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [step, setStep] = useState(0)
@@ -37,6 +42,8 @@ export function AIGuideButton() {
         id: 'header-notifications',
         selector: '[data-guide=\"header-notifications\"]',
         section: 'header',
+        href: '/dashboard',
+        where: { it: 'Dashboard → Header', en: 'Dashboard → Header' },
         title: { it: 'Notifiche', en: 'Notifications' },
         body: {
           it: 'Qui trovi notifiche su messaggi, follow, commenti e aggiornamenti. Aprilo per vedere cosa è successo di recente.',
@@ -48,6 +55,8 @@ export function AIGuideButton() {
         id: 'header-theme',
         selector: '[data-guide=\"header-theme\"]',
         section: 'header',
+        href: '/dashboard',
+        where: { it: 'Dashboard → Header', en: 'Dashboard → Header' },
         title: { it: 'Tema chiaro/scuro', en: 'Theme (light/dark)' },
         body: {
           it: 'Cambia il tema dell’app. Utile di sera o se preferisci più contrasto.',
@@ -59,6 +68,8 @@ export function AIGuideButton() {
         id: 'header-language',
         selector: '[data-guide=\"header-language\"]',
         section: 'header',
+        href: '/dashboard',
+        where: { it: 'Dashboard → Header', en: 'Dashboard → Header' },
         title: { it: 'Lingua', en: 'Language' },
         body: {
           it: 'Cambia la lingua tra italiano e inglese.',
@@ -70,6 +81,8 @@ export function AIGuideButton() {
         id: 'sidebar-map',
         selector: '[data-guide=\"nav-map\"]',
         section: 'sidebar',
+        href: '/dashboard/map',
+        where: { it: 'Dashboard → Sidebar', en: 'Dashboard → Sidebar' },
         title: { it: 'Mappa', en: 'Map' },
         body: {
           it: 'Esplora marker e opportunità. Usa ricerca e filtri per trovare ciò che ti interessa.',
@@ -81,6 +94,8 @@ export function AIGuideButton() {
         id: 'map-search',
         selector: '[data-guide=\"map-search\"]',
         section: 'map',
+        href: '/dashboard/map',
+        where: { it: 'Dashboard → Mappa', en: 'Dashboard → Map' },
         title: { it: 'Ricerca sulla mappa', en: 'Map search' },
         body: {
           it: 'Cerca per titolo, città o testo nella descrizione. I risultati si aggiornano in tempo reale.',
@@ -92,6 +107,8 @@ export function AIGuideButton() {
         id: 'map-filters',
         selector: '[data-guide=\"map-filters\"]',
         section: 'map',
+        href: '/dashboard/map',
+        where: { it: 'Dashboard → Mappa', en: 'Dashboard → Map' },
         title: { it: 'Filtri', en: 'Filters' },
         body: {
           it: 'Filtra per tipo (opportunità, collaborazione, eventi) e per art-tag. Su mobile si apre un pannello dedicato.',
@@ -103,6 +120,8 @@ export function AIGuideButton() {
         id: 'map-new-marker',
         selector: '[data-guide=\"map-new-marker\"]',
         section: 'map',
+        href: '/dashboard/map',
+        where: { it: 'Dashboard → Mappa', en: 'Dashboard → Map' },
         title: { it: 'Nuovo marker', en: 'New marker' },
         body: {
           it: 'Crea un marker sulla mappa. Puoi anche cliccare direttamente sulla mappa per precompilare la posizione.',
@@ -114,6 +133,8 @@ export function AIGuideButton() {
         id: 'map-contact',
         selector: '[data-guide=\"map-contact\"]',
         section: 'map',
+        href: '/dashboard/map',
+        where: { it: 'Dashboard → Mappa', en: 'Dashboard → Map' },
         title: { it: 'Contatta autore', en: 'Contact author' },
         body: {
           it: 'Apre una chat con l’autore e invia un messaggio automatico con riferimento al marker. Poi ti porta in Messaggi.',
@@ -125,6 +146,8 @@ export function AIGuideButton() {
         id: 'messages',
         selector: '[data-guide=\"nav-messages\"]',
         section: 'messages',
+        href: '/dashboard/messages',
+        where: { it: 'Dashboard → Sidebar', en: 'Dashboard → Sidebar' },
         title: { it: 'Messaggi', en: 'Messages' },
         body: {
           it: 'Gestisci le conversazioni. Da qui puoi continuare le chat avviate dalla mappa o dal profilo.',
@@ -150,6 +173,10 @@ export function AIGuideButton() {
   }, [items, query])
 
   const active = filtered[Math.min(step, Math.max(0, filtered.length - 1))]
+  const activeEl = useMemo(() => {
+    if (!active) return null
+    return document.querySelector(active.selector) as HTMLElement | null
+  }, [active])
 
   // Tour mode: try to scroll and “pulse” the target element
   useEffect(() => {
@@ -170,6 +197,12 @@ export function AIGuideButton() {
     lang === 'it'
       ? 'Cerca una sezione o avvia il tour per capire dove cliccare.'
       : 'Search a section or start the tour to understand where to click.'
+
+  const goToActive = () => {
+    if (!active?.href) return
+    if (pathname === active.href) return
+    router.push(active.href)
+  }
 
   return (
     <>
@@ -252,7 +285,30 @@ export function AIGuideButton() {
                 {active ? (
                   <div className="rounded-2xl border border-sky-200 dark:border-sky-800 bg-white/60 dark:bg-gray-900/30 p-4">
                     <div className="text-sm font-bold text-slate-800 dark:text-slate-100">{active.title[lang]}</div>
+                    {active.where && (
+                      <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                        <span className="font-semibold">{lang === 'it' ? 'Dove:' : 'Where:'}</span> {active.where[lang]}
+                      </div>
+                    )}
                     <div className="text-sm text-slate-700 dark:text-slate-300 mt-2 leading-relaxed">{active.body[lang]}</div>
+
+                    {/* Action: open the section when the target isn’t on this page */}
+                    {active.href && (
+                      <div className="mt-3 flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="flex-1"
+                          onClick={goToActive}
+                          disabled={pathname === active.href}
+                        >
+                          {lang === 'it' ? (pathname === active.href ? 'Sei già qui' : 'Vai alla sezione') : pathname === active.href ? 'You are here' : 'Go to section'}
+                        </Button>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                          {activeEl ? (lang === 'it' ? 'Elemento trovato' : 'Target found') : (lang === 'it' ? 'Elemento non in pagina' : 'Target not on page')}
+                        </div>
+                      </div>
+                    )}
                     <div className="mt-3 flex items-center justify-between">
                       <button
                         type="button"
