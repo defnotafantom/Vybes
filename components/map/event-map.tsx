@@ -22,6 +22,7 @@ interface Event {
   startDate: string
   type: string
   recruiter: {
+    id?: string
     name: string | null
   }
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -27,6 +28,7 @@ interface Event {
   city?: string
   imageUrl?: string | null
   recruiter: {
+    id?: string
     name: string | null
   }
 }
@@ -59,6 +61,7 @@ function FilterChip({
 }
 
 export default function MapPage() {
+  const router = useRouter()
   const { data: session } = useSession()
   const { toast } = useToast()
   const { t, language } = useLanguage()
@@ -67,6 +70,7 @@ export default function MapPage() {
   const [loading, setLoading] = useState(true)
   const [showNewPost, setShowNewPost] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
+  const [contacting, setContacting] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [filterKind, setFilterKind] = useState<FilterKind>('all')
   const [artTag, setArtTag] = useState<string>('all')
@@ -178,6 +182,50 @@ export default function MapPage() {
     }
   }
 
+  const handleContact = async (ev: Event) => {
+    if (!ev.recruiter?.id) {
+      toast({ title: t('toast.error'), description: 'Destinatario non disponibile', variant: 'destructive' })
+      return
+    }
+    setContacting(true)
+    try {
+      const cRes = await fetch('/api/messages/conversations/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recipientId: ev.recruiter.id }),
+      })
+      if (!cRes.ok) {
+        const err = await cRes.json().catch(() => ({}))
+        throw new Error(err?.error || `Errore creazione chat (${cRes.status})`)
+      }
+      const conversation = await cRes.json()
+
+      const refLine = `📍 Riferimento: ${ev.title} (${(ev.type || '').toUpperCase() === 'COLLABORATION' ? 'Collaborazione' : 'Evento / Opportunità'})`
+      const locLine = `🗺️ Posizione: ${ev.latitude.toFixed(5)}, ${ev.longitude.toFixed(5)}${ev.city ? ` • ${ev.city}` : ''}`
+      const linkLine = `🔗 Link: /dashboard/events/${ev.id}`
+      const content = `Ciao! Ti contatto dal marker sulla mappa.\n\n${refLine}\n${locLine}\n${linkLine}\n\nMessaggio: `
+
+      // Send initial message (so it appears in inbox immediately)
+      const mRes = await fetch(`/api/messages/${conversation.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content }),
+      })
+      if (!mRes.ok) {
+        const err = await mRes.json().catch(() => ({}))
+        throw new Error(err?.error || `Errore invio messaggio (${mRes.status})`)
+      }
+
+      toast({ title: 'Messaggio inviato', description: 'Conversazione creata nella dashboard messaggi.' })
+      setSelectedEvent(null)
+      router.push(`/dashboard/messages?conversationId=${encodeURIComponent(conversation.id)}`)
+    } catch (e: any) {
+      toast({ title: t('toast.error'), description: e?.message || 'Errore contatto', variant: 'destructive' })
+    } finally {
+      setContacting(false)
+    }
+  }
+
   if (loading) {
     return <div className="text-center py-12 text-slate-600 dark:text-slate-400">{t('map.loading')}</div>
   }
@@ -269,6 +317,23 @@ export default function MapPage() {
           >
             Art tags…
           </button>
+        </div>
+
+        <div className="mt-2 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+          <div>Risultati: <span className="font-semibold text-slate-700 dark:text-slate-200">{filteredEvents.length}</span></div>
+          {(filterKind !== 'all' || artTag !== 'all' || searchQuery) && (
+            <button
+              type="button"
+              className="px-2 py-1 rounded-lg border border-sky-200 dark:border-sky-800 bg-white/60 dark:bg-gray-900/30"
+              onClick={() => {
+                setSearchQuery('')
+                setFilterKind('all')
+                setArtTag('all')
+              }}
+            >
+              Pulisci
+            </button>
+          )}
         </div>
       </div>
 
@@ -494,8 +559,18 @@ export default function MapPage() {
                     {t('map.detail.apply')}
                   </button>
                 )}
-                <button className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border-2 border-sky-300 dark:border-sky-700 text-slate-700 dark:text-slate-300 rounded-xl shadow hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:border-sky-500 transition-all font-semibold">
-                  {t('map.detail.contact')}
+                <button
+                  type="button"
+                  disabled={contacting}
+                  onClick={() => handleContact(selectedEvent)}
+                  className={cn(
+                    "flex-1 px-3 py-2 border-2 rounded-xl shadow transition-all font-semibold",
+                    contacting
+                      ? "bg-white/60 dark:bg-gray-800/60 border-sky-200 dark:border-sky-800 text-slate-400 cursor-not-allowed"
+                      : "bg-white dark:bg-gray-800 border-sky-300 dark:border-sky-700 text-slate-700 dark:text-slate-300 hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:border-sky-500"
+                  )}
+                >
+                  {contacting ? 'Invio…' : t('map.detail.contact')}
                 </button>
               </div>
             </motion.div>
@@ -523,6 +598,7 @@ function MarkerGallery({
   // Uses a public client token (NEXT_PUBLIC_MAPILLARY_TOKEN) and fetches a few nearby thumbnails.
   const mapillaryToken = process.env.NEXT_PUBLIC_MAPILLARY_TOKEN
   const [streetShots, setStreetShots] = useState<string[]>([])
+  const [approxMeters, setApproxMeters] = useState<number | null>(null)
   const [streetStatus, setStreetStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
 
   useEffect(() => {
@@ -530,41 +606,55 @@ function MarkerGallery({
     async function load() {
       if (!mapillaryToken) {
         setStreetShots([])
+        setApproxMeters(null)
         setStreetStatus('idle')
         return
       }
 
       setStreetStatus('loading')
       try {
-        // Small bbox around the point (degrees). ~0.001 ≈ 100m (varies with latitude)
-        const d = 0.001
-        const minLon = longitude - d
-        const minLat = latitude - d
-        const maxLon = longitude + d
-        const maxLat = latitude + d
+        // Progressive fallback: expand bbox until we find photos.
+        // NOTE: this makes images more likely to show, but less precise.
+        const steps = [0.001, 0.003, 0.01, 0.03, 0.08] // ~100m .. ~9km
+        let found: string[] = []
+        let used = steps[0]
 
-        const url =
-          `https://graph.mapillary.com/images` +
-          `?fields=id,thumb_1024_url` +
-          `&bbox=${minLon},${minLat},${maxLon},${maxLat}` +
-          `&limit=6` +
-          `&access_token=${encodeURIComponent(mapillaryToken)}`
+        for (const d of steps) {
+          const minLon = longitude - d
+          const minLat = latitude - d
+          const maxLon = longitude + d
+          const maxLat = latitude + d
 
-        // Using access_token in query avoids CORS issues in some environments
-        const res = await fetch(url)
-        if (!res.ok) throw new Error(`Mapillary ${res.status}`)
-        const json = await res.json()
-        const urls = (json?.data || [])
-          .map((x: any) => x?.thumb_1024_url)
-          .filter(Boolean)
-          .slice(0, 3)
+          const url =
+            `https://graph.mapillary.com/images` +
+            `?fields=id,thumb_1024_url` +
+            `&bbox=${minLon},${minLat},${maxLon},${maxLat}` +
+            `&limit=20` +
+            `&access_token=${encodeURIComponent(mapillaryToken)}`
+
+          const res = await fetch(url)
+          if (!res.ok) continue
+          const json = await res.json()
+          const urls = (json?.data || [])
+            .map((x: any) => x?.thumb_1024_url)
+            .filter(Boolean)
+            .slice(0, 3)
+
+          if (urls.length > 0) {
+            found = urls
+            used = d
+            break
+          }
+        }
 
         if (cancelled) return
-        setStreetShots(urls)
-        setStreetStatus('ready')
+        setStreetShots(found)
+        setApproxMeters(found.length > 0 ? Math.round(steps.find((s) => s === used)! * 111000) : null)
+        setStreetStatus(found.length > 0 ? 'ready' : 'error')
       } catch (e) {
         if (cancelled) return
         setStreetShots([])
+        setApproxMeters(null)
         setStreetStatus('error')
       }
     }
@@ -574,6 +664,10 @@ function MarkerGallery({
       cancelled = true
     }
   }, [latitude, longitude, mapillaryToken])
+
+  useEffect(() => {
+    setIdx(0)
+  }, [latitude, longitude])
 
   const mapPreview = `https://staticmap.openstreetmap.de/staticmap.php?center=${latitude},${longitude}&zoom=16&size=640x360&maptype=mapnik&markers=${latitude},${longitude},lightblue1`
   const creatorImages = (imageUrl ? [imageUrl] : []).filter(Boolean)
@@ -636,7 +730,8 @@ function MarkerGallery({
         {images.length > 1 ? ` • ${idx + 1}/${images.length}` : ''}
         {!mapillaryToken ? ' • (Per foto reali: aggiungi NEXT_PUBLIC_MAPILLARY_TOKEN)' : ''}
         {mapillaryToken && streetStatus === 'loading' ? ' • (carico foto...)' : ''}
-        {mapillaryToken && streetStatus === 'error' ? ' • (foto non disponibili qui)' : ''}
+        {mapillaryToken && streetStatus === 'error' ? ' • (nessuna foto disponibile: mostro mappa)' : ''}
+        {idx < streetShots.length && approxMeters ? ` • (~entro ${approxMeters}m, posizione approssimata)` : ''}
       </div>
     </div>
   )

@@ -12,6 +12,7 @@ import { it } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
 import { useMinichat } from '@/components/chat/minichat-provider'
 import { useLanguage } from '@/components/providers/language-provider'
+import { useSearchParams } from 'next/navigation'
 
 interface Conversation {
   id: string
@@ -39,6 +40,8 @@ export default function MessagesPage() {
   const { data: session } = useSession()
   const { openChat } = useMinichat()
   const { t, language } = useLanguage()
+  const searchParams = useSearchParams()
+  const initialConversationId = searchParams.get('conversationId')
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
@@ -94,6 +97,15 @@ export default function MessagesPage() {
   useEffect(() => {
     fetchConversations()
   }, [fetchConversations])
+
+  // If arriving from a deep-link (e.g. /dashboard/messages?conversationId=...),
+  // auto-select the conversation once we have the list.
+  useEffect(() => {
+    if (!initialConversationId) return
+    if (selectedConversation) return
+    const exists = conversations.some((c) => c.id === initialConversationId)
+    if (exists) setSelectedConversation(initialConversationId)
+  }, [conversations, initialConversationId, selectedConversation])
 
   // Refresh messages when switching conversation (immediate)
   useEffect(() => {
