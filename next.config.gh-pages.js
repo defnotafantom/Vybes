@@ -8,6 +8,11 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'i.imgur.com',
       },
+      // Vercel Blob public URLs (e.g. https://<id>.public.blob.vercel-storage.com/...)
+      {
+        protocol: 'https',
+        hostname: '**.public.blob.vercel-storage.com',
+      },
       {
         protocol: 'http',
         hostname: 'localhost',
