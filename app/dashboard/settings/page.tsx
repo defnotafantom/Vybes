@@ -14,6 +14,7 @@ import { User, Save, Upload, X } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Textarea } from '@/components/ui/textarea'
+import { prepareImageForUpload } from '@/lib/image-upload-client'
 
 interface UserProfile {
   id: string
@@ -77,30 +78,11 @@ export default function SettingsPage() {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast({
-        title: t('toast.error'),
-        description: t('toast.imageTypeError'),
-        variant: 'destructive',
-      })
-      return
-    }
-
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: t('toast.error'),
-        description: t('toast.imageSizeError'),
-        variant: 'destructive',
-      })
-      return
-    }
-
     setUploading(true)
     try {
+      const prepared = await prepareImageForUpload(file, 'profile')
       const formData = new FormData()
-      formData.append('file', file)
+      formData.append('file', prepared)
       formData.append('folder', 'profile')
 
       const response = await fetch('/api/upload', {
@@ -114,7 +96,7 @@ export default function SettingsPage() {
         setPreviewImage(data.url)
         toast({
           title: t('toast.imageUploaded'),
-          description: t('toast.imageUploadSuccess'),
+          description: language === 'it' ? 'Caricata e ottimizzata (WebP).' : 'Uploaded and optimized (WebP).',
         })
       } else {
         toast({
@@ -127,7 +109,7 @@ export default function SettingsPage() {
       console.error('Error uploading image:', error)
       toast({
         title: t('toast.error'),
-        description: t('toast.imageUploadError'),
+        description: error instanceof Error ? error.message : t('toast.imageUploadError'),
         variant: 'destructive',
       })
     } finally {

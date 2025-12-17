@@ -11,6 +11,7 @@ import { useSession } from 'next-auth/react'
 import Image from 'next/image'
 import { useLanguage } from '@/components/providers/language-provider'
 import { useToast } from '@/hooks/use-toast'
+import { prepareImageForUpload } from '@/lib/image-upload-client'
 
 export default function CreatePortfolioPage() {
   const router = useRouter()
@@ -56,8 +57,9 @@ export default function CreatePortfolioPage() {
     setLoading(true)
     try {
       // Upload file
+      const fileToUpload = type === 'IMAGE' ? await prepareImageForUpload(file, 'portfolio') : file
       const uploadFormData = new FormData()
-      uploadFormData.append('file', file)
+      uploadFormData.append('file', fileToUpload)
       uploadFormData.append('folder', 'portfolio')
 
       const uploadResponse = await fetch('/api/upload', {
@@ -66,7 +68,8 @@ export default function CreatePortfolioPage() {
       })
 
       if (!uploadResponse.ok) {
-        throw new Error(t('portfolio.create.fileUploadError'))
+        const err = await uploadResponse.json().catch(() => ({}))
+        throw new Error(err?.error || t('portfolio.create.fileUploadError'))
       }
 
       const uploadData = await uploadResponse.json()
@@ -95,7 +98,7 @@ export default function CreatePortfolioPage() {
       console.error('Error creating portfolio item:', error)
       toast({
         title: t('toast.genericError'),
-        description: t('portfolio.create.retry'),
+        description: error instanceof Error ? error.message : t('portfolio.create.retry'),
         variant: 'destructive',
       })
     } finally {
@@ -230,7 +233,7 @@ export default function CreatePortfolioPage() {
                       onChange={handleFileChange}
                       accept={
                         type === 'IMAGE'
-                          ? 'image/*'
+                          ? 'image/jpeg,image/png,image/webp'
                           : type === 'VIDEO'
                           ? 'video/*'
                           : type === 'AUDIO'
@@ -243,6 +246,11 @@ export default function CreatePortfolioPage() {
                   </label>
                 )}
               </div>
+              {type === 'IMAGE' && (
+                <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Immagine portfolio: JPG/PNG/WebP • max 12MB • ottimizzata automaticamente.
+                </div>
+              )}
             </div>
 
             {/* Tags */}

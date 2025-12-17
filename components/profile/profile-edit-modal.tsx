@@ -10,6 +10,7 @@ import { X, Upload, Save } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { useLanguage } from '@/components/providers/language-provider'
 import Image from 'next/image'
+import { prepareImageForUpload } from '@/lib/image-upload-client'
 
 interface UserProfile {
   id: string
@@ -97,28 +98,21 @@ export function ProfileEditModal({ isOpen, onClose, profile, onSave }: ProfileEd
     const file = e.target.files?.[0]
     if (!file) return
 
-    // Check file type
-    if (!file.type.startsWith('image/')) {
-      toast({
-        title: t('toast.error'),
-        description: t('toast.imageTypeError'),
-        variant: 'destructive',
-      })
-      return
-    }
-
-    // Check file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: t('toast.error'),
-        description: t('toast.imageSizeError'),
-        variant: 'destructive',
-      })
-      return
-    }
-
+    // Preset: profile image
     const formDataUpload = new FormData()
-    formDataUpload.append('file', file)
+    let prepared: File
+    try {
+      prepared = await prepareImageForUpload(file, 'profile')
+    } catch (err) {
+      toast({
+        title: t('toast.error'),
+        description: err instanceof Error ? err.message : t('toast.imageUploadError'),
+        variant: 'destructive',
+      })
+      return
+    }
+    formDataUpload.append('file', prepared)
+    formDataUpload.append('folder', 'profile')
 
     try {
       const response = await fetch('/api/upload', {
@@ -131,12 +125,13 @@ export function ProfileEditModal({ isOpen, onClose, profile, onSave }: ProfileEd
         setFormData(prev => ({ ...prev, image: data.url }))
         toast({
           title: t('toast.imageUploaded'),
-          description: t('toast.imageUploadSuccess'),
+          description: 'Caricata e ottimizzata (WebP).',
         })
       } else {
+        const data = await response.json().catch(() => ({}))
         toast({
           title: t('toast.error'),
-          description: t('toast.imageUploadError'),
+          description: data?.error || t('toast.imageUploadError'),
           variant: 'destructive',
         })
       }
@@ -144,7 +139,7 @@ export function ProfileEditModal({ isOpen, onClose, profile, onSave }: ProfileEd
       console.error('Error uploading image:', error)
       toast({
         title: t('toast.error'),
-        description: t('toast.imageUploadError'),
+        description: error instanceof Error ? error.message : t('toast.imageUploadError'),
         variant: 'destructive',
       })
     }

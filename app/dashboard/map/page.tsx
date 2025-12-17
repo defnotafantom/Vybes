@@ -13,6 +13,7 @@ import { useSession } from 'next-auth/react'
 import { useToast } from '@/hooks/use-toast'
 import { useLanguage } from '@/components/providers/language-provider'
 import { cn } from '@/lib/utils'
+import { prepareImageForUpload } from '@/lib/image-upload-client'
 
 // Dynamically import Map component to avoid SSR issues with Leaflet
 const Map = dynamic(() => import('@/components/map/event-map'), { ssr: false })
@@ -753,7 +754,9 @@ function NewPostForm({ onSubmit, selectedLocation, t }: { onSubmit: (data: any) 
   const [locationResults, setLocationResults] = useState<any[]>([])
   const [showLocationResults, setShowLocationResults] = useState(false)
   const [loadingLocation, setLoadingLocation] = useState(false)
-  const [imageUrl, setImageUrl] = useState("")
+  const { toast } = useToast()
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [uploadingImage, setUploadingImage] = useState(false)
 
   useEffect(() => {
     if (selectedLocation) {
@@ -797,9 +800,37 @@ function NewPostForm({ onSubmit, selectedLocation, t }: { onSubmit: (data: any) 
     setShowLocationResults(false)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!title || !description || !city || !lat || !lng) return
+    let imageUrl: string | null = null
+    if (imageFile) {
+      setUploadingImage(true)
+      try {
+        const prepared = await prepareImageForUpload(imageFile, 'events')
+        const fd = new FormData()
+        fd.append('file', prepared)
+        fd.append('folder', 'events')
+        const res = await fetch('/api/upload', { method: 'POST', body: fd })
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}))
+          throw new Error(err?.error || 'Errore upload immagine')
+        }
+        const data = await res.json()
+        imageUrl = data.url
+      } catch (err) {
+        toast({
+          title: t('toast.error'),
+          description: err instanceof Error ? err.message : 'Errore upload immagine',
+          variant: 'destructive',
+        })
+        setUploadingImage(false)
+        return
+      } finally {
+        setUploadingImage(false)
+      }
+    }
+
     onSubmit({ title, description, type, city, lat: parseFloat(lat), lng: parseFloat(lng), images: imageUrl ? [imageUrl] : [] })
     setTitle("")
     setDescription("")
@@ -809,7 +840,7 @@ function NewPostForm({ onSubmit, selectedLocation, t }: { onSubmit: (data: any) 
     setLng("")
     setType("opportunity")
     setShowLocationResults(false)
-    setImageUrl("")
+    setImageFile(null)
   }
 
   return (
@@ -910,18 +941,23 @@ function NewPostForm({ onSubmit, selectedLocation, t }: { onSubmit: (data: any) 
         <option value="artist">{t('map.marker.typeCollaboration')}</option>
       </select>
 
-      <Input
-        type="url"
-        placeholder="URL foto (opzionale)"
-        value={imageUrl}
-        onChange={(e) => setImageUrl(e.target.value)}
-        className="border-2 border-sky-200 dark:border-sky-800 bg-white dark:bg-gray-900 rounded-xl"
-      />
+      <div className="space-y-1">
+        <Input
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+          className="border-2 border-sky-200 dark:border-sky-800 bg-white dark:bg-gray-900 rounded-xl file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-sky-500 file:to-blue-600 file:text-white hover:file:from-sky-600 hover:file:to-blue-700 file:cursor-pointer"
+        />
+        <div className="text-[11px] text-slate-500 dark:text-slate-400">
+          Foto marker (opzionale): JPG/PNG/WebP • max 6MB • ottimizzata automaticamente.
+        </div>
+      </div>
       <Button
         type="submit"
+        disabled={uploadingImage}
         className="px-4 py-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white rounded-xl shadow-lg shadow-sky-500/30 transition-all hover:scale-105 font-semibold"
       >
-        {t('map.marker.create')}
+        {uploadingImage ? 'Caricamento…' : t('map.marker.create')}
       </Button>
     </form>
   )
