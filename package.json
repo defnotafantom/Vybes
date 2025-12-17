@@ -14,8 +14,7 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
-    "create-user": "tsx scripts/create-user.ts",
-    "reset-password": "tsx scripts/reset-password.ts"
+    "create-user": "tsx scripts/create-user.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.7.1",
@@ -29,7 +28,6 @@
     "@radix-ui/react-switch": "^1.0.3",
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-toast": "^1.1.5",
-    "@vercel/blob": "^1.0.1",
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
@@ -38,7 +36,7 @@
     "framer-motion": "^10.16.16",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.309.0",
-    "next": "^14.2.35",
+    "next": "14.0.4",
     "next-auth": "^4.24.5",
     "next-themes": "^0.2.1",
     "nodemailer": "^7.0.11",
@@ -63,14 +61,11 @@
     "@types/react-dom": "^18.2.18",
     "autoprefixer": "^10.4.16",
     "eslint": "^8.56.0",
-    "eslint-config-next": "^14.2.35",
+    "eslint-config-next": "14.0.4",
     "postcss": "^8.4.32",
     "prisma": "^5.7.1",
     "tailwindcss": "^3.4.0",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3"
-  },
-  "overrides": {
-    "glob": "10.5.0"
   }
 }

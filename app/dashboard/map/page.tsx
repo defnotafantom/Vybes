@@ -25,10 +25,13 @@ interface Event {
   startDate: string
   type: string
   city?: string
+  imageUrl?: string | null
   recruiter: {
     name: string | null
   }
 }
+
+type FilterKind = 'all' | 'opportunity' | 'collaboration' | 'events'
 
 export default function MapPage() {
   const { data: session } = useSession()
@@ -39,7 +42,8 @@ export default function MapPage() {
   const [loading, setLoading] = useState(true)
   const [showNewPost, setShowNewPost] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const [filterType, setFilterType] = useState<"all" | "artist" | "opportunity">("all")
+  const [filterKind, setFilterKind] = useState<FilterKind>('all')
+  const [artTag, setArtTag] = useState<string>('all')
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null)
 
   useEffect(() => {
@@ -48,7 +52,7 @@ export default function MapPage() {
 
   const fetchEvents = async () => {
     try {
-      const response = await fetch('/api/events?status=upcoming')
+      const response = await fetch('/api/events?status=map&limit=200')
       if (response.ok) {
         const data = await response.json()
         // Handle both old format (array) and new format (object with events property)
@@ -67,11 +71,26 @@ export default function MapPage() {
       event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       event.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       event.description.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesType =
-      filterType === "all" ? true : 
-      filterType === "opportunity" ? event.type !== "COLLABORATION" :
-      event.type === "COLLABORATION"
-    return matchesSearch && matchesType
+    const normalizedType = (event.type || '').toUpperCase()
+    const matchesKind =
+      filterKind === 'all'
+        ? true
+        : filterKind === 'collaboration'
+          ? normalizedType === 'COLLABORATION'
+          : filterKind === 'events'
+            ? normalizedType === 'EVENT'
+            : normalizedType !== 'COLLABORATION' // opportunity = everything non-collaboration by default
+
+    // Events do not currently have "tags" in the DB; we support lightweight tag filtering by:
+    // - using #hashtags in description/title (e.g. "#danza") OR
+    // - matching plain words (e.g. "danza") when artTag is selected.
+    const matchesArtTag =
+      artTag === 'all'
+        ? true
+        : (`${event.title} ${event.description}`.toLowerCase().includes(`#${artTag.toLowerCase()}`) ||
+            `${event.title} ${event.description}`.toLowerCase().includes(artTag.toLowerCase()))
+
+    return matchesSearch && matchesKind && matchesArtTag
   })
 
   const handleMapClick = (lat: number, lng: number) => {
@@ -88,6 +107,7 @@ export default function MapPage() {
     city: string
     lat: number
     lng: number
+    images?: string[]
   }) => {
     try {
       const response = await fetch('/api/events', {
@@ -100,7 +120,10 @@ export default function MapPage() {
           city: data.city,
           latitude: data.lat,
           longitude: data.lng,
-          startDate: new Date().toISOString(),
+          // Make sure newly created markers are visible in "upcoming" too (avoid ms drift),
+          // but map uses status=map anyway.
+          startDate: new Date(Date.now() + 60_000).toISOString(),
+          imageUrl: data.images?.filter(Boolean)?.[0] || undefined,
         }),
       })
 
@@ -139,34 +162,22 @@ export default function MapPage() {
     <div className="relative w-full h-[calc(100vh-8rem)] p-2 md:p-4 flex flex-col gap-2 md:gap-4">
       {/* TOP BAR */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2 sm:gap-3 bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl p-3 md:p-4 rounded-2xl md:rounded-3xl shadow-xl border border-sky-200 dark:border-sky-800 z-20">
-        {/* Filtri */}
-        <div className="flex gap-2 order-2 sm:order-1">
+        {/* Nuovo Marker (LEFT) */}
+        {canCreateMarker && (
           <button
-            className={cn(
-              "px-3 md:px-4 py-2 rounded-xl shadow font-semibold transition-all duration-200 text-sm md:text-base",
-              filterType === "artist"
-                ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/30"
-                : "bg-white dark:bg-gray-800 text-slate-700 dark:text-slate-300 border-2 border-sky-200 dark:border-sky-800 hover:border-sky-500"
-            )}
-            onClick={() => setFilterType(filterType === "artist" ? "all" : "artist")}
+            onClick={() => {
+              setShowNewPost(true)
+              setSelectedLocation(null)
+            }}
+            className="px-3 md:px-4 py-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white rounded-xl shadow-lg shadow-sky-500/30 flex items-center justify-center gap-2 transition-all hover:scale-105 text-sm md:text-base whitespace-nowrap order-1"
           >
-            {t('map.filter.artists')}
+            <Plus size={18} /> <span className="hidden sm:inline">{t('map.newMarker')}</span>
+            <span className="sm:hidden">{t('map.newMarkerShort')}</span>
           </button>
-          <button
-            className={cn(
-              "px-3 md:px-4 py-2 rounded-xl shadow font-semibold transition-all duration-200 text-sm md:text-base",
-              filterType === "opportunity"
-                ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/30"
-                : "bg-white dark:bg-gray-800 text-slate-700 dark:text-slate-300 border-2 border-sky-200 dark:border-sky-800 hover:border-sky-500"
-            )}
-            onClick={() => setFilterType(filterType === "opportunity" ? "all" : "opportunity")}
-          >
-            {t('map.filter.opportunity')}
-          </button>
-        </div>
+        )}
 
-        {/* Search - Centered and flexible */}
-        <div className="relative flex-1 max-w-2xl mx-2 order-1 sm:order-2">
+        {/* Search */}
+        <div className="relative flex-1 max-w-2xl mx-2 order-2">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
           <Input
             type="text"
@@ -177,18 +188,57 @@ export default function MapPage() {
           />
         </div>
 
-        {/* Nuovo annuncio */}
-        {canCreateMarker && (
+        {/* Filtri (RIGHT) */}
+        <div className="flex flex-wrap gap-2 justify-center order-3">
           <button
-            onClick={() => {
-              setShowNewPost(true)
-              setSelectedLocation(null)
-            }}
-            className="px-3 md:px-4 py-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white rounded-xl shadow-lg shadow-sky-500/30 flex items-center justify-center gap-2 transition-all hover:scale-105 text-sm md:text-base whitespace-nowrap order-3"
+            className={cn(
+              "px-3 md:px-4 py-2 rounded-xl shadow font-semibold transition-all duration-200 text-sm md:text-base",
+              filterKind === "opportunity"
+                ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/30"
+                : "bg-white dark:bg-gray-800 text-slate-700 dark:text-slate-300 border-2 border-sky-200 dark:border-sky-800 hover:border-sky-500"
+            )}
+            onClick={() => setFilterKind(filterKind === "opportunity" ? "all" : "opportunity")}
           >
-            <Plus size={18} /> <span className="hidden sm:inline">{t('map.newMarker')}</span><span className="sm:hidden">{t('map.newMarkerShort')}</span>
+            Opportunità Lavorativa
           </button>
-        )}
+          <button
+            className={cn(
+              "px-3 md:px-4 py-2 rounded-xl shadow font-semibold transition-all duration-200 text-sm md:text-base",
+              filterKind === "collaboration"
+                ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/30"
+                : "bg-white dark:bg-gray-800 text-slate-700 dark:text-slate-300 border-2 border-sky-200 dark:border-sky-800 hover:border-sky-500"
+            )}
+            onClick={() => setFilterKind(filterKind === "collaboration" ? "all" : "collaboration")}
+          >
+            Collaborazione
+          </button>
+          <button
+            className={cn(
+              "px-3 md:px-4 py-2 rounded-xl shadow font-semibold transition-all duration-200 text-sm md:text-base",
+              filterKind === "events"
+                ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/30"
+                : "bg-white dark:bg-gray-800 text-slate-700 dark:text-slate-300 border-2 border-sky-200 dark:border-sky-800 hover:border-sky-500"
+            )}
+            onClick={() => setFilterKind(filterKind === "events" ? "all" : "events")}
+          >
+            Eventi
+          </button>
+
+          <select
+            value={artTag}
+            onChange={(e) => setArtTag(e.target.value)}
+            className="h-10 px-3 rounded-xl border-2 border-sky-200 dark:border-sky-800 bg-white dark:bg-gray-900 text-slate-700 dark:text-slate-200 shadow-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm md:text-base"
+            title="Art Tags"
+          >
+            <option value="all">Art Tags</option>
+            <option value="danza">Danza</option>
+            <option value="canto">Canto</option>
+            <option value="teatro">Teatro</option>
+            <option value="musica">Musica</option>
+            <option value="fotografia">Fotografia</option>
+            <option value="pittura">Pittura</option>
+          </select>
+        </div>
       </div>
 
       {/* MAIN LAYOUT */}
@@ -255,6 +305,15 @@ export default function MapPage() {
                   onClick={() => setSelectedEvent(null)} 
                 />
               </div>
+
+              {/* Gallery: map preview + optional creator images */}
+              <MarkerGallery
+                title={selectedEvent.title}
+                latitude={selectedEvent.latitude}
+                longitude={selectedEvent.longitude}
+                imageUrl={selectedEvent.imageUrl || undefined}
+              />
+
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center text-white font-bold text-xl">
                   {selectedEvent.recruiter.name?.charAt(0).toUpperCase() || 'E'}
@@ -309,6 +368,142 @@ export default function MapPage() {
   )
 }
 
+function MarkerGallery({
+  title,
+  latitude,
+  longitude,
+  imageUrl,
+}: {
+  title: string
+  latitude: number
+  longitude: number
+  imageUrl?: string
+}) {
+  const [idx, setIdx] = useState(0)
+
+  // Mapillary (Meta) street-level images (crowdsourced).
+  // Uses a public client token (NEXT_PUBLIC_MAPILLARY_TOKEN) and fetches a few nearby thumbnails.
+  const mapillaryToken = process.env.NEXT_PUBLIC_MAPILLARY_TOKEN
+  const [streetShots, setStreetShots] = useState<string[]>([])
+  const [streetStatus, setStreetStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      if (!mapillaryToken) {
+        setStreetShots([])
+        setStreetStatus('idle')
+        return
+      }
+
+      setStreetStatus('loading')
+      try {
+        // Small bbox around the point (degrees). ~0.001 ≈ 100m (varies with latitude)
+        const d = 0.001
+        const minLon = longitude - d
+        const minLat = latitude - d
+        const maxLon = longitude + d
+        const maxLat = latitude + d
+
+        const url =
+          `https://graph.mapillary.com/images` +
+          `?fields=id,thumb_1024_url` +
+          `&bbox=${minLon},${minLat},${maxLon},${maxLat}` +
+          `&limit=6` +
+          `&access_token=${encodeURIComponent(mapillaryToken)}`
+
+        // Using access_token in query avoids CORS issues in some environments
+        const res = await fetch(url)
+        if (!res.ok) throw new Error(`Mapillary ${res.status}`)
+        const json = await res.json()
+        const urls = (json?.data || [])
+          .map((x: any) => x?.thumb_1024_url)
+          .filter(Boolean)
+          .slice(0, 3)
+
+        if (cancelled) return
+        setStreetShots(urls)
+        setStreetStatus('ready')
+      } catch (e) {
+        if (cancelled) return
+        setStreetShots([])
+        setStreetStatus('error')
+      }
+    }
+
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [latitude, longitude, mapillaryToken])
+
+  const mapPreview = `https://staticmap.openstreetmap.de/staticmap.php?center=${latitude},${longitude}&zoom=16&size=640x360&maptype=mapnik&markers=${latitude},${longitude},lightblue1`
+  const creatorImages = (imageUrl ? [imageUrl] : []).filter(Boolean)
+  const images = [...streetShots, mapPreview, ...creatorImages]
+
+  const current = images[Math.min(idx, images.length - 1)]
+  const canPrev = idx > 0
+  const canNext = idx < images.length - 1
+
+  const labelForIdx = (i: number) => {
+    if (streetShots.length > 0 && i < streetShots.length) return 'Foto zona (Mapillary)'
+    if (i === streetShots.length) return 'Preview zona (mappa)'
+    return 'Foto del creatore'
+  }
+
+  return (
+    <div className="mb-4">
+      <div className="relative rounded-2xl overflow-hidden border border-sky-200 dark:border-sky-800 bg-white/50 dark:bg-gray-900/30">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={current}
+          alt={title}
+          className="w-full h-40 object-cover"
+          loading="lazy"
+          referrerPolicy="no-referrer"
+        />
+        {images.length > 1 && (
+          <div className="absolute inset-0 flex items-center justify-between px-2">
+            <button
+              type="button"
+              onClick={() => setIdx((v) => Math.max(0, v - 1))}
+              disabled={!canPrev}
+              className={cn(
+                "px-2 py-1 rounded-lg text-xs font-semibold backdrop-blur-sm border transition-all",
+                canPrev
+                  ? "bg-white/70 dark:bg-gray-800/70 border-sky-200 dark:border-sky-800 text-slate-800 dark:text-slate-100 hover:bg-white/90"
+                  : "bg-white/40 dark:bg-gray-900/40 border-sky-200/60 dark:border-sky-800/60 text-slate-400 cursor-not-allowed"
+              )}
+            >
+              Prev
+            </button>
+            <button
+              type="button"
+              onClick={() => setIdx((v) => Math.min(images.length - 1, v + 1))}
+              disabled={!canNext}
+              className={cn(
+                "px-2 py-1 rounded-lg text-xs font-semibold backdrop-blur-sm border transition-all",
+                canNext
+                  ? "bg-white/70 dark:bg-gray-800/70 border-sky-200 dark:border-sky-800 text-slate-800 dark:text-slate-100 hover:bg-white/90"
+                  : "bg-white/40 dark:bg-gray-900/40 border-sky-200/60 dark:border-sky-800/60 text-slate-400 cursor-not-allowed"
+              )}
+            >
+              Next
+            </button>
+          </div>
+        )}
+      </div>
+      <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+        {labelForIdx(idx)}
+        {images.length > 1 ? ` • ${idx + 1}/${images.length}` : ''}
+        {!mapillaryToken ? ' • (Per foto reali: aggiungi NEXT_PUBLIC_MAPILLARY_TOKEN)' : ''}
+        {mapillaryToken && streetStatus === 'loading' ? ' • (carico foto...)' : ''}
+        {mapillaryToken && streetStatus === 'error' ? ' • (foto non disponibili qui)' : ''}
+      </div>
+    </div>
+  )
+}
+
 // FORM NUOVO ANNUNCIO
 function NewPostForm({ onSubmit, selectedLocation, t }: { onSubmit: (data: any) => void, selectedLocation?: { lat: number; lng: number } | null, t: (key: string) => string }) {
   const [title, setTitle] = useState("")
@@ -321,6 +516,7 @@ function NewPostForm({ onSubmit, selectedLocation, t }: { onSubmit: (data: any) 
   const [locationResults, setLocationResults] = useState<any[]>([])
   const [showLocationResults, setShowLocationResults] = useState(false)
   const [loadingLocation, setLoadingLocation] = useState(false)
+  const [imageUrl, setImageUrl] = useState("")
 
   useEffect(() => {
     if (selectedLocation) {
@@ -367,7 +563,7 @@ function NewPostForm({ onSubmit, selectedLocation, t }: { onSubmit: (data: any) 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!title || !description || !city || !lat || !lng) return
-    onSubmit({ title, description, type, city, lat: parseFloat(lat), lng: parseFloat(lng) })
+    onSubmit({ title, description, type, city, lat: parseFloat(lat), lng: parseFloat(lng), images: imageUrl ? [imageUrl] : [] })
     setTitle("")
     setDescription("")
     setCity("")
@@ -376,6 +572,7 @@ function NewPostForm({ onSubmit, selectedLocation, t }: { onSubmit: (data: any) 
     setLng("")
     setType("opportunity")
     setShowLocationResults(false)
+    setImageUrl("")
   }
 
   return (
@@ -475,6 +672,14 @@ function NewPostForm({ onSubmit, selectedLocation, t }: { onSubmit: (data: any) 
         <option value="opportunity">{t('map.marker.typeOpportunity')}</option>
         <option value="artist">{t('map.marker.typeCollaboration')}</option>
       </select>
+
+      <Input
+        type="url"
+        placeholder="URL foto (opzionale)"
+        value={imageUrl}
+        onChange={(e) => setImageUrl(e.target.value)}
+        className="border-2 border-sky-200 dark:border-sky-800 bg-white dark:bg-gray-900 rounded-xl"
+      />
       <Button
         type="submit"
         className="px-4 py-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white rounded-xl shadow-lg shadow-sky-500/30 transition-all hover:scale-105 font-semibold"

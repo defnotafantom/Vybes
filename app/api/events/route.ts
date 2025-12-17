@@ -18,7 +18,11 @@ export async function GET(request: Request) {
     let whereClause: any = {}
     let includeParticipants = false
 
-    if (status === 'upcoming') {
+    // Special "map" mode: show all published markers regardless of date
+    // (avoids "created now" markers being filtered out by millisecond drift)
+    if (status === 'map') {
+      whereClause.status = 'PUBLISHED'
+    } else if (status === 'upcoming') {
       whereClause.status = 'PUBLISHED'
       whereClause.startDate = { gte: new Date() }
     } else if (status === 'active') {
