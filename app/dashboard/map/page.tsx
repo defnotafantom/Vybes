@@ -13,7 +13,7 @@ import { useSession } from 'next-auth/react'
 import { useToast } from '@/hooks/use-toast'
 import { useLanguage } from '@/components/providers/language-provider'
 import { cn } from '@/lib/utils'
-import { prepareImageForUpload } from '@/lib/image-upload-client'
+import { prepareMediaForUpload } from '@/lib/image-upload-client'
 
 // Dynamically import Map component to avoid SSR issues with Leaflet
 const Map = dynamic(() => import('@/components/map/event-map'), { ssr: false })
@@ -807,7 +807,7 @@ function NewPostForm({ onSubmit, selectedLocation, t }: { onSubmit: (data: any) 
     if (imageFile) {
       setUploadingImage(true)
       try {
-        const prepared = await prepareImageForUpload(imageFile, 'events')
+        const prepared = await prepareMediaForUpload(imageFile, 'events')
         const fd = new FormData()
         fd.append('file', prepared)
         fd.append('folder', 'events')

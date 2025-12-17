@@ -11,7 +11,7 @@ import { useSession } from 'next-auth/react'
 import Image from 'next/image'
 import { useLanguage } from '@/components/providers/language-provider'
 import { useToast } from '@/hooks/use-toast'
-import { prepareImageForUpload } from '@/lib/image-upload-client'
+import { prepareMediaForUpload } from '@/lib/image-upload-client'
 
 export default function CreatePortfolioPage() {
   const router = useRouter()
@@ -57,7 +57,8 @@ export default function CreatePortfolioPage() {
     setLoading(true)
     try {
       // Upload file
-      const fileToUpload = type === 'IMAGE' ? await prepareImageForUpload(file, 'portfolio') : file
+      // Portfolio supports: images (optimized), GIF, video (validated)
+      const fileToUpload = await prepareMediaForUpload(file, 'portfolio')
       const uploadFormData = new FormData()
       uploadFormData.append('file', fileToUpload)
       uploadFormData.append('folder', 'portfolio')
