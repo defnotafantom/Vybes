@@ -251,11 +251,11 @@ export default function AuthPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 z-20 p-2 rounded-xl border border-sky-200/70 dark:border-sky-800/70 bg-white/80 dark:bg-gray-900/40 text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-colors shadow-sm"
                     aria-label={showPassword ? 'Nascondi password' : 'Mostra password'}
                     title={showPassword ? 'Nascondi password' : 'Mostra password'}
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
                 <PasswordStrength password={formData.password} />
@@ -279,11 +279,11 @@ export default function AuthPage() {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 z-20 p-2 rounded-xl border border-sky-200/70 dark:border-sky-800/70 bg-white/80 dark:bg-gray-900/40 text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-colors shadow-sm"
                     aria-label={showConfirmPassword ? 'Nascondi password' : 'Mostra password'}
                     title={showConfirmPassword ? 'Nascondi password' : 'Mostra password'}
                   >
-                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
                 {fieldError.confirmPassword && <div className="text-xs text-red-600 dark:text-red-400">{fieldError.confirmPassword}</div>}

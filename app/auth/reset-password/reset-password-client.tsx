@@ -108,11 +108,11 @@ export default function ResetPasswordClient() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 z-20 p-2 rounded-xl border border-sky-200/70 dark:border-sky-800/70 bg-white/80 dark:bg-gray-900/40 text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-colors shadow-sm"
                   aria-label={showPassword ? 'Nascondi password' : 'Mostra password'}
                   title={showPassword ? 'Nascondi password' : 'Mostra password'}
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
               <div className="text-xs text-slate-500 dark:text-slate-400">Minimo 8 caratteri.</div>
@@ -133,11 +133,11 @@ export default function ResetPasswordClient() {
                 <button
                   type="button"
                   onClick={() => setShowConfirm((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 z-20 p-2 rounded-xl border border-sky-200/70 dark:border-sky-800/70 bg-white/80 dark:bg-gray-900/40 text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-colors shadow-sm"
                   aria-label={showConfirm ? 'Nascondi password' : 'Mostra password'}
                   title={showConfirm ? 'Nascondi password' : 'Mostra password'}
                 >
-                  {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showConfirm ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
             </div>
