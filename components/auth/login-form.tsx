@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useToast } from '@/hooks/use-toast'
 import { useLanguage } from '@/components/providers/language-provider'
-import { User, RefreshCw } from 'lucide-react'
+import { Eye, EyeOff, User, RefreshCw } from 'lucide-react'
 
 interface UserPreview {
   id: string
@@ -32,6 +32,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   const { t } = useLanguage()
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [userPreview, setUserPreview] = useState<UserPreview | null>(null)
   const [useAvatar, setUseAvatar] = useState(false)
@@ -215,16 +216,28 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         <Label htmlFor="password" className="text-slate-700 dark:text-slate-300">
           {t('common.password')}
         </Label>
-        <Input
-          id="password"
-          type="password"
-          placeholder={t('login.passwordPlaceholder')}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="bg-white/90 dark:bg-gray-700/90 backdrop-blur-sm border-2 border-sky-200 dark:border-sky-800 focus:border-sky-500 dark:focus:border-sky-500 rounded-xl transition-all shadow-sm hover:shadow-md focus:shadow-lg focus:ring-2 focus:ring-sky-500/20 relative z-10"
-          required
-          disabled={loading}
-        />
+        <div className="relative">
+          <Input
+            id="password"
+            type={showPassword ? 'text' : 'password'}
+            placeholder={t('login.passwordPlaceholder')}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="pr-12 bg-white/90 dark:bg-gray-700/90 backdrop-blur-sm border-2 border-sky-200 dark:border-sky-800 focus:border-sky-500 dark:focus:border-sky-500 rounded-xl transition-all shadow-sm hover:shadow-md focus:shadow-lg focus:ring-2 focus:ring-sky-500/20 relative z-10"
+            required
+            disabled={loading}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-colors"
+            aria-label={showPassword ? 'Nascondi password' : 'Mostra password'}
+            title={showPassword ? 'Nascondi password' : 'Mostra password'}
+            tabIndex={0}
+          >
+            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
       </motion.div>
 
       <motion.div
