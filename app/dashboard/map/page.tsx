@@ -240,11 +240,11 @@ export default function MapPage() {
         <div className="flex items-center gap-2">
           {canCreateMarker && (
             <button
+              data-guide="map-new-marker"
               onClick={() => {
                 setShowNewPost(true)
                 setSelectedLocation(null)
               }}
-              data-guide="map-new"
               className="px-3 md:px-4 py-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white rounded-xl shadow-lg shadow-sky-500/30 flex items-center justify-center gap-2 transition-all hover:scale-105 text-sm md:text-base whitespace-nowrap"
             >
               <Plus size={18} /> <span className="hidden sm:inline">{t('map.newMarker')}</span>
@@ -252,9 +252,10 @@ export default function MapPage() {
             </button>
           )}
 
-          <div className="relative flex-1" data-guide="map-search">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
             <Input
+              data-guide="map-search"
               type="text"
               placeholder={t('map.searchPlaceholder')}
               value={searchQuery}
@@ -274,7 +275,7 @@ export default function MapPage() {
             Filtri
           </button>
 
-          <div className="hidden sm:flex flex-wrap gap-2 justify-center" data-guide="map-filters">
+          <div className="hidden sm:flex flex-wrap gap-2 justify-center">
             <FilterChip active={filterKind === 'opportunity'} onClick={() => setFilterKind(filterKind === 'opportunity' ? 'all' : 'opportunity')}>
               Opportunità
             </FilterChip>
@@ -479,7 +480,6 @@ export default function MapPage() {
               initial={{ scale: 0, opacity: 0, x: 100 }}
               animate={{ scale: 1, opacity: 1, x: 0 }}
               exit={{ scale: 0, opacity: 0, x: 100 }}
-              data-guide="map-details"
               className="absolute right-0 top-0 h-full w-full sm:w-[380px] bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-xl border border-sky-200 dark:border-sky-800 p-4 z-20 flex flex-col gap-3"
             >
               <div className="flex justify-between items-start gap-3">
@@ -566,6 +566,7 @@ export default function MapPage() {
                   type="button"
                   disabled={contacting}
                   onClick={() => handleContact(selectedEvent)}
+                  data-guide="map-contact"
                   className={cn(
                     "flex-1 px-3 py-2 border-2 rounded-xl shadow transition-all font-semibold",
                     contacting

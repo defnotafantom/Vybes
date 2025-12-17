@@ -188,7 +188,7 @@ export default function MessagesPage() {
       <Card className={cn(
         "w-full md:w-80 flex flex-col bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-sky-100 dark:border-sky-900 shadow-xl",
         selectedConversation && "hidden md:flex"
-      )} data-guide="messages-list">
+      )}>
         <div className="p-4 border-b border-sky-200 dark:border-sky-800 bg-gradient-to-r from-sky-50 to-blue-50 dark:from-sky-900/30 dark:to-blue-900/30">
           <h2 className="text-xl font-black bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent mb-4">
             {t('messages.title')}
@@ -320,7 +320,7 @@ export default function MessagesPage() {
             </div>
 
             {/* Message Input */}
-            <form onSubmit={handleSendMessage} className="p-4 border-t border-sky-200 dark:border-sky-800 flex gap-2 bg-gradient-to-r from-sky-50 to-blue-50 dark:from-sky-900/30 dark:to-blue-900/30" data-guide="messages-compose">
+            <form onSubmit={handleSendMessage} className="p-4 border-t border-sky-200 dark:border-sky-800 flex gap-2 bg-gradient-to-r from-sky-50 to-blue-50 dark:from-sky-900/30 dark:to-blue-900/30">
               <Input
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
