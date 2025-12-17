@@ -251,7 +251,7 @@ export default function AuthPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 z-20 p-2 rounded-xl border border-sky-200/70 dark:border-sky-800/70 bg-white/80 dark:bg-gray-900/40 text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-colors shadow-sm"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 z-20 inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-gray-800/60 transition-colors"
                     aria-label={showPassword ? 'Nascondi password' : 'Mostra password'}
                     title={showPassword ? 'Nascondi password' : 'Mostra password'}
                   >
@@ -279,7 +279,7 @@ export default function AuthPage() {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 z-20 p-2 rounded-xl border border-sky-200/70 dark:border-sky-800/70 bg-white/80 dark:bg-gray-900/40 text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-colors shadow-sm"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 z-20 inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-gray-800/60 transition-colors"
                     aria-label={showConfirmPassword ? 'Nascondi password' : 'Mostra password'}
                     title={showConfirmPassword ? 'Nascondi password' : 'Mostra password'}
                   >
