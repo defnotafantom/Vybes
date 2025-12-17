@@ -5,13 +5,11 @@ import bcrypt from 'bcryptjs'
 
 type UserRole = 'DEFAULT' | 'ARTIST' | 'RECRUITER' | 'ARTIST_RECRUITER'
 
-// Validate required environment variables (keep logs minimal in production)
+// Validate required environment variables (runtime-safe)
+// IMPORTANT: Do not throw at module import time, otherwise Next.js can fail builds
+// when importing this file during "Collecting page data".
 if (!process.env.NEXTAUTH_SECRET) {
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('NEXTAUTH_SECRET is not set (required in production).')
-  } else {
-    console.warn('⚠️ NEXTAUTH_SECRET is not set. Auth may be unstable in development.')
-  }
+  console.warn('⚠️ NEXTAUTH_SECRET is not set. Authentication will fail at runtime until it is configured.')
 }
 
 if (!process.env.NEXTAUTH_URL && process.env.NODE_ENV === 'production') {
