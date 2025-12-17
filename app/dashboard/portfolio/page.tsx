@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Plus, Image as ImageIcon, Video, FileText } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
+import { useLanguage } from '@/components/providers/language-provider'
 
 interface PortfolioItem {
   id: string
@@ -21,6 +22,7 @@ interface PortfolioItem {
 
 export default function PortfolioPage() {
   const { data: session } = useSession()
+  const { t } = useLanguage()
   const [items, setItems] = useState<PortfolioItem[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -48,14 +50,14 @@ export default function PortfolioPage() {
     return (
       <div className="text-center py-12">
         <p className="text-muted-foreground">
-          Questa sezione è disponibile solo per gli artisti
+          {t('portfolio.onlyArtists')}
         </p>
       </div>
     )
   }
 
   if (loading) {
-    return <div className="text-center py-12">Caricamento portfolio...</div>
+    return <div className="text-center py-12">{t('portfolio.loading')}</div>
   }
 
   return (
@@ -63,16 +65,16 @@ export default function PortfolioPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-black bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">
-            Portfolio
+            {t('portfolio.title')}
           </h1>
           <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 mt-1">
-            Mostra la tua arte al mondo
+            {t('portfolio.description')}
           </p>
         </div>
         <Link href="/dashboard/portfolio/create">
           <Button className="w-full sm:w-auto bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white shadow-lg shadow-sky-500/30">
             <Plus className="h-4 w-4 mr-2" />
-            Aggiungi Opera
+            {t('portfolio.add')}
           </Button>
         </Link>
       </div>
@@ -84,11 +86,11 @@ export default function PortfolioPage() {
               <ImageIcon className="h-10 w-10 text-sky-600 dark:text-sky-400" />
             </div>
             <p className="text-slate-600 dark:text-slate-400 mb-6 text-lg">
-              Il tuo portfolio è vuoto
+              {t('portfolio.empty')}
             </p>
             <Button className="bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white shadow-lg shadow-sky-500/30">
               <Plus className="h-4 w-4 mr-2" />
-              Aggiungi la tua prima opera
+              {t('profile.portfolio.addFirst')}
             </Button>
           </CardContent>
         </Card>

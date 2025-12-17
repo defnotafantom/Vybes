@@ -9,8 +9,26 @@ import { Toaster } from '@/components/ui/toaster'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Vybes - Diffusione Culturale Artistica',
-  description: 'Connetti artisti, recruiter e appassionati d\'arte',
+  metadataBase: new URL(process.env.NEXTAUTH_URL || 'http://localhost:3000'),
+  title: {
+    default: 'Vybes',
+    template: '%s · Vybes',
+  },
+  description: "Bridging Culture & Opportunity — connect artists, recruiters, and culture lovers.",
+  applicationName: 'Vybes',
+  keywords: ['vybes', 'artists', 'recruiters', 'events', 'collaborations', 'culture', 'art'],
+  openGraph: {
+    type: 'website',
+    siteName: 'Vybes',
+    title: 'Vybes',
+    description: "Bridging Culture & Opportunity — connect artists, recruiters, and culture lovers.",
+    url: '/',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Vybes',
+    description: "Bridging Culture & Opportunity — connect artists, recruiters, and culture lovers.",
+  },
 }
 
 export default function RootLayout({

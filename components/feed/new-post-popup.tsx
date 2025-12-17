@@ -5,6 +5,8 @@ import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { motion, AnimatePresence } from "framer-motion"
+import { useLanguage } from "@/components/providers/language-provider"
+import { useToast } from "@/hooks/use-toast"
 
 interface Tag {
   id: number | string
@@ -19,6 +21,8 @@ interface NewPostPopupProps {
 }
 
 export function NewPostPopup({ isOpen, onClose, artTags = [], onPostSubmit }: NewPostPopupProps) {
+  const { t } = useLanguage()
+  const { toast } = useToast()
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [tags, setTags] = useState<string[]>([])
@@ -49,7 +53,7 @@ export function NewPostPopup({ isOpen, onClose, artTags = [], onPostSubmit }: Ne
           const uploadData = await uploadResponse.json()
           fileUrl = uploadData.url
         } else {
-          throw new Error('Errore nel caricamento del file')
+          throw new Error(t('feed.newPost.uploadError'))
         }
       }
       
@@ -61,7 +65,11 @@ export function NewPostPopup({ isOpen, onClose, artTags = [], onPostSubmit }: Ne
       onClose()
     } catch (error) {
       console.error("Error submitting post:", error)
-      alert("Errore nella pubblicazione del post. Riprova.")
+      toast({
+        title: t('toast.genericError'),
+        description: t('feed.newPost.retry'),
+        variant: 'destructive',
+      })
     } finally {
       setLoading(false)
     }
@@ -86,7 +94,7 @@ export function NewPostPopup({ isOpen, onClose, artTags = [], onPostSubmit }: Ne
               className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl w-full max-w-lg rounded-2xl shadow-2xl border border-sky-100 dark:border-sky-900 p-6 relative"
             >
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Nuovo Post</h2>
+                <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">{t('feed.newPost.title')}</h2>
                 <button
                   onClick={onClose}
                   className="p-2 rounded-lg hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-colors"
@@ -98,21 +106,21 @@ export function NewPostPopup({ isOpen, onClose, artTags = [], onPostSubmit }: Ne
               <div className="space-y-4">
                 <Input
                   type="text"
-                  placeholder="Titolo"
+                  placeholder={t('common.title')}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="bg-white dark:bg-gray-700 border-2 border-sky-200 dark:border-sky-800"
                 />
 
                 <textarea
-                  placeholder="Descrizione"
+                  placeholder={t('common.description')}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="w-full min-h-[120px] rounded-xl border-2 border-sky-200 dark:border-sky-800 bg-white dark:bg-gray-700 px-4 py-3 text-sm ring-offset-background placeholder:text-slate-400 dark:placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:border-sky-500 transition-all resize-none"
                 />
 
                 <label className="block">
-                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 block">File:</span>
+                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 block">{t('feed.newPost.fileLabel')}:</span>
                   <input
                     type="file"
                     onChange={(e) => setFile(e.target.files?.[0] || null)}
@@ -121,7 +129,7 @@ export function NewPostPopup({ isOpen, onClose, artTags = [], onPostSubmit }: Ne
                 </label>
 
                 <div>
-                  <p className="font-semibold mb-2 text-slate-700 dark:text-slate-300">Tags</p>
+                  <p className="font-semibold mb-2 text-slate-700 dark:text-slate-300">{t('feed.newPost.tags')}</p>
                   <div className="flex gap-2 flex-wrap">
                     {artTags.map((tag) => (
                       <button
@@ -145,14 +153,14 @@ export function NewPostPopup({ isOpen, onClose, artTags = [], onPostSubmit }: Ne
 
                 <div className="flex justify-end gap-2 pt-4">
                   <Button onClick={onClose} variant="outline" disabled={loading}>
-                    Annulla
+                    {t('feed.newPost.cancel')}
                   </Button>
                   <Button
                     onClick={handleSubmit}
                     disabled={!title.trim() || !description.trim() || loading}
                     className="bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700"
                   >
-                    {loading ? "Pubblicazione..." : "Pubblica"}
+                    {loading ? t('feed.newPost.publishing') : t('feed.newPost.publish')}
                   </Button>
                 </div>
               </div>

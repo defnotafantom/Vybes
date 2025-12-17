@@ -16,6 +16,7 @@ import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import { it } from 'date-fns/locale'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useLanguage } from '@/components/providers/language-provider'
 
 interface Notification {
   id: string
@@ -29,6 +30,7 @@ interface Notification {
 
 export function NotificationBell() {
   const { data: session } = useSession()
+  const { t, language } = useLanguage()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(false)
@@ -108,14 +110,14 @@ export function NotificationBell() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-2 border-sky-200/50 dark:border-sky-800/50 shadow-2xl">
         <DropdownMenuLabel className="flex items-center justify-between">
-          <span>Notifiche</span>
+          <span>{t('settings.notifications.title')}</span>
           {unreadCount > 0 && (
             <button
               onClick={markAllAsRead}
               disabled={loading}
               className="text-xs text-sky-600 dark:text-sky-400 hover:underline"
             >
-              Segna tutte come lette
+              {t('notifications.markAllRead')}
             </button>
           )}
         </DropdownMenuLabel>
@@ -123,7 +125,7 @@ export function NotificationBell() {
         <div className="max-h-96 overflow-y-auto">
           {notifications.length === 0 ? (
             <div className="p-4 text-center text-sm text-slate-500 dark:text-slate-400">
-              Nessuna notifica
+              {t('notifications.empty')}
             </div>
           ) : (
             <AnimatePresence>
@@ -159,7 +161,7 @@ export function NotificationBell() {
                           <div className="text-xs text-slate-400 dark:text-slate-500">
                             {formatDistanceToNow(new Date(notification.createdAt), {
                               addSuffix: true,
-                              locale: it,
+                              locale: language === 'it' ? it : undefined,
                             })}
                           </div>
                         </div>
@@ -175,7 +177,7 @@ export function NotificationBell() {
                         <div className="text-xs text-slate-400 dark:text-slate-500">
                           {formatDistanceToNow(new Date(notification.createdAt), {
                             addSuffix: true,
-                            locale: it,
+                            locale: language === 'it' ? it : undefined,
                           })}
                         </div>
                       </div>
@@ -191,7 +193,7 @@ export function NotificationBell() {
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link href="/dashboard/notifications" className="w-full text-center justify-center text-sky-600 dark:text-sky-400">
-                Vedi tutte le notifiche
+                {t('notifications.viewAll')}
               </Link>
             </DropdownMenuItem>
           </>

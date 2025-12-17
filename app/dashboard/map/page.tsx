@@ -224,6 +224,7 @@ export default function MapPage() {
             events={filteredEvents} 
             onEventClick={(event) => setSelectedEvent(event)}
             onMapClick={handleMapClick}
+            locale={language === 'it' ? 'it-IT' : 'en-US'}
           />
           {canCreateMarker && !showNewPost && (
             <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm px-4 py-2 rounded-lg shadow-lg border border-sky-200 dark:border-sky-800 z-30 text-sm text-slate-600 dark:text-slate-400">

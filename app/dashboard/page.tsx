@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import Image from 'next/image'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -18,6 +18,7 @@ import { NewPostPopup } from '@/components/feed/new-post-popup'
 import { FeedCover, FeedSocial, FeedMasonry, FeedThreads } from '@/components/feed/feed-views'
 import { CollaborationPost } from '@/components/posts/collaboration-post'
 import { SearchBar } from '@/components/search/search-bar'
+import { useLanguage } from '@/components/providers/language-provider'
 
 interface Post {
   id: string
@@ -67,6 +68,7 @@ const feedWidth = {
 
 export default function DashboardFeed() {
   const { data: session } = useSession()
+  const { t } = useLanguage()
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
   const [newPost, setNewPost] = useState('')
@@ -95,24 +97,7 @@ export default function DashboardFeed() {
   const [hasMore, setHasMore] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
 
-  useEffect(() => {
-    fetchPosts()
-  }, [])
-
-  // Persist view mode and tags
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('homeViewMode', viewMode)
-    }
-  }, [viewMode])
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('homeSelectedTags', JSON.stringify(selectedTags))
-    }
-  }, [selectedTags])
-
-  const fetchPosts = async (page: number = 1) => {
+  const fetchPosts = useCallback(async (page: number = 1) => {
     try {
       const response = await fetch(`/api/posts?page=${page}&limit=20`)
       if (response.ok) {
@@ -129,7 +114,24 @@ export default function DashboardFeed() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchPosts(1)
+  }, [fetchPosts])
+
+  // Persist view mode and tags
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('homeViewMode', viewMode)
+    }
+  }, [viewMode])
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('homeSelectedTags', JSON.stringify(selectedTags))
+    }
+  }, [selectedTags])
 
   const handleCreatePost = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -144,7 +146,7 @@ export default function DashboardFeed() {
 
       if (response.ok) {
         setNewPost('')
-        fetchPosts()
+        fetchPosts(1)
       }
     } catch (error) {
       console.error('Error creating post:', error)
@@ -201,30 +203,43 @@ export default function DashboardFeed() {
   }
 
   const handleLike = async (postId: string) => {
+    // Optimistic update: avoid refetching the entire feed
+    setPosts(prev =>
+      prev.map(p => {
+        if (p.id !== postId) return p
+        const nextLiked = !p.liked
+        return { ...p, liked: nextLiked, likes: Math.max(0, p.likes + (nextLiked ? 1 : -1)) }
+      })
+    )
     try {
       const response = await fetch(`/api/posts/${postId}/like`, {
         method: 'POST',
       })
 
-      if (response.ok) {
-        fetchPosts()
+      if (!response.ok) {
+        // Rollback by refetching this page (safe fallback)
+        fetchPosts(1)
       }
     } catch (error) {
       console.error('Error liking post:', error)
+      fetchPosts(1)
     }
   }
 
   const handleSave = async (postId: string) => {
+    // Optimistic update
+    setPosts(prev => prev.map(p => (p.id === postId ? { ...p, saved: !p.saved } : p)))
     try {
       const response = await fetch(`/api/posts/${postId}/save`, {
         method: 'POST',
       })
 
-      if (response.ok) {
-        fetchPosts()
+      if (!response.ok) {
+        fetchPosts(1)
       }
     } catch (error) {
       console.error('Error saving post:', error)
+      fetchPosts(1)
     }
   }
 
@@ -277,7 +292,8 @@ export default function DashboardFeed() {
       if (response.ok) {
         setNewComment(prev => ({ ...prev, [postId]: '' }))
         fetchComments(postId)
-        fetchPosts()
+        // Update only the comment count locally instead of refetching the whole feed
+        setPosts(prev => prev.map(p => (p.id === postId ? { ...p, comments: p.comments + 1 } : p)))
       }
     } catch (error) {
       console.error('Error adding comment:', error)
@@ -508,7 +524,7 @@ export default function DashboardFeed() {
                   {expandedComments.has(post.id) && (
                     <div className="mt-4 pt-4 border-t border-sky-200 dark:border-sky-800 space-y-4">
                       {loadingComments.has(post.id) ? (
-                        <div className="text-center py-4 text-slate-500 dark:text-slate-400">Caricamento commenti...</div>
+                        <div className="text-center py-4 text-slate-500 dark:text-slate-400">{t('common.loading')}</div>
                       ) : (
                         <>
                           {comments[post.id]?.map((comment) => (
@@ -534,15 +550,15 @@ export default function DashboardFeed() {
                           ))}
                           {(!comments[post.id] || comments[post.id].length === 0) && (
                             <div className="text-center py-4 text-slate-500 dark:text-slate-400 text-sm">
-                              Nessun commento ancora. Sii il primo a commentare!
+                              {t('feed.comments.empty')}
                             </div>
                           )}
                           <form onSubmit={(e) => handleAddComment(post.id, e)} className="flex gap-2">
                             <Input
                               value={newComment[post.id] || ''}
                               onChange={(e) => setNewComment(prev => ({ ...prev, [post.id]: e.target.value }))}
-                              placeholder="Scrivi un commento..."
-                              className="flex-1 bg-white/90 dark:bg-gray-700/90 backdrop-blur-sm"
+                              placeholder={t('placeholder.comment')}
+                              className="flex-1"
                             />
                             <Button
                               type="submit"

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Calendar, MapPin, Users, Clock, Plus } from 'lucide-react'
@@ -8,6 +8,7 @@ import { useSession } from 'next-auth/react'
 import { formatDistanceToNow } from 'date-fns'
 import { it } from 'date-fns/locale'
 import Link from 'next/link'
+import { useLanguage } from '@/components/providers/language-provider'
 
 interface Event {
   id: string
@@ -27,6 +28,7 @@ interface Event {
 
 export default function EventsPage() {
   const { data: session } = useSession()
+  const { t, language } = useLanguage()
   const [events, setEvents] = useState<Event[]>([])
   const [activeTab, setActiveTab] = useState<'upcoming' | 'active' | 'completed' | 'saved'>('upcoming')
   const [loading, setLoading] = useState(true)
@@ -34,7 +36,7 @@ export default function EventsPage() {
   const [hasMore, setHasMore] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
 
-  const fetchEvents = async (page: number = 1) => {
+  const fetchEvents = useCallback(async (page: number = 1) => {
     try {
       const response = await fetch(`/api/events?status=${activeTab}&page=${page}&limit=20`)
       if (response.ok) {
@@ -51,13 +53,12 @@ export default function EventsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [activeTab])
 
   useEffect(() => {
     setCurrentPage(1)
     fetchEvents(1)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab])
+  }, [activeTab, fetchEvents])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -74,38 +75,33 @@ export default function EventsPage() {
 
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [hasMore, loading, currentPage])
-
-  useEffect(() => {
-    fetchEvents()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab])
+  }, [hasMore, loading, currentPage, fetchEvents])
 
   const tabs = [
-    { id: 'upcoming', label: 'Prossimi' },
-    { id: 'active', label: 'In Corso' },
-    { id: 'completed', label: 'Completati' },
-    { id: 'saved', label: 'Salvati' },
+    { id: 'upcoming', label: t('events.upcoming') },
+    { id: 'active', label: t('events.active') },
+    { id: 'completed', label: t('events.completed') },
+    { id: 'saved', label: t('events.saved') },
   ]
 
   if (loading) {
-    return <div className="text-center py-12">Caricamento eventi...</div>
+    return <div className="text-center py-12">{t('events.loadingPage')}</div>
   }
 
   return (
     <div className="space-y-4 md:space-y-6 w-full">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Eventi</h1>
+          <h1 className="text-2xl md:text-3xl font-bold">{t('events.pageTitle')}</h1>
           <p className="text-sm md:text-base text-muted-foreground">
-            Gestisci i tuoi eventi e opportunità
+            {t('events.pageSubtitle')}
           </p>
         </div>
         {session?.user?.role === 'RECRUITER' && (
           <Link href="/dashboard/events/create">
             <Button className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
-              Crea Evento
+              {t('events.createCta')}
             </Button>
           </Link>
         )}
@@ -133,7 +129,7 @@ export default function EventsPage() {
         {events.length === 0 ? (
           <Card className="col-span-full">
             <CardContent className="py-12 text-center text-muted-foreground">
-              Nessun evento trovato
+              {t('events.empty')}
             </CardContent>
           </Card>
         ) : (
@@ -161,11 +157,7 @@ export default function EventsPage() {
                     <Calendar className="h-4 w-4 text-sky-500" />
                     <span>
                       {new Date(event.startDate).toLocaleDateString('it-IT', {
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
+                        // locale set below
                       })}
                     </span>
                   </div>
@@ -175,14 +167,14 @@ export default function EventsPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-sky-500" />
-                    <span>{event.participants} partecipanti</span>
+                    <span>{event.participants} {t('events.participantsCount')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-sky-500" />
                     <span>
                       {formatDistanceToNow(new Date(event.startDate), {
                         addSuffix: true,
-                        locale: it,
+                        locale: language === 'it' ? it : undefined,
                       })}
                     </span>
                   </div>
@@ -191,7 +183,7 @@ export default function EventsPage() {
                 <div className="flex gap-2 pt-2">
                   <Link href={`/dashboard/events/${event.id}`} className="flex-1">
                     <Button variant="outline" className="w-full border-2 border-sky-300 dark:border-sky-700 hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:border-sky-500 dark:hover:border-sky-500 transition-all">
-                      Dettagli
+                      {t('events.detail')}
                     </Button>
                   </Link>
                   {session?.user?.role === 'ARTIST' && (
@@ -210,7 +202,7 @@ export default function EventsPage() {
                       }}
                       className="flex-1 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white shadow-lg shadow-sky-500/30 transition-all"
                     >
-                      Partecipa
+                      {t('events.participate')}
                     </Button>
                   )}
                 </div>

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Users, UserPlus, X } from 'lucide-react'
 import { useSession } from 'next-auth/react'
+import { useLanguage } from '@/components/providers/language-provider'
 
 interface CollaborationPostProps {
   onPostCreate: (data: {
@@ -19,6 +20,7 @@ interface CollaborationPostProps {
 
 export function CollaborationPost({ onPostCreate, onClose }: CollaborationPostProps) {
   const { data: session } = useSession()
+  const { t } = useLanguage()
   const [content, setContent] = useState('')
   const [selectedArtists, setSelectedArtists] = useState<Array<{ id: string; name: string; image: string | null }>>([])
   const [searchQuery, setSearchQuery] = useState('')
@@ -83,7 +85,7 @@ export function CollaborationPost({ onPostCreate, onClose }: CollaborationPostPr
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Users className="h-5 w-5 text-sky-500" />
-          Crea Collaborazione
+          {t('collab.title')}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -91,12 +93,12 @@ export function CollaborationPost({ onPostCreate, onClose }: CollaborationPostPr
           {/* Content */}
           <div>
             <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 block">
-              Descrizione Collaborazione *
+              {t('collab.descriptionLabel')} *
             </label>
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="Descrivi la collaborazione che vuoi proporre..."
+              placeholder={t('collab.descriptionPlaceholder')}
               rows={4}
               required
               className="w-full px-3 py-2 rounded-lg border border-sky-200 dark:border-sky-800 bg-white dark:bg-gray-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500"
@@ -106,7 +108,7 @@ export function CollaborationPost({ onPostCreate, onClose }: CollaborationPostPr
           {/* Artist Search */}
           <div>
             <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 block">
-              Invita Artisti *
+              {t('collab.inviteArtists')} *
             </label>
             <div className="space-y-2">
               <Input
@@ -115,7 +117,7 @@ export function CollaborationPost({ onPostCreate, onClose }: CollaborationPostPr
                   setSearchQuery(e.target.value)
                   searchArtists(e.target.value)
                 }}
-                placeholder="Cerca artisti da invitare..."
+                placeholder={t('collab.searchPlaceholder')}
                 className="bg-white dark:bg-gray-900"
               />
               {searchResults.length > 0 && (
@@ -148,7 +150,7 @@ export function CollaborationPost({ onPostCreate, onClose }: CollaborationPostPr
           {selectedArtists.length > 0 && (
             <div>
               <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 block">
-                Artisti Invitati ({selectedArtists.length})
+                {t('collab.invitedArtists')} ({selectedArtists.length})
               </label>
               <div className="flex flex-wrap gap-2">
                 {selectedArtists.map((artist) => (
@@ -186,14 +188,14 @@ export function CollaborationPost({ onPostCreate, onClose }: CollaborationPostPr
               onClick={onClose}
               className="flex-1"
             >
-              Annulla
+              {t('collab.cancel')}
             </Button>
             <Button
               type="submit"
               disabled={loading || !content.trim() || selectedArtists.length === 0}
               className="flex-1 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700"
             >
-              {loading ? 'Creazione...' : 'Crea Collaborazione'}
+              {loading ? t('collab.creating') : t('collab.create')}
             </Button>
           </div>
         </form>

@@ -30,6 +30,7 @@ interface EventMapProps {
   events: Event[]
   onEventClick: (event: Event) => void
   onMapClick?: (lat: number, lng: number) => void
+  locale?: string
 }
 
 function MapController({ center }: { center: [number, number] }) {
@@ -61,7 +62,7 @@ function MapClickHandler({ onMapClick }: { onMapClick?: (lat: number, lng: numbe
   return null
 }
 
-export default function EventMap({ events, onEventClick, onMapClick }: EventMapProps) {
+export default function EventMap({ events, onEventClick, onMapClick, locale = 'it-IT' }: EventMapProps) {
   const mapRef = useRef<L.Map>(null)
   
   // Default center (Italy)
@@ -122,7 +123,7 @@ export default function EventMap({ events, onEventClick, onMapClick }: EventMapP
               <h3 className="font-bold">{event.title}</h3>
               <p className="text-sm text-gray-600">{event.type}</p>
               <p className="text-xs text-gray-500 mt-1">
-                {new Date(event.startDate).toLocaleDateString('it-IT')}
+                {new Date(event.startDate).toLocaleDateString(locale)}
               </p>
             </div>
           </Popup>

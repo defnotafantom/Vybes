@@ -5,14 +5,17 @@ import bcrypt from 'bcryptjs'
 
 type UserRole = 'DEFAULT' | 'ARTIST' | 'RECRUITER' | 'ARTIST_RECRUITER'
 
-// Validate required environment variables
+// Validate required environment variables (keep logs minimal in production)
 if (!process.env.NEXTAUTH_SECRET) {
-  console.error('❌ NEXTAUTH_SECRET is not set. This will cause authentication to fail.')
-  console.error('Generate one with: openssl rand -base64 32')
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('NEXTAUTH_SECRET is not set (required in production).')
+  } else {
+    console.warn('⚠️ NEXTAUTH_SECRET is not set. Auth may be unstable in development.')
+  }
 }
 
 if (!process.env.NEXTAUTH_URL && process.env.NODE_ENV === 'production') {
-  console.warn('⚠️ NEXTAUTH_URL is not set in production. This may cause issues.')
+  console.warn('⚠️ NEXTAUTH_URL is not set in production. This may cause callback URL issues.')
 }
 
 export const authOptions: NextAuthOptions = {
@@ -24,14 +27,10 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' }
       },
       async authorize(credentials) {
-        console.log('🔐 Authorization attempt for:', credentials?.email)
-        
         if (!credentials?.email || !credentials?.password) {
-          console.log('❌ Missing credentials')
           return null
         }
 
-        console.log('🔍 Looking up user...')
         // Support both email and username login
         const isEmail = credentials.email.includes('@')
         const user = await prisma.user.findUnique({
@@ -41,34 +40,23 @@ export const authOptions: NextAuthOptions = {
         })
 
         if (!user) {
-          console.log('❌ User not found')
           return null
         }
-
-        console.log('👤 User found:', user.id, 'Email verified:', !!user.emailVerified)
 
         // In development, allow login without email verification if NODE_ENV is development
         if (!user.emailVerified && process.env.NODE_ENV === 'production') {
-          console.log('❌ Email not verified (production mode)')
           return null
         }
 
-        if (!user.emailVerified) {
-          console.log('⚠️ Email not verified (development mode - allowing anyway)')
-        }
-
-        console.log('🔐 Checking password...')
         const isPasswordValid = await bcrypt.compare(
           credentials.password,
           user.password
         )
 
         if (!isPasswordValid) {
-          console.log('❌ Invalid password')
           return null
         }
 
-        console.log('✅ Authorization successful')
         return {
           id: user.id,
           email: user.email,
@@ -101,7 +89,7 @@ export const authOptions: NextAuthOptions = {
       return session
     },
   },
-  secret: process.env.NEXTAUTH_SECRET || 'fallback-secret-for-development-only',
+  secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === 'development',
 }
 

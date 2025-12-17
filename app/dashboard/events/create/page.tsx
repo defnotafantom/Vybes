@@ -7,10 +7,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
+import { useLanguage } from '@/components/providers/language-provider'
 
 export default function CreateEventPage() {
   const router = useRouter()
   const { toast } = useToast()
+  const { t } = useLanguage()
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     title: '',
@@ -45,17 +47,17 @@ export default function CreateEventPage() {
 
       if (response.ok) {
         toast({
-          title: 'Successo',
-          description: 'Evento creato con successo',
+          title: t('events.create.successTitle'),
+          description: t('events.create.successDesc'),
         })
         router.push('/dashboard/events')
       } else {
         const data = await response.json()
-        throw new Error(data.error || 'Errore nella creazione dell\'evento')
+        throw new Error(data.error || t('events.create.errorDefault'))
       }
     } catch (error: any) {
       toast({
-        title: 'Errore',
+        title: t('events.create.errorTitle'),
         description: error.message,
         variant: 'destructive',
       })
@@ -67,23 +69,23 @@ export default function CreateEventPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Crea Evento</h1>
+        <h1 className="text-3xl font-bold">{t('events.create.title')}</h1>
         <p className="text-muted-foreground">
-          Crea un nuovo evento o opportunità
+          {t('events.create.subtitle')}
         </p>
       </div>
 
       <form onSubmit={handleSubmit}>
         <Card>
           <CardHeader>
-            <CardTitle>Informazioni Base</CardTitle>
+            <CardTitle>{t('events.create.baseInfo')}</CardTitle>
             <CardDescription>
-              Dettagli principali dell&apos;evento
+              {t('events.create.baseInfoDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Titolo *</Label>
+              <Label htmlFor="title">{t('common.title')} *</Label>
               <Input
                 id="title"
                 value={formData.title}
@@ -92,7 +94,7 @@ export default function CreateEventPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="description">Descrizione *</Label>
+              <Label htmlFor="description">{t('events.description')} *</Label>
               <textarea
                 id="description"
                 className="w-full min-h-[120px] rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -102,17 +104,17 @@ export default function CreateEventPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="type">Tipo</Label>
+              <Label htmlFor="type">{t('events.create.type')}</Label>
               <select
                 id="type"
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 value={formData.type}
                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
               >
-                <option value="event">Evento</option>
-                <option value="job">Lavoro</option>
-                <option value="collaboration">Collaborazione</option>
-                <option value="training">Formazione</option>
+                <option value="event">{t('events.create.type.event')}</option>
+                <option value="job">{t('events.create.type.job')}</option>
+                <option value="collaboration">{t('events.create.type.collaboration')}</option>
+                <option value="training">{t('events.create.type.training')}</option>
               </select>
             </div>
           </CardContent>
@@ -120,12 +122,12 @@ export default function CreateEventPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Posizione</CardTitle>
+            <CardTitle>{t('events.create.location')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="address">Indirizzo</Label>
+                <Label htmlFor="address">{t('events.address')}</Label>
                 <Input
                   id="address"
                   value={formData.address}
@@ -133,7 +135,7 @@ export default function CreateEventPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="city">Città *</Label>
+                <Label htmlFor="city">{t('events.city')} *</Label>
                 <Input
                   id="city"
                   value={formData.city}
@@ -144,7 +146,7 @@ export default function CreateEventPage() {
             </div>
             <div className="grid md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="country">Paese</Label>
+                <Label htmlFor="country">{t('events.country')}</Label>
                 <Input
                   id="country"
                   value={formData.country}
@@ -152,7 +154,7 @@ export default function CreateEventPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="latitude">Latitudine *</Label>
+                <Label htmlFor="latitude">{t('common.latitude')} *</Label>
                 <Input
                   id="latitude"
                   type="number"
@@ -163,7 +165,7 @@ export default function CreateEventPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="longitude">Longitudine *</Label>
+                <Label htmlFor="longitude">{t('common.longitude')} *</Label>
                 <Input
                   id="longitude"
                   type="number"
@@ -179,12 +181,12 @@ export default function CreateEventPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Data e Ora</CardTitle>
+            <CardTitle>{t('events.create.dateTime')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="startDate">Data/Ora Inizio *</Label>
+                <Label htmlFor="startDate">{t('events.create.startDateTime')} *</Label>
                 <Input
                   id="startDate"
                   type="datetime-local"
@@ -194,7 +196,7 @@ export default function CreateEventPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="endDate">Data/Ora Fine</Label>
+                <Label htmlFor="endDate">{t('events.create.endDateTime')}</Label>
                 <Input
                   id="endDate"
                   type="datetime-local"
@@ -208,11 +210,11 @@ export default function CreateEventPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Dettagli Aggiuntivi</CardTitle>
+            <CardTitle>{t('events.create.extraDetails')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="requirements">Requisiti</Label>
+              <Label htmlFor="requirements">{t('events.requirements')}</Label>
               <textarea
                 id="requirements"
                 className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -222,7 +224,7 @@ export default function CreateEventPage() {
             </div>
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="compensation">Compenso</Label>
+                <Label htmlFor="compensation">{t('events.compensation')}</Label>
                 <Input
                   id="compensation"
                   value={formData.compensation}
@@ -230,7 +232,7 @@ export default function CreateEventPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="maxParticipants">Max Partecipanti</Label>
+                <Label htmlFor="maxParticipants">{t('events.maxParticipants')}</Label>
                 <Input
                   id="maxParticipants"
                   type="number"

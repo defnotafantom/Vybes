@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress'
 import { Trophy, CheckCircle, Circle, Star } from 'lucide-react'
 import { useSession } from 'next-auth/react'
+import { useLanguage } from '@/components/providers/language-provider'
 
 interface Quest {
   id: string
@@ -23,6 +24,7 @@ interface Quest {
 
 export default function QuestsPage() {
   const { data: session } = useSession()
+  const { t } = useLanguage()
   const [quests, setQuests] = useState<Quest[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -45,7 +47,7 @@ export default function QuestsPage() {
   }
 
   if (loading) {
-    return <div className="text-center py-12">Caricamento missioni...</div>
+    return <div className="text-center py-12">{t('quests.loading')}</div>
   }
 
   const completedQuests = quests.filter(q => q.progress?.completed)
@@ -56,10 +58,10 @@ export default function QuestsPage() {
     <div className="max-w-4xl mx-auto space-y-4 md:space-y-6 w-full px-2">
       <div>
         <h1 className="text-3xl font-black bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">
-          Missioni
+          {t('quests.title')}
         </h1>
         <p className="text-slate-600 dark:text-slate-400 mt-1">
-          Completa le missioni per guadagnare esperienza e aumentare la tua reputazione
+          {t('quests.subtitle')}
         </p>
       </div>
 
@@ -71,7 +73,7 @@ export default function QuestsPage() {
               <Trophy className="h-10 w-10 text-yellow-500 fill-yellow-500" />
               <div>
                 <div className="text-3xl font-black text-slate-800 dark:text-slate-100">{completedQuests.length}</div>
-                <div className="text-sm text-slate-600 dark:text-slate-400 font-medium">Completate</div>
+                <div className="text-sm text-slate-600 dark:text-slate-400 font-medium">{t('quests.stats.completed')}</div>
               </div>
             </div>
           </CardContent>
@@ -82,7 +84,7 @@ export default function QuestsPage() {
               <Circle className="h-10 w-10 text-blue-500 fill-blue-500" />
               <div>
                 <div className="text-3xl font-black text-slate-800 dark:text-slate-100">{activeQuests.length}</div>
-                <div className="text-sm text-slate-600 dark:text-slate-400 font-medium">In Corso</div>
+                <div className="text-sm text-slate-600 dark:text-slate-400 font-medium">{t('quests.stats.active')}</div>
               </div>
             </div>
           </CardContent>
@@ -93,7 +95,7 @@ export default function QuestsPage() {
               <Circle className="h-10 w-10 text-slate-400" />
               <div>
                 <div className="text-3xl font-black text-slate-800 dark:text-slate-100">{availableQuests.length}</div>
-                <div className="text-sm text-slate-600 dark:text-slate-400 font-medium">Disponibili</div>
+                <div className="text-sm text-slate-600 dark:text-slate-400 font-medium">{t('quests.stats.available')}</div>
               </div>
             </div>
           </CardContent>
@@ -104,7 +106,7 @@ export default function QuestsPage() {
       {activeQuests.length > 0 && (
         <div>
           <h2 className="text-2xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-            Missioni in Corso
+            {t('quests.activeTitle')}
           </h2>
           <div className="space-y-4">
             {activeQuests.map((quest) => (
@@ -128,7 +130,7 @@ export default function QuestsPage() {
                 <CardContent className="space-y-4 pt-6">
                   <div>
                     <div className="flex justify-between text-sm mb-2 text-slate-700 dark:text-slate-300">
-                      <span className="font-medium">Progresso</span>
+                      <span className="font-medium">{t('quests.progress')}</span>
                       <span className="font-semibold">
                         {quest.progress!.progress} / {quest.progress!.maxProgress}
                       </span>

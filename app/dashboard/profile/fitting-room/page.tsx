@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ShoppingBag, Coins, Check, Lock, Image as ImageIcon } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import Image from 'next/image'
+import { useLanguage } from '@/components/providers/language-provider'
 
 interface AvatarItem {
   id: string
@@ -32,17 +33,18 @@ interface AvatarConfig {
 }
 
 const CATEGORIES = [
-  { id: 'face', label: 'Faccia', icon: '😊' },
-  { id: 'eyes', label: 'Occhi', icon: '👁️' },
-  { id: 'hair', label: 'Capelli', icon: '💇' },
-  { id: 'top', label: 'Busto', icon: '👕' },
-  { id: 'bottom', label: 'Pantaloni', icon: '👖' },
-  { id: 'accessories', label: 'Accessori', icon: '👓' },
+  { id: 'face', labelKey: 'avatar.category.face', icon: '😊' },
+  { id: 'eyes', labelKey: 'avatar.category.eyes', icon: '👁️' },
+  { id: 'hair', labelKey: 'avatar.category.hair', icon: '💇' },
+  { id: 'top', labelKey: 'avatar.category.top', icon: '👕' },
+  { id: 'bottom', labelKey: 'avatar.category.bottom', icon: '👖' },
+  { id: 'accessories', labelKey: 'avatar.category.accessories', icon: '👓' },
 ]
 
 export default function FittingRoomPage() {
   const { data: session } = useSession()
   const { toast } = useToast()
+  const { t } = useLanguage()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [purchasing, setPurchasing] = useState<string | null>(null)
@@ -96,8 +98,8 @@ export default function FittingRoomPage() {
     // Only allow selection of owned items
     if (!item.owned) {
       toast({
-        title: 'Item non posseduto',
-        description: 'Devi acquistare questo item prima di usarlo',
+        title: t('toast.itemNotOwned'),
+        description: t('avatar.itemNotOwned'),
         variant: 'destructive',
       })
       return
@@ -123,23 +125,23 @@ export default function FittingRoomPage() {
 
       if (response.ok) {
         toast({
-          title: '✅ Acquisto completato',
+          title: t('toast.purchaseSuccess'),
           description: `${data.ownership.item.name} acquistato con successo!`,
         })
         setCoins(data.coins)
         await fetchItems() // Refresh items to update ownership
       } else {
         toast({
-          title: '❌ Errore acquisto',
-          description: data.error || 'Errore durante l\'acquisto',
+          title: t('toast.purchaseError'),
+          description: data.error || t('toast.purchaseError'),
           variant: 'destructive',
         })
       }
     } catch (error) {
       console.error('Error purchasing item:', error)
       toast({
-        title: '❌ Errore',
-        description: 'Errore durante l\'acquisto',
+        title: t('toast.genericError'),
+        description: t('toast.purchaseError'),
         variant: 'destructive',
       })
     } finally {
@@ -163,21 +165,21 @@ export default function FittingRoomPage() {
 
       if (response.ok) {
         toast({
-          title: '✅ Avatar salvato',
-          description: 'La configurazione del tuo avatar è stata salvata',
+          title: t('toast.avatarSaved'),
+          description: t('toast.avatarConfigSaved'),
         })
       } else {
         toast({
-          title: '❌ Errore',
-          description: 'Errore durante il salvataggio',
+          title: t('toast.avatarError'),
+          description: t('toast.avatarSaveError'),
           variant: 'destructive',
         })
       }
     } catch (error) {
       console.error('Error saving avatar:', error)
       toast({
-        title: '❌ Errore',
-        description: 'Errore durante il salvataggio',
+        title: t('toast.avatarError'),
+        description: t('toast.avatarSaveError'),
         variant: 'destructive',
       })
     } finally {
@@ -215,7 +217,7 @@ export default function FittingRoomPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-slate-600 dark:text-slate-400">Caricamento...</div>
+        <div className="text-slate-600 dark:text-slate-400">{t('minichat.loading')}</div>
       </div>
     )
   }
@@ -231,10 +233,10 @@ export default function FittingRoomPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-black bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">
-              Fitting Room
+              {t('profile.avatar.open')}
             </h1>
             <p className="text-slate-600 dark:text-slate-400 mt-2">
-              Personalizza il tuo avatar 3D
+              {t('profile.avatar.description')}
             </p>
           </div>
           
@@ -251,7 +253,7 @@ export default function FittingRoomPage() {
           {/* Avatar Preview */}
           <Card className="lg:col-span-1">
             <CardHeader>
-              <CardTitle>Anteprima Avatar</CardTitle>
+              <CardTitle>{t('avatar.previewTitle')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Avatar Display - Placeholder for 3D renderer */}
@@ -259,10 +261,10 @@ export default function FittingRoomPage() {
                 <div className="text-center">
                   <ImageIcon className="h-16 w-16 text-sky-400 dark:text-sky-600 mx-auto mb-2" />
                   <p className="text-sm text-slate-600 dark:text-slate-400">
-                    Preview Avatar 3D
+                    {t('avatar.preview3d')}
                   </p>
                   <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">
-                    (Render 3D da implementare)
+                    {t('avatar.preview3dNote')}
                   </p>
                 </div>
               </div>
@@ -270,7 +272,7 @@ export default function FittingRoomPage() {
               {/* Toggle Use Avatar */}
               <div className="flex items-center justify-between p-3 bg-sky-50 dark:bg-sky-900/20 rounded-lg border border-sky-200 dark:border-sky-800">
                 <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Usa Avatar invece di immagine profilo
+                  {t('avatar.useAvatarInstead')}
                 </span>
                 <Button
                   variant={useAvatar ? "default" : "outline"}
@@ -278,7 +280,7 @@ export default function FittingRoomPage() {
                   onClick={() => setUseAvatar(!useAvatar)}
                   className={useAvatar ? "bg-sky-500 hover:bg-sky-600" : ""}
                 >
-                  {useAvatar ? 'Attivo' : 'Inattivo'}
+                  {useAvatar ? t('common.active') : t('common.inactive')}
                 </Button>
               </div>
 
@@ -288,7 +290,7 @@ export default function FittingRoomPage() {
                 disabled={saving}
                 className="w-full bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700"
               >
-                {saving ? 'Salvataggio...' : 'Salva Configurazione'}
+                {saving ? t('avatar.saving') : t('avatar.saveConfig')}
               </Button>
             </CardContent>
           </Card>
@@ -296,7 +298,7 @@ export default function FittingRoomPage() {
           {/* Items Selection */}
           <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle>Personalizza Avatar</CardTitle>
+              <CardTitle>{t('avatar.customizeTitle')}</CardTitle>
             </CardHeader>
             <CardContent>
               <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
@@ -304,7 +306,7 @@ export default function FittingRoomPage() {
                   {CATEGORIES.map((cat) => (
                     <TabsTrigger key={cat.id} value={cat.id} className="flex flex-col gap-1">
                       <span className="text-xl">{cat.icon}</span>
-                      <span className="text-xs">{cat.label}</span>
+                      <span className="text-xs">{t(cat.labelKey)}</span>
                     </TabsTrigger>
                   ))}
                 </TabsList>
@@ -326,7 +328,7 @@ export default function FittingRoomPage() {
                                   {selectedItem.name}
                                 </p>
                                 <p className="text-sm text-slate-600 dark:text-slate-400">
-                                  Attualmente selezionato
+                                  {t('avatar.currentlySelected')}
                                 </p>
                               </div>
                             </div>

@@ -13,18 +13,16 @@ export function Logo() {
     >
       <motion.div
         className="relative"
-        animate={{ y: [0, -30, 0] }}
-        whileHover={{ 
-          rotate: 360,
-        }}
-        transition={{ 
-          duration: 5,  
-          ease: 'easeIn', 
-          y: { duration: 3, repeat: Infinity }
+        animate={{ y: [0, -14, 0] }}
+        whileHover={{ scale: 1.03, rotate: 2 }}
+        transition={{
+          y: { duration: 4, repeat: Infinity, ease: 'easeInOut' },
+          scale: { duration: 0.2 },
+          rotate: { duration: 0.2 },
         }}
       >
         <Image
-          className="w-40 h-40 md:w-52 md:h-52 lg:w-64 lg:h-64 object-contain drop-shadow-2xl"
+          className="w-36 h-36 sm:w-40 sm:h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 object-contain drop-shadow-2xl"
           alt="Vybes logo - abstract artistic design"
           src="https://i.imgur.com/gGwB8VE.png"
           width={256}
@@ -34,14 +32,12 @@ export function Logo() {
 
       <div className="text-center space-y-1 relative z-20">
         <h1 
-          className="text-6xl md:text-5xl lg:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-600 to-blue-600 tracking-tight leading-[1.15] mb-2"
-          style={{ fontSize: '4rem', lineHeight: '1', paddingBottom: '0.2em' }}
+          className="text-5xl sm:text-6xl lg:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-600 to-blue-600 tracking-tight leading-none"
         >
           Vybes
         </h1>
         <p 
-          className="text-sm md:text-base font-semibold text-slate-600 tracking-widest uppercase relative z-10"
-          style={{ lineHeight: '0', paddingTop: '0.01em' }}
+          className="text-xs sm:text-sm md:text-base font-semibold text-slate-600 dark:text-slate-300 tracking-[0.22em] uppercase"
         >
           Bridging Culture & Opportunity
         </p>

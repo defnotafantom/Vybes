@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -70,6 +70,40 @@ export default function ProfilePage() {
     }
   }, [session])
 
+  const fetchEvents = useCallback(async () => {
+    if (!profile?.isOwnProfile) return
+
+    setLoadingEvents(true)
+    try {
+      const response = await fetch(`/api/user/events?type=${eventsTab}`)
+      if (response.ok) {
+        const data = await response.json()
+        setEvents(data)
+      }
+    } catch (error) {
+      console.error('Error fetching events:', error)
+    } finally {
+      setLoadingEvents(false)
+    }
+  }, [eventsTab, profile?.isOwnProfile])
+
+  const fetchPortfolio = useCallback(async () => {
+    if (profile?.role !== 'ARTIST') return
+
+    setLoadingPortfolio(true)
+    try {
+      const response = await fetch('/api/portfolio')
+      if (response.ok) {
+        const data = await response.json()
+        setPortfolioItems(data)
+      }
+    } catch (error) {
+      console.error('Error fetching portfolio:', error)
+    } finally {
+      setLoadingPortfolio(false)
+    }
+  }, [profile?.role])
+
   useEffect(() => {
     if (profile?.isOwnProfile) {
       fetchEvents()
@@ -77,7 +111,7 @@ export default function ProfilePage() {
     if (profile?.role === 'ARTIST') {
       fetchPortfolio()
     }
-  }, [eventsTab, profile])
+  }, [eventsTab, profile, fetchEvents, fetchPortfolio])
 
   const fetchProfile = async () => {
     try {
@@ -109,40 +143,6 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error('Error toggling follow:', error)
-    }
-  }
-
-  const fetchEvents = async () => {
-    if (!profile?.isOwnProfile) return
-
-    setLoadingEvents(true)
-    try {
-      const response = await fetch(`/api/user/events?type=${eventsTab}`)
-      if (response.ok) {
-        const data = await response.json()
-        setEvents(data)
-      }
-    } catch (error) {
-      console.error('Error fetching events:', error)
-    } finally {
-      setLoadingEvents(false)
-    }
-  }
-
-  const fetchPortfolio = async () => {
-    if (profile?.role !== 'ARTIST') return
-
-    setLoadingPortfolio(true)
-    try {
-      const response = await fetch('/api/portfolio')
-      if (response.ok) {
-        const data = await response.json()
-        setPortfolioItems(data)
-      }
-    } catch (error) {
-      console.error('Error fetching portfolio:', error)
-    } finally {
-      setLoadingPortfolio(false)
     }
   }
 

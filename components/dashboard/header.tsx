@@ -1,11 +1,13 @@
 "use client"
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { LanguageToggle } from '@/components/language-toggle'
 import { NotificationBell } from '@/components/notifications/notification-bell'
 import { useSession } from 'next-auth/react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { useLanguage } from '@/components/providers/language-provider'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +22,7 @@ import { MobileMenu } from './mobile-menu'
 export function DashboardHeader() {
   const { data: session } = useSession()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const { t } = useLanguage()
 
   const initials = session?.user?.name
     ?.split(' ')
@@ -43,6 +46,17 @@ export function DashboardHeader() {
             >
               <Menu className="h-6 w-6 text-slate-700 dark:text-slate-300" />
             </button>
+
+            {/* Brand (desktop) */}
+            <Link
+              href="/dashboard"
+              className="hidden md:flex items-center gap-2 px-2 py-1 rounded-xl hover:bg-sky-50/80 dark:hover:bg-sky-900/30 transition-colors"
+              aria-label="Vybes Dashboard"
+            >
+              <span className="text-lg font-black bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">
+                Vybes
+              </span>
+            </Link>
           </div>
 
           <div className="flex items-center gap-2 md:gap-3">
@@ -65,13 +79,13 @@ export function DashboardHeader() {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-gradient-to-br from-white/95 via-sky-50/50 to-blue-50/50 dark:from-gray-900/95 dark:via-sky-900/30 dark:to-blue-900/30 backdrop-blur-xl border-2 border-sky-200/50 dark:border-sky-800/50 shadow-2xl">
-                <DropdownMenuLabel className="text-slate-700 dark:text-slate-200 font-bold">Il mio account</DropdownMenuLabel>
+                <DropdownMenuLabel className="text-slate-700 dark:text-slate-200 font-bold">{t('common.myAccount')}</DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-gradient-to-r from-transparent via-sky-300 dark:via-sky-700 to-transparent" />
                 <DropdownMenuItem asChild className="hover:bg-sky-50/80 dark:hover:bg-sky-900/30 rounded-lg transition-all">
-                  <a href="/dashboard/profile" className="cursor-pointer font-medium">Profilo</a>
+                  <Link href="/dashboard/profile" className="cursor-pointer font-medium">{t('common.profile')}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild className="hover:bg-sky-50/80 dark:hover:bg-sky-900/30 rounded-lg transition-all">
-                  <a href="/dashboard/settings" className="cursor-pointer font-medium">Impostazioni</a>
+                  <Link href="/dashboard/settings" className="cursor-pointer font-medium">{t('common.settings')}</Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

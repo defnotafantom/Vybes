@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -9,6 +9,7 @@ import { ArrowLeft, CheckCircle, XCircle, Clock, User } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { formatDistanceToNow } from 'date-fns'
 import { it } from 'date-fns/locale'
+import { useLanguage } from '@/components/providers/language-provider'
 
 interface Participant {
   id: string
@@ -33,23 +34,19 @@ export default function ManageEventPage() {
   const params = useParams()
   const router = useRouter()
   const { data: session } = useSession()
+  const { t, language } = useLanguage()
   const [event, setEvent] = useState<Event | null>(null)
   const [participants, setParticipants] = useState<Participant[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    if (params.id) {
-      fetchEventData()
-    }
-  }, [params.id])
-
-  const fetchEventData = async () => {
+  const fetchEventData = useCallback(async () => {
+    if (!params.id) return
     try {
       const eventResponse = await fetch(`/api/events/${params.id}`)
       if (eventResponse.ok) {
         const eventData = await eventResponse.json()
         setEvent(eventData)
-        
+
         // Check if user is the recruiter
         if (eventData.recruiter.id !== session?.user?.id) {
           router.push(`/dashboard/events/${params.id}`)
@@ -68,7 +65,11 @@ export default function ManageEventPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [params.id, router, session?.user?.id])
+
+  useEffect(() => {
+    fetchEventData()
+  }, [fetchEventData])
 
   const handleStatusChange = async (participantId: string, newStatus: 'ACCEPTED' | 'REJECTED') => {
     try {
@@ -87,14 +88,14 @@ export default function ManageEventPage() {
   }
 
   if (loading) {
-    return <div className="text-center py-12">Caricamento...</div>
+    return <div className="text-center py-12">{t('minichat.loading')}</div>
   }
 
   if (!event) {
     return (
       <div className="text-center py-12">
-        <p className="text-slate-500 dark:text-slate-400 mb-4">Evento non trovato</p>
-        <Button onClick={() => router.back()}>Torna indietro</Button>
+        <p className="text-slate-500 dark:text-slate-400 mb-4">{t('events.notFound')}</p>
+        <Button onClick={() => router.back()}>{t('events.back')}</Button>
       </div>
     )
   }
@@ -112,13 +113,13 @@ export default function ManageEventPage() {
           className="hover:bg-sky-50 dark:hover:bg-sky-900/20"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Torna all&apos;Evento
+          {t('events.backToEvent')}
         </Button>
       </div>
 
       <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-sky-100 dark:border-sky-900 shadow-xl">
         <CardHeader>
-          <CardTitle className="text-2xl">Gestisci Partecipanti</CardTitle>
+          <CardTitle className="text-2xl">{t('events.manageParticipants')}</CardTitle>
           <CardDescription>{event.title}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -127,7 +128,7 @@ export default function ManageEventPage() {
             <div>
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-slate-800 dark:text-slate-100">
                 <Clock className="h-5 w-5 text-yellow-500" />
-                In Attesa ({pendingParticipants.length})
+                {t('events.pending')} ({pendingParticipants.length})
               </h3>
               <div className="space-y-3">
                 {pendingParticipants.map((participant) => (
@@ -156,7 +157,7 @@ export default function ManageEventPage() {
                             <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                               {formatDistanceToNow(new Date(participant.createdAt), {
                                 addSuffix: true,
-                                locale: it,
+                                locale: language === 'it' ? it : undefined,
                               })}
                             </div>
                           </div>
@@ -168,7 +169,7 @@ export default function ManageEventPage() {
                             className="bg-green-500 hover:bg-green-600 text-white"
                           >
                             <CheckCircle className="h-4 w-4 mr-1" />
-                            Accetta
+                            {t('events.accept')}
                           </Button>
                           <Button
                             size="sm"
@@ -177,7 +178,7 @@ export default function ManageEventPage() {
                             className="border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
                           >
                             <XCircle className="h-4 w-4 mr-1" />
-                            Rifiuta
+                            {t('events.reject')}
                           </Button>
                         </div>
                       </div>
@@ -193,7 +194,7 @@ export default function ManageEventPage() {
             <div>
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-slate-800 dark:text-slate-100">
                 <CheckCircle className="h-5 w-5 text-green-500" />
-                Accettati ({acceptedParticipants.length})
+                {t('events.accepted')} ({acceptedParticipants.length})
               </h3>
               <div className="space-y-3">
                 {acceptedParticipants.map((participant) => (
@@ -232,7 +233,7 @@ export default function ManageEventPage() {
             <div>
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-slate-800 dark:text-slate-100">
                 <XCircle className="h-5 w-5 text-red-500" />
-                Rifiutati ({rejectedParticipants.length})
+                {t('events.rejected')} ({rejectedParticipants.length})
               </h3>
               <div className="space-y-3">
                 {rejectedParticipants.map((participant) => (

@@ -180,7 +180,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         transition={{ delay: 0.4 }}
       >
         <Label htmlFor="identifier" className="text-slate-700 dark:text-slate-300">
-          E-mail o Nickname
+          {t('auth.login.identifierLabel')}
         </Label>
         <div className="relative">
           <Input
@@ -213,7 +213,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         transition={{ delay: 0.5 }}
       >
         <Label htmlFor="password" className="text-slate-700 dark:text-slate-300">
-          Password
+          {t('common.password')}
         </Label>
         <Input
           id="password"
@@ -245,10 +245,10 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
               >
                 <RefreshCw className="h-5 w-5" />
               </motion.div>
-              Accesso in corso...
+              {t('auth.login.submitting')}
             </span>
           ) : (
-            'Accedi'
+            t('auth.cta.login')
           )}
         </Button>
       </motion.div>

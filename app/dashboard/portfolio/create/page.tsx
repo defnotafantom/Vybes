@@ -9,10 +9,14 @@ import { Label } from '@/components/ui/label'
 import { ArrowLeft, Upload, Image as ImageIcon, Video, X } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import Image from 'next/image'
+import { useLanguage } from '@/components/providers/language-provider'
+import { useToast } from '@/hooks/use-toast'
 
 export default function CreatePortfolioPage() {
   const router = useRouter()
   const { data: session } = useSession()
+  const { t } = useLanguage()
+  const { toast } = useToast()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [type, setType] = useState<'IMAGE' | 'VIDEO' | 'AUDIO' | 'OTHER'>('IMAGE')
@@ -62,7 +66,7 @@ export default function CreatePortfolioPage() {
       })
 
       if (!uploadResponse.ok) {
-        throw new Error('Errore nel caricamento del file')
+        throw new Error(t('portfolio.create.fileUploadError'))
       }
 
       const uploadData = await uploadResponse.json()
@@ -85,11 +89,15 @@ export default function CreatePortfolioPage() {
       if (response.ok) {
         router.push('/dashboard/portfolio')
       } else {
-        throw new Error('Errore nella creazione del portfolio item')
+        throw new Error(t('portfolio.create.createError'))
       }
     } catch (error) {
       console.error('Error creating portfolio item:', error)
-      alert('Errore nella creazione del portfolio item. Riprova.')
+      toast({
+        title: t('toast.genericError'),
+        description: t('portfolio.create.retry'),
+        variant: 'destructive',
+      })
     } finally {
       setLoading(false)
     }
@@ -99,9 +107,9 @@ export default function CreatePortfolioPage() {
     return (
       <div className="text-center py-12">
         <p className="text-slate-500 dark:text-slate-400 mb-4">
-          Solo gli artisti possono aggiungere al portfolio
+          {t('portfolio.create.onlyArtists')}
         </p>
-        <Button onClick={() => router.back()}>Torna indietro</Button>
+        <Button onClick={() => router.back()}>{t('portfolio.create.back')}</Button>
       </div>
     )
   }
@@ -115,27 +123,27 @@ export default function CreatePortfolioPage() {
           className="hover:bg-sky-50 dark:hover:bg-sky-900/20"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Indietro
+          {t('portfolio.create.back')}
         </Button>
       </div>
 
       <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-sky-100 dark:border-sky-900 shadow-xl">
         <CardHeader>
-          <CardTitle className="text-2xl">Aggiungi al Portfolio</CardTitle>
+          <CardTitle className="text-2xl">{t('portfolio.create.title')}</CardTitle>
           <CardDescription>
-            Condividi le tue opere d&apos;arte con la community
+            {t('portfolio.create.subtitle')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Title */}
             <div className="space-y-2">
-              <Label htmlFor="title">Titolo *</Label>
+              <Label htmlFor="title">{t('portfolio.create.titleLabel')} *</Label>
               <Input
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Titolo dell'opera"
+                placeholder={t('portfolio.create.titlePlaceholder')}
                 required
                 className="bg-white dark:bg-gray-900"
               />
@@ -143,12 +151,12 @@ export default function CreatePortfolioPage() {
 
             {/* Description */}
             <div className="space-y-2">
-              <Label htmlFor="description">Descrizione</Label>
+              <Label htmlFor="description">{t('portfolio.create.descriptionLabel')}</Label>
               <textarea
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Descrivi la tua opera..."
+                placeholder={t('portfolio.create.descriptionPlaceholder')}
                 rows={4}
                 className="w-full px-3 py-2 rounded-lg border border-sky-200 dark:border-sky-800 bg-white dark:bg-gray-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500"
               />
@@ -156,7 +164,7 @@ export default function CreatePortfolioPage() {
 
             {/* Type */}
             <div className="space-y-2">
-              <Label>Tipo *</Label>
+              <Label>{t('portfolio.create.typeLabel')} *</Label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {(['IMAGE', 'VIDEO', 'AUDIO', 'OTHER'] as const).map((t) => (
                   <button

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -11,6 +11,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { it } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
 import { useMinichat } from '@/components/chat/minichat-provider'
+import { useLanguage } from '@/components/providers/language-provider'
 
 interface Conversation {
   id: string
@@ -37,31 +38,15 @@ interface Message {
 export default function MessagesPage() {
   const { data: session } = useSession()
   const { openChat } = useMinichat()
+  const { t, language } = useLanguage()
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [loading, setLoading] = useState(true)
+  const pollRef = useRef<number | null>(null)
 
-  useEffect(() => {
-    fetchConversations()
-  }, [])
-
-  useEffect(() => {
-    if (selectedConversation) {
-      fetchMessages(selectedConversation)
-      
-      // Set up polling for new messages (Socket.io will replace this)
-      const interval = setInterval(() => {
-        fetchMessages(selectedConversation)
-        fetchConversations()
-      }, 3000) // Poll every 3 seconds
-
-      return () => clearInterval(interval)
-    }
-  }, [selectedConversation])
-
-  const fetchConversations = async () => {
+  const fetchConversations = useCallback(async () => {
     try {
       const response = await fetch('/api/messages/conversations')
       if (response.ok) {
@@ -73,9 +58,9 @@ export default function MessagesPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const fetchMessages = async (conversationId: string) => {
+  const fetchMessages = useCallback(async (conversationId: string) => {
     try {
       const response = await fetch(`/api/messages/${conversationId}`)
       if (response.ok) {
@@ -85,33 +70,104 @@ export default function MessagesPage() {
     } catch (error) {
       console.error('Error fetching messages:', error)
     }
-  }
+  }, [])
+
+  const startPolling = useCallback(() => {
+    // Stop any existing poll
+    if (pollRef.current) {
+      window.clearInterval(pollRef.current)
+      pollRef.current = null
+    }
+
+    // Only poll when a conversation is selected and tab is visible
+    if (!selectedConversation) return
+    if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return
+
+    // Poll less aggressively to reduce load; sockets can replace later.
+    pollRef.current = window.setInterval(() => {
+      fetchMessages(selectedConversation)
+      fetchConversations()
+    }, 8000) // every 8 seconds
+  }, [fetchConversations, fetchMessages, selectedConversation])
+
+  // Initial load
+  useEffect(() => {
+    fetchConversations()
+  }, [fetchConversations])
+
+  // Refresh messages when switching conversation (immediate)
+  useEffect(() => {
+    if (!selectedConversation) return
+    fetchMessages(selectedConversation)
+    startPolling()
+    return () => {
+      if (pollRef.current) {
+        window.clearInterval(pollRef.current)
+        pollRef.current = null
+      }
+    }
+  }, [selectedConversation, fetchMessages, startPolling])
+
+  // Pause polling when tab hidden; resume and refresh when visible again
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        // refresh once immediately
+        fetchConversations()
+        if (selectedConversation) fetchMessages(selectedConversation)
+        startPolling()
+      } else {
+        if (pollRef.current) {
+          window.clearInterval(pollRef.current)
+          pollRef.current = null
+        }
+      }
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => document.removeEventListener('visibilitychange', onVisibility)
+  }, [fetchConversations, fetchMessages, selectedConversation, startPolling])
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newMessage.trim() || !selectedConversation) return
 
+    const tempId = `temp-${Date.now()}`
+    const optimistic: Message = {
+      id: tempId,
+      content: newMessage,
+      senderId: session?.user?.id || 'me',
+      createdAt: new Date(),
+    }
+
+    // Optimistic UI: show message immediately
+    setMessages((prev) => [...prev, optimistic])
+    const toSend = newMessage
     try {
       const response = await fetch(`/api/messages/${selectedConversation}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: newMessage }),
+        body: JSON.stringify({ content: toSend }),
       })
 
       if (response.ok) {
         setNewMessage('')
+        // Sync: fetch latest messages + conversation list
         fetchMessages(selectedConversation)
         fetchConversations()
+      } else {
+        // Rollback optimistic message on failure
+        setMessages((prev) => prev.filter((m) => m.id !== tempId))
       }
     } catch (error) {
       console.error('Error sending message:', error)
+      setMessages((prev) => prev.filter((m) => m.id !== tempId))
     }
   }
 
   const selectedConversationData = conversations.find(c => c.id === selectedConversation)
 
   if (loading) {
-    return <div className="text-center py-12">Caricamento messaggi...</div>
+    return <div className="text-center py-12">{t('messages.loading')}</div>
   }
 
   return (
@@ -123,12 +179,12 @@ export default function MessagesPage() {
       )}>
         <div className="p-4 border-b border-sky-200 dark:border-sky-800 bg-gradient-to-r from-sky-50 to-blue-50 dark:from-sky-900/30 dark:to-blue-900/30">
           <h2 className="text-xl font-black bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent mb-4">
-            Messaggi
+            {t('messages.title')}
           </h2>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input 
-              placeholder="Cerca conversazioni..." 
+              placeholder={t('messages.searchPlaceholder')} 
               className="pl-10 border-2 border-sky-200 dark:border-sky-800 bg-white dark:bg-gray-900 focus:border-sky-500 dark:focus:border-sky-500 rounded-xl" 
             />
           </div>
@@ -136,7 +192,7 @@ export default function MessagesPage() {
         <div className="flex-1 overflow-y-auto">
           {conversations.length === 0 ? (
             <div className="p-4 text-center text-slate-500 dark:text-slate-400 text-sm">
-              Nessuna conversazione ✨
+              {t('messages.empty')} ✨
             </div>
           ) : (
             <div>
@@ -179,7 +235,7 @@ export default function MessagesPage() {
                           openChat(conversation.id, conversation.participant)
                         }}
                         className="p-2 rounded-lg hover:bg-sky-100 dark:hover:bg-sky-900/20 transition-colors"
-                        title="Apri minichat"
+                        title={t('messages.openMinichat')}
                       >
                         <MessageSquare className="h-4 w-4 text-sky-500" />
                       </button>
@@ -242,7 +298,7 @@ export default function MessagesPage() {
                       }`}>
                         {formatDistanceToNow(new Date(message.createdAt), {
                           addSuffix: true,
-                          locale: it,
+                          locale: language === 'it' ? it : undefined,
                         })}
                       </p>
                     </div>

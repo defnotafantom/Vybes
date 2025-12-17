@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -10,6 +10,7 @@ import { useSession } from 'next-auth/react'
 import { formatDistanceToNow } from 'date-fns'
 import { it } from 'date-fns/locale'
 import Image from 'next/image'
+import { useLanguage } from '@/components/providers/language-provider'
 
 interface EventDetail {
   id: string
@@ -57,18 +58,14 @@ export default function EventDetailPage() {
   const params = useParams()
   const router = useRouter()
   const { data: session } = useSession()
+  const { t, language } = useLanguage()
   const [event, setEvent] = useState<EventDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [participating, setParticipating] = useState(false)
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => {
-    if (params.id) {
-      fetchEvent()
-    }
-  }, [params.id])
-
-  const fetchEvent = async () => {
+  const fetchEvent = useCallback(async () => {
+    if (!params.id) return
     try {
       const response = await fetch(`/api/events/${params.id}`)
       if (response.ok) {
@@ -81,7 +78,11 @@ export default function EventDetailPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [params.id])
+
+  useEffect(() => {
+    fetchEvent()
+  }, [fetchEvent])
 
   const handleParticipate = async () => {
     if (!event) return
@@ -121,14 +122,14 @@ export default function EventDetailPage() {
   }
 
   if (loading) {
-    return <div className="text-center py-12">Caricamento evento...</div>
+    return <div className="text-center py-12">{t('events.loadingSingle')}</div>
   }
 
   if (!event) {
     return (
       <div className="text-center py-12">
-        <p className="text-slate-500 dark:text-slate-400 mb-4">Evento non trovato</p>
-        <Button onClick={() => router.back()}>Torna indietro</Button>
+        <p className="text-slate-500 dark:text-slate-400 mb-4">{t('events.notFound')}</p>
+        <Button onClick={() => router.back()}>{t('events.back')}</Button>
       </div>
     )
   }
@@ -157,7 +158,7 @@ export default function EventDetailPage() {
           className="hover:bg-sky-50 dark:hover:bg-sky-900/20"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Indietro
+          {t('events.back')}
         </Button>
       </div>
 
@@ -191,7 +192,7 @@ export default function EventDetailPage() {
         <CardContent className="space-y-6">
           {/* Description */}
           <div>
-            <h3 className="font-semibold mb-2 text-slate-800 dark:text-slate-100">Descrizione</h3>
+            <h3 className="font-semibold mb-2 text-slate-800 dark:text-slate-100">{t('events.description')}</h3>
             <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{event.description}</p>
           </div>
 
@@ -200,9 +201,9 @@ export default function EventDetailPage() {
             <div className="flex items-center gap-3 text-slate-700 dark:text-slate-300">
               <Calendar className="h-5 w-5 text-sky-500" />
               <div>
-                <div className="font-medium">Data Inizio</div>
+                <div className="font-medium">{t('events.startDate')}</div>
                 <div className="text-sm">
-                  {new Date(event.startDate).toLocaleDateString('it-IT', {
+                  {new Date(event.startDate).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US', {
                     day: 'numeric',
                     month: 'long',
                     year: 'numeric',
@@ -217,9 +218,9 @@ export default function EventDetailPage() {
               <div className="flex items-center gap-3 text-slate-700 dark:text-slate-300">
                 <Calendar className="h-5 w-5 text-sky-500" />
                 <div>
-                  <div className="font-medium">Data Fine</div>
+                  <div className="font-medium">{t('events.endDate')}</div>
                   <div className="text-sm">
-                    {new Date(event.endDate).toLocaleDateString('it-IT', {
+                    {new Date(event.endDate).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US', {
                       day: 'numeric',
                       month: 'long',
                       year: 'numeric',
@@ -234,7 +235,7 @@ export default function EventDetailPage() {
             <div className="flex items-center gap-3 text-slate-700 dark:text-slate-300">
               <MapPin className="h-5 w-5 text-sky-500" />
               <div>
-                <div className="font-medium">Posizione</div>
+                <div className="font-medium">{t('events.address')}</div>
                 <div className="text-sm">{event.address}, {event.city}, {event.country}</div>
               </div>
             </div>
@@ -242,7 +243,7 @@ export default function EventDetailPage() {
             <div className="flex items-center gap-3 text-slate-700 dark:text-slate-300">
               <Users className="h-5 w-5 text-sky-500" />
               <div>
-                <div className="font-medium">Partecipanti</div>
+                <div className="font-medium">{t('events.participantsCount')}</div>
                 <div className="text-sm">
                   {event.participantsCount}
                   {event.maxParticipants && ` / ${event.maxParticipants}`}
@@ -254,7 +255,7 @@ export default function EventDetailPage() {
           {/* Requirements */}
           {event.requirements && (
             <div>
-              <h3 className="font-semibold mb-2 text-slate-800 dark:text-slate-100">Requisiti</h3>
+              <h3 className="font-semibold mb-2 text-slate-800 dark:text-slate-100">{t('events.requirements')}</h3>
               <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{event.requirements}</p>
             </div>
           )}
@@ -262,7 +263,7 @@ export default function EventDetailPage() {
           {/* Compensation */}
           {event.compensation && (
             <div>
-              <h3 className="font-semibold mb-2 text-slate-800 dark:text-slate-100">Compenso</h3>
+              <h3 className="font-semibold mb-2 text-slate-800 dark:text-slate-100">{t('events.compensation')}</h3>
               <p className="text-slate-700 dark:text-slate-300">{event.compensation}</p>
             </div>
           )}
@@ -384,7 +385,7 @@ export default function EventDetailPage() {
                       <div className="text-xs text-slate-500 dark:text-slate-400">
                         {formatDistanceToNow(new Date(participant.createdAt), {
                           addSuffix: true,
-                          locale: it,
+                          locale: language === 'it' ? it : undefined,
                         })}
                       </div>
                     </div>

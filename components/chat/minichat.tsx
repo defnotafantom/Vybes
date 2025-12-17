@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { MessageSquare, X, Send, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useMinichat } from './minichat-provider'
+import { useLanguage } from '@/components/providers/language-provider'
 
 interface Conversation {
   id: string
@@ -37,6 +38,7 @@ interface MinichatProps {
 export function Minichat({ conversationId, recipient }: MinichatProps) {
   const { data: session } = useSession()
   const { openChat, closeChat } = useMinichat()
+  const { t } = useLanguage()
   const [isOpen, setIsOpen] = useState(false)
   const [showConversations, setShowConversations] = useState(false)
   const [conversations, setConversations] = useState<Conversation[]>([])
@@ -46,7 +48,7 @@ export function Minichat({ conversationId, recipient }: MinichatProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Fetch conversations list
-  const fetchConversations = async () => {
+  const fetchConversations = useCallback(async () => {
     if (!session?.user?.id) return
     setLoadingConversations(true)
     try {
@@ -60,7 +62,7 @@ export function Minichat({ conversationId, recipient }: MinichatProps) {
     } finally {
       setLoadingConversations(false)
     }
-  }
+  }, [session?.user?.id])
 
   // Auto-open if conversationId and recipient are provided
   useEffect(() => {
@@ -77,13 +79,13 @@ export function Minichat({ conversationId, recipient }: MinichatProps) {
     if (isOpen && !conversationId && showConversations) {
       fetchConversations()
     }
-  }, [isOpen, conversationId, showConversations, session])
+  }, [isOpen, conversationId, showConversations, fetchConversations])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
-  const fetchMessages = async () => {
+  const fetchMessages = useCallback(async () => {
     if (!conversationId) return
     try {
       const response = await fetch(`/api/messages/${conversationId}`)
@@ -94,14 +96,13 @@ export function Minichat({ conversationId, recipient }: MinichatProps) {
     } catch (error) {
       console.error('Error fetching messages:', error)
     }
-  }
+  }, [conversationId])
 
   useEffect(() => {
     if (isOpen && conversationId) {
       fetchMessages()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, conversationId])
+  }, [isOpen, conversationId, fetchMessages])
 
   useEffect(() => {
     scrollToBottom()
@@ -153,13 +154,13 @@ export function Minichat({ conversationId, recipient }: MinichatProps) {
 
   // Refresh conversations count periodically
   useEffect(() => {
-    if (!isOpen) {
+    if (!isOpen && session?.user?.id) {
       const interval = setInterval(() => {
         fetchConversations()
       }, 30000) // Every 30 seconds
       return () => clearInterval(interval)
     }
-  }, [isOpen, session])
+  }, [isOpen, session?.user?.id, fetchConversations])
 
   return (
     <AnimatePresence>
@@ -170,7 +171,7 @@ export function Minichat({ conversationId, recipient }: MinichatProps) {
           exit={{ scale: 0 }}
           onClick={handleButtonClick}
           className="fixed bottom-4 right-4 h-14 w-14 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/30 hover:from-sky-600 hover:to-blue-700 flex items-center justify-center z-[100] transition-all hover:scale-110"
-          title="Apri chat rapida"
+          title={t('minichat.open')}
         >
           <MessageSquare className="h-6 w-6" />
           {conversations.some(c => c.unreadCount > 0) && (
@@ -196,7 +197,7 @@ export function Minichat({ conversationId, recipient }: MinichatProps) {
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 border-b border-sky-200 dark:border-sky-800">
                   <div className="flex items-center gap-2">
                     <Users className="h-5 w-5 text-sky-500" />
-                    <span className="font-semibold text-slate-800 dark:text-slate-100">Chat Rapide</span>
+                    <span className="font-semibold text-slate-800 dark:text-slate-100">{t('minichat.title')}</span>
                   </div>
                   <Button
                     variant="ghost"
@@ -211,11 +212,11 @@ export function Minichat({ conversationId, recipient }: MinichatProps) {
                   <div className="flex-1 overflow-y-auto">
                     {loadingConversations ? (
                       <div className="flex items-center justify-center py-8 text-slate-500 dark:text-slate-400">
-                        Caricamento...
+                        {t('minichat.loading')}
                       </div>
                     ) : conversations.length === 0 ? (
                       <div className="text-center py-8 text-slate-500 dark:text-slate-400 text-sm px-4">
-                        Nessuna conversazione. Inizia una chat dalla pagina Messaggi!
+                        {t('minichat.empty')}
                       </div>
                     ) : (
                       <div className="divide-y divide-sky-200 dark:divide-sky-800">

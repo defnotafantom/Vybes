@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { X, Upload, Save } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { useLanguage } from '@/components/providers/language-provider'
+import Image from 'next/image'
 
 interface UserProfile {
   id: string
@@ -185,10 +186,10 @@ export function ProfileEditModal({ isOpen, onClose, profile, onSave }: ProfileEd
               {/* Header */}
               <div className="p-6 border-b border-sky-200 dark:border-sky-800">
                 <h2 className="text-2xl font-black bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">
-                  Modifica Profilo
+                  {t('profile.edit')}
                 </h2>
                 <p className="text-slate-600 dark:text-slate-400 mt-1 text-sm">
-                  Aggiorna le tue informazioni personali
+                  {t('profile.edit.subtitle')}
                 </p>
               </div>
 
@@ -199,9 +200,11 @@ export function ProfileEditModal({ isOpen, onClose, profile, onSave }: ProfileEd
                   <div className="relative">
                     <div className="w-24 h-24 rounded-full bg-gradient-to-br from-sky-200 to-blue-200 dark:from-sky-800 dark:to-blue-800 border-4 border-white dark:border-gray-800 shadow-lg overflow-hidden">
                       {formData.image ? (
-                        <img
+                        <Image
                           src={formData.image}
                           alt="Profile"
+                          width={96}
+                          height={96}
                           className="w-full h-full object-cover"
                         />
                       ) : (
@@ -225,14 +228,14 @@ export function ProfileEditModal({ isOpen, onClose, profile, onSave }: ProfileEd
                     />
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
-                    Clicca sull&apos;icona per caricare una nuova immagine
+                    {t('profile.edit.uploadHint')}
                   </p>
                 </div>
 
                 {/* Name */}
                 <div className="space-y-2">
                   <Label htmlFor="name" className="text-slate-700 dark:text-slate-300 font-semibold">
-                    Nome Completo
+                    {t('settings.profile.name')}
                   </Label>
                   <Input
                     id="name"
@@ -256,7 +259,7 @@ export function ProfileEditModal({ isOpen, onClose, profile, onSave }: ProfileEd
                     className="bg-white/90 dark:bg-gray-700/90 backdrop-blur-sm border-2 border-sky-200 dark:border-sky-800 focus:border-sky-500 dark:focus:border-sky-500"
                   />
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Usato per il tuo link profilo: vybes.com/@{formData.username || 'username'}
+                    {t('profile.edit.profileLinkHint')} vybes.com/@{formData.username || 'username'}
                   </p>
                 </div>
 
