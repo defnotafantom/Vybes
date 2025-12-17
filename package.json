@@ -69,5 +69,8 @@
     "tailwindcss": "^3.4.0",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3"
+  },
+  "overrides": {
+    "glob": "10.5.0"
   }
 }
