@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Menu } from 'lucide-react'
 import { MobileMenu } from './mobile-menu'
+import { AIGuide } from '@/components/ai-guide'
 
 export function DashboardHeader() {
   const { data: session } = useSession()
@@ -61,12 +62,17 @@ export function DashboardHeader() {
 
           <div className="flex items-center gap-2 md:gap-3">
             <NotificationBell />
-            <ThemeToggle />
-            <LanguageToggle />
+            <div data-guide="header-theme">
+              <ThemeToggle />
+            </div>
+            <div data-guide="header-language">
+              <LanguageToggle />
+            </div>
+            <AIGuide />
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 md:gap-3 px-2 md:px-3 py-2 rounded-xl hover:bg-sky-50/80 dark:hover:bg-sky-900/30 transition-all duration-200 group shadow-sm hover:shadow-md">
+                <button data-guide="header-profile" className="flex items-center gap-2 md:gap-3 px-2 md:px-3 py-2 rounded-xl hover:bg-sky-50/80 dark:hover:bg-sky-900/30 transition-all duration-200 group shadow-sm hover:shadow-md">
                   <Avatar className="ring-2 ring-sky-300 dark:ring-sky-700 group-hover:ring-sky-500 dark:group-hover:ring-sky-500 transition-all h-8 w-8 md:h-10 md:w-10 shadow-md group-hover:shadow-lg group-hover:scale-110">
                     <AvatarImage src={session?.user?.image || undefined} />
                     <AvatarFallback className="bg-gradient-to-br from-sky-500 via-sky-600 to-blue-600 text-white font-bold text-xs md:text-sm shadow-lg">
