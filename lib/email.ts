@@ -60,3 +60,52 @@ export async function sendVerificationEmail(email: string, verificationUrl: stri
   }
 }
 
+export async function sendPasswordResetEmail(email: string, resetUrl: string) {
+  // Check if email is configured
+  if (!process.env.EMAIL_SERVER_HOST || !process.env.EMAIL_SERVER_USER) {
+    console.warn('⚠️ Email not configured - skipping email send')
+    console.log('📧 Would send password reset email to:', email)
+    console.log('🔗 Reset URL:', resetUrl)
+    return Promise.resolve()
+  }
+
+  const mailOptions = {
+    from: process.env.EMAIL_FROM || process.env.EMAIL_SERVER_USER,
+    to: email,
+    subject: 'Reset password - Vybes',
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .button { display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+            .small { color: #666; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h1>Reset password</h1>
+            <p>Hai richiesto il reset della password. Clicca sul pulsante per scegliere una nuova password:</p>
+            <a href="${resetUrl}" class="button">Imposta nuova password</a>
+            <p>Oppure copia e incolla questo link nel browser:</p>
+            <p>${resetUrl}</p>
+            <p class="small">Questo link scade tra 1 ora. Se non hai richiesto il reset, ignora questa email.</p>
+          </div>
+        </body>
+      </html>
+    `,
+  }
+
+  try {
+    const result = await transporter.sendMail(mailOptions)
+    console.log('✅ Email sent successfully:', result.messageId)
+    return result
+  } catch (error) {
+    console.error('❌ Email send error:', error)
+    throw error
+  }
+}
+

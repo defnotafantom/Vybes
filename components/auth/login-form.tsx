@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useToast } from '@/hooks/use-toast'
 import { useLanguage } from '@/components/providers/language-provider'
 import { Eye, EyeOff, User, RefreshCw } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface UserPreview {
   id: string
@@ -33,6 +34,9 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [forgotOpen, setForgotOpen] = useState(false)
+  const [forgotIdentifier, setForgotIdentifier] = useState('')
+  const [forgotLoading, setForgotLoading] = useState(false)
   const [loading, setLoading] = useState(false)
   const [userPreview, setUserPreview] = useState<UserPreview | null>(null)
   const [useAvatar, setUseAvatar] = useState(false)
@@ -119,6 +123,38 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
       console.error('Login error:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleForgot = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const id = forgotIdentifier.trim()
+    if (!id) return
+    setForgotLoading(true)
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: id }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err?.error || `Errore (${res.status})`)
+      }
+      toast({
+        title: 'Email inviata',
+        description: 'Se l’account esiste, riceverai un link per reimpostare la password.',
+      })
+      setForgotOpen(false)
+      setForgotIdentifier('')
+    } catch (error: any) {
+      toast({
+        title: t('toast.genericError'),
+        description: error?.message || t('toast.genericError'),
+        variant: 'destructive',
+      })
+    } finally {
+      setForgotLoading(false)
     }
   }
 
@@ -265,6 +301,53 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           )}
         </Button>
       </motion.div>
+
+      <div className="flex items-center justify-between text-sm">
+        <button
+          type="button"
+          onClick={() => {
+            setForgotOpen((v) => !v)
+            setForgotIdentifier(identifier)
+          }}
+          className="text-sky-700 dark:text-sky-300 hover:underline font-semibold"
+        >
+          Password dimenticata?
+        </button>
+        <span className="text-slate-500 dark:text-slate-400">
+          {/* placeholder for future links */}
+        </span>
+      </div>
+
+      <AnimatePresence>
+        {forgotOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="rounded-2xl border-2 border-sky-200 dark:border-sky-800 bg-white/60 dark:bg-gray-900/30 p-4"
+          >
+            <div className="text-sm font-bold text-slate-800 dark:text-slate-100 mb-2">Reset password</div>
+            <div className="text-xs text-slate-600 dark:text-slate-400 mb-3">
+              Inserisci email o username. Se l’account esiste, invieremo un link via email.
+            </div>
+            <form onSubmit={handleForgot} className="flex gap-2">
+              <Input
+                value={forgotIdentifier}
+                onChange={(e) => setForgotIdentifier(e.target.value)}
+                placeholder="Email o username"
+                className="bg-white/90 dark:bg-gray-700/90 border-2 border-sky-200 dark:border-sky-800 rounded-xl"
+                disabled={forgotLoading || loading}
+              />
+              <Button type="submit" disabled={!forgotIdentifier.trim() || forgotLoading || loading} className="shrink-0">
+                {forgotLoading ? 'Invio…' : 'Invia'}
+              </Button>
+            </form>
+            <div className={cn('mt-2 text-[11px] text-slate-500 dark:text-slate-400')}>
+              Controlla anche spam/promozioni. Il link scade dopo 1 ora.
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </form>
   )
 }
