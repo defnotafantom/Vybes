@@ -21,6 +21,13 @@ export async function GET(request: Request) {
       prisma.post.findMany({
         skip,
         take: limit,
+        where: {
+          isDraft: false,
+          OR: [
+            { scheduledFor: null },
+            { scheduledFor: { lte: new Date() } },
+          ],
+        },
         include: {
           author: {
             select: {
@@ -36,6 +43,12 @@ export async function GET(request: Request) {
               userId: true,
             },
           },
+          reactions: {
+            select: {
+              emoji: true,
+              userId: true,
+            },
+          },
           comments: {
             select: {
               id: true,
@@ -46,26 +59,63 @@ export async function GET(request: Request) {
               userId: true,
             },
           },
+          poll: {
+            include: {
+              options: {
+                include: {
+                  _count: { select: { votes: true } },
+                },
+              },
+            },
+          },
+          _count: {
+            select: { reposts: true },
+          },
         },
-        orderBy: {
-          createdAt: 'desc',
+        orderBy: [
+          { isPinned: 'desc' },
+          { createdAt: 'desc' },
+        ],
+      }),
+      prisma.post.count({
+        where: {
+          isDraft: false,
+          OR: [
+            { scheduledFor: null },
+            { scheduledFor: { lte: new Date() } },
+          ],
         },
       }),
-      prisma.post.count(),
     ])
 
-    const formattedPosts = posts.map((post: typeof posts[0]) => ({
-      id: post.id,
-      content: post.content,
-      images: post.images,
-      tags: post.tags || [],
-      author: post.author,
-      createdAt: post.createdAt,
-      likes: post.likes.length,
-      comments: post.comments.length,
-      liked: userId ? post.likes.some((like: { userId: string }) => like.userId === userId) : false,
-      saved: userId ? post.savedBy.some((saved: { userId: string }) => saved.userId === userId) : false,
-    }))
+    const formattedPosts = posts.map((post: typeof posts[0]) => {
+      // Group reactions by emoji
+      const reactionCounts = new Map<string, number>()
+      post.reactions.forEach((r: { emoji: string }) => {
+        reactionCounts.set(r.emoji, (reactionCounts.get(r.emoji) || 0) + 1)
+      })
+      
+      return {
+        id: post.id,
+        content: post.content,
+        images: post.images,
+        tags: post.tags || [],
+        author: post.author,
+        createdAt: post.createdAt,
+        isPinned: post.isPinned,
+        viewsCount: post.viewsCount,
+        likes: post.likes.length,
+        comments: post.comments.length,
+        reposts: post._count.reposts,
+        reactions: Array.from(reactionCounts.entries()).map(([emoji, count]) => ({ emoji, count })),
+        userReactions: userId 
+          ? post.reactions.filter((r: { userId: string }) => r.userId === userId).map((r: { emoji: string }) => r.emoji) 
+          : [],
+        liked: userId ? post.likes.some((like: { userId: string }) => like.userId === userId) : false,
+        saved: userId ? post.savedBy.some((saved: { userId: string }) => saved.userId === userId) : false,
+        hasPoll: !!post.poll,
+      }
+    })
 
     return NextResponse.json({
       posts: formattedPosts,
@@ -116,6 +166,7 @@ export async function POST(request: Request) {
     }
 
     const { content, images, type, tags } = validation.data
+    const { poll, scheduledFor, isDraft } = body // Additional optional fields
 
     const post = await prisma.post.create({
       data: {
@@ -124,6 +175,8 @@ export async function POST(request: Request) {
         tags: tags,
         type: type,
         authorId: session.user.id,
+        scheduledFor: scheduledFor ? new Date(scheduledFor) : null,
+        isDraft: isDraft || false,
       },
       include: {
         author: {
@@ -132,11 +185,25 @@ export async function POST(request: Request) {
             name: true,
             image: true,
             username: true,
-          role: true,
+            role: true,
           },
         },
       },
     })
+
+    // Create poll if provided
+    if (poll && poll.question && poll.options?.length >= 2) {
+      await prisma.poll.create({
+        data: {
+          postId: post.id,
+          question: poll.question,
+          endsAt: poll.endsAt ? new Date(poll.endsAt) : null,
+          options: {
+            create: poll.options.map((text: string) => ({ text })),
+          },
+        },
+      })
+    }
 
     // Update quest progress for first post
     await updateQuestProgress(session.user.id, 'first_post', true)

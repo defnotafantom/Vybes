@@ -87,7 +87,11 @@ model User {
   posts         Post[]
   comments      Comment[]
   likes         Like[]
+  reactions     Reaction[]
+  reposts       Repost[]
   savedPosts    SavedPost[]
+  pollVotes     PollVote[]
+  bookmarkCollections BookmarkCollection[]
   
   // Events participation
   eventParticipants EventParticipant[]
@@ -142,8 +146,24 @@ model Post {
   
   // Social engagement
   likes         Like[]
+  reactions     Reaction[]
   comments      Comment[]
   savedBy       SavedPost[]
+  reposts       Repost[]   @relation("OriginalPost")
+  collections   CollectionPost[]
+  
+  // Poll (optional)
+  poll          Poll?
+  
+  // Pinned post
+  isPinned      Boolean  @default(false)
+  
+  // Scheduled post
+  scheduledFor  DateTime?
+  isDraft       Boolean  @default(false)
+  
+  // Views tracking
+  viewsCount    Int      @default(0)
   
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -152,6 +172,7 @@ model Post {
   @@index([authorId])
   @@index([createdAt])
   @@index([type])
+  @@index([isPinned])
 }
 
 model Event {
@@ -252,6 +273,102 @@ model Like {
   createdAt DateTime @default(now())
   
   @@unique([postId, userId])
+}
+
+// Reactions (emoji reactions beyond like)
+model Reaction {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emoji     String   // 😂❤️😮😢😡🔥👏
+  createdAt DateTime @default(now())
+  
+  @@unique([postId, userId, emoji])
+  @@index([postId])
+}
+
+// Repost/Quote system
+model Repost {
+  id             String   @id @default(cuid())
+  originalPostId String
+  originalPost   Post     @relation("OriginalPost", fields: [originalPostId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quote          String?  // Optional quote text
+  createdAt      DateTime @default(now())
+  
+  @@unique([originalPostId, userId])
+  @@index([userId])
+}
+
+// Polls
+model Poll {
+  id        String       @id @default(cuid())
+  postId    String       @unique
+  post      Post         @relation(fields: [postId], references: [id], onDelete: Cascade)
+  question  String
+  options   PollOption[]
+  endsAt    DateTime?
+  createdAt DateTime     @default(now())
+}
+
+model PollOption {
+  id        String     @id @default(cuid())
+  pollId    String
+  poll      Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  text      String
+  votes     PollVote[]
+  
+  @@index([pollId])
+}
+
+model PollVote {
+  id        String     @id @default(cuid())
+  optionId  String
+  option    PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime   @default(now())
+  
+  @@unique([optionId, userId])
+}
+
+// Bookmark Collections
+model BookmarkCollection {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  isDefault Boolean          @default(false)
+  posts     CollectionPost[]
+  createdAt DateTime         @default(now())
+  
+  @@index([userId])
+}
+
+model CollectionPost {
+  id           String             @id @default(cuid())
+  collectionId String
+  collection   BookmarkCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  postId       String
+  post         Post               @relation(fields: [postId], references: [id], onDelete: Cascade)
+  addedAt      DateTime           @default(now())
+  
+  @@unique([collectionId, postId])
+}
+
+// Link Previews cache
+model LinkPreview {
+  id          String   @id @default(cuid())
+  url         String   @unique
+  title       String?
+  description String?
+  image       String?
+  siteName    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model SavedPost {
