@@ -14,6 +14,7 @@ import { it } from "date-fns/locale"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
+import { CommentsModal } from "./comments-modal"
 
 interface Post {
   id: string
@@ -261,9 +262,14 @@ function PostCardComponent({
   onDelete,
   onCopyLink,
 }: PostCardProps) {
+  const { toast } = useToast()
   const [imageLoaded, setImageLoaded] = useState(false)
   const [imageError, setImageError] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
+  const [showComments, setShowComments] = useState(false)
+  const [commentCount, setCommentCount] = useState(post.comments || 0)
+  const [likeCount, setLikeCount] = useState(post.likes || 0)
+  const [isLiked, setIsLiked] = useState(post.isLiked || false)
   
   const imageUrl = post.imageUrl || post.image_url || post.media_url || (post.images && post.images[0])
   const isVideo = typeof imageUrl === 'string' && /\.(mp4|webm)(\?|$)/i.test(imageUrl)
@@ -274,18 +280,30 @@ function PostCardComponent({
   const timeAgo = post.createdAt ? formatDistanceToNow(new Date(post.createdAt), { addSuffix: true, locale: it }) : null
   const isOwner = currentUserId && post.author?.id === currentUserId
   
-  const handleLike = useCallback(() => onLike?.(post.id), [onLike, post.id])
+  const handleLike = useCallback(() => {
+    setIsLiked(prev => !prev)
+    setLikeCount(prev => isLiked ? prev - 1 : prev + 1)
+    onLike?.(post.id)
+  }, [onLike, post.id, isLiked])
   const handleSave = useCallback(() => onSave?.(post.id), [onSave, post.id])
   const handleShare = useCallback(() => {
+    const shareUrl = `${window.location.origin}/dashboard/post/${post.id}`
     if (navigator.share) {
       navigator.share({
         title: post.title || 'Post su Vybes',
-        url: `${window.location.origin}/dashboard#post-${post.id}`,
+        text: post.description || post.content || '',
+        url: shareUrl,
       })
     } else {
+      navigator.clipboard.writeText(shareUrl)
+      toast({ title: "Link copiato!", description: "Il link è stato copiato negli appunti" })
       onShare?.(post.id)
     }
-  }, [onShare, post.id, post.title])
+  }, [onShare, post.id, post.title, post.description, post.content, toast])
+
+  const handleOpenComments = useCallback(() => {
+    setShowComments(true)
+  }, [])
 
   // Close dropdown when clicking outside
   const handleClickOutside = useCallback(() => {
@@ -388,17 +406,17 @@ function PostCardComponent({
         <div className="flex items-center gap-6 pt-3 border-t border-gray-200 dark:border-gray-700">
           <ActionButton
             onClick={handleLike}
-            isActive={post.isLiked}
+            isActive={isLiked}
             activeColor="text-red-500"
             icon={Heart}
-            count={post.likes || 0}
+            count={likeCount}
           />
           <ActionButton
-            onClick={() => {}}
+            onClick={handleOpenComments}
             isActive={false}
             activeColor="text-sky-500"
             icon={MessageCircle}
-            count={post.comments || 0}
+            count={commentCount}
           />
           <ActionButton
             onClick={handleShare}
@@ -414,6 +432,16 @@ function PostCardComponent({
             className="ml-auto"
           />
         </div>
+
+        {/* Comments Modal */}
+        <CommentsModal
+          isOpen={showComments}
+          onClose={() => setShowComments(false)}
+          postId={post.id}
+          postAuthorId={post.author?.id}
+          currentUserId={currentUserId}
+          onCommentCountChange={setCommentCount}
+        />
       </motion.article>
     )
   }
@@ -502,12 +530,22 @@ function PostCardComponent({
           </div>
           {/* Actions */}
           <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-            <ActionButton onClick={handleLike} isActive={post.isLiked} activeColor="text-red-500" icon={Heart} count={post.likes || 0} />
-            <ActionButton onClick={() => {}} isActive={false} activeColor="text-sky-500" icon={MessageCircle} count={post.comments || 0} />
+            <ActionButton onClick={handleLike} isActive={isLiked} activeColor="text-red-500" icon={Heart} count={likeCount} />
+            <ActionButton onClick={handleOpenComments} isActive={false} activeColor="text-sky-500" icon={MessageCircle} count={commentCount} />
             <ActionButton onClick={handleShare} isActive={false} activeColor="text-sky-500" icon={Share2} />
             <ActionButton onClick={handleSave} isActive={post.isSaved} activeColor="text-sky-500" icon={Bookmark} className="ml-auto" />
           </div>
         </div>
+
+        {/* Comments Modal */}
+        <CommentsModal
+          isOpen={showComments}
+          onClose={() => setShowComments(false)}
+          postId={post.id}
+          postAuthorId={post.author?.id}
+          currentUserId={currentUserId}
+          onCommentCountChange={setCommentCount}
+        />
       </motion.article>
     )
   }
@@ -587,14 +625,14 @@ function PostCardComponent({
           <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">{post.description || post.content}</p>
           {/* Actions */}
           <div className="flex items-center gap-3 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700 text-gray-500">
-            <button onClick={handleLike} className={cn("flex items-center gap-1 text-xs hover:text-red-500 transition-colors", post.isLiked && "text-red-500")}>
-              <Heart className={cn("h-3.5 w-3.5", post.isLiked && "fill-current")} />
-              {post.likes || 0}
+            <button onClick={handleLike} className={cn("flex items-center gap-1 text-xs hover:text-red-500 transition-colors", isLiked && "text-red-500")}>
+              <Heart className={cn("h-3.5 w-3.5", isLiked && "fill-current")} />
+              {likeCount}
             </button>
-            <span className="flex items-center gap-1 text-xs">
+            <button onClick={handleOpenComments} className="flex items-center gap-1 text-xs hover:text-sky-500 transition-colors">
               <MessageCircle className="h-3.5 w-3.5" />
-              {post.comments || 0}
-            </span>
+              {commentCount}
+            </button>
             <button onClick={handleShare} className="hover:text-sky-500 transition-colors">
               <Share2 className="h-3.5 w-3.5" />
             </button>
@@ -603,6 +641,16 @@ function PostCardComponent({
             </button>
           </div>
         </div>
+
+        {/* Comments Modal */}
+        <CommentsModal
+          isOpen={showComments}
+          onClose={() => setShowComments(false)}
+          postId={post.id}
+          postAuthorId={post.author?.id}
+          currentUserId={currentUserId}
+          onCommentCountChange={setCommentCount}
+        />
       </motion.article>
     )
   }
@@ -687,14 +735,14 @@ function PostCardComponent({
           {tags.length > 0 && <PostTags tags={tags} onTagClick={onTagClick} />}
           
           <div className="flex items-center gap-4 mt-3 text-gray-500">
-            <button onClick={handleLike} className={cn("flex items-center gap-1 text-sm hover:text-red-500 transition-colors", post.isLiked && "text-red-500")}>
-              <Heart className={cn("h-4 w-4", post.isLiked && "fill-current")} />
-              {post.likes || 0}
+            <button onClick={handleLike} className={cn("flex items-center gap-1 text-sm hover:text-red-500 transition-colors", isLiked && "text-red-500")}>
+              <Heart className={cn("h-4 w-4", isLiked && "fill-current")} />
+              {likeCount}
             </button>
-            <span className="flex items-center gap-1 text-sm">
+            <button onClick={handleOpenComments} className="flex items-center gap-1 text-sm hover:text-sky-500 transition-colors">
               <MessageCircle className="h-4 w-4" />
-              {post.comments || 0}
-            </span>
+              {commentCount}
+            </button>
             <button onClick={handleShare} className="flex items-center gap-1 text-sm hover:text-sky-500 transition-colors">
               <Share2 className="h-4 w-4" />
             </button>
@@ -704,6 +752,16 @@ function PostCardComponent({
           </div>
         </div>
       </div>
+
+      {/* Comments Modal */}
+      <CommentsModal
+        isOpen={showComments}
+        onClose={() => setShowComments(false)}
+        postId={post.id}
+        postAuthorId={post.author?.id}
+        currentUserId={currentUserId}
+        onCommentCountChange={setCommentCount}
+      />
     </motion.article>
   )
 }

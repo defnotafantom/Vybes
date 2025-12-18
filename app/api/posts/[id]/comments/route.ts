@@ -4,6 +4,8 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { createNotification } from '@/lib/notifications'
 
+export const dynamic = 'force-dynamic'
+
 // GET comments for a post
 export async function GET(
   request: Request,
@@ -53,7 +55,7 @@ export async function POST(
     }
 
     const postId = params.id
-    const { content } = await request.json()
+    const { content, parentId } = await request.json()
 
     if (!content || !content.trim()) {
       return NextResponse.json(
@@ -68,11 +70,21 @@ export async function POST(
       select: { authorId: true },
     })
 
+    // If replying, get parent comment author
+    let parentComment = null
+    if (parentId) {
+      parentComment = await prisma.comment.findUnique({
+        where: { id: parentId },
+        select: { authorId: true, author: { select: { name: true, username: true } } },
+      })
+    }
+
     const comment = await prisma.comment.create({
       data: {
         postId,
         authorId: session.user.id,
         content: content.trim(),
+        parentId: parentId || null,
       },
       include: {
         author: {
@@ -86,22 +98,32 @@ export async function POST(
       },
     })
 
-    // Create notification for post author (if not commenting on own post)
-    if (post && post.authorId !== session.user.id) {
-      const commenter = await prisma.user.findUnique({
-        where: { id: session.user.id },
-        select: { name: true, username: true },
-      })
+    // Get commenter info
+    const commenter = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { name: true, username: true },
+    })
 
-      if (commenter) {
-        await createNotification(
-          post.authorId,
-          'comment',
-          'Nuovo Commento',
-          `${commenter.name || commenter.username || 'Qualcuno'} ha commentato il tuo post`,
-          `/dashboard#post-${postId}`
-        )
-      }
+    // Notify post author (if not self)
+    if (post && post.authorId !== session.user.id && commenter) {
+      await createNotification(
+        post.authorId,
+        'comment',
+        'Nuovo Commento',
+        `${commenter.name || commenter.username || 'Qualcuno'} ha commentato il tuo post`,
+        `/dashboard#post-${postId}`
+      )
+    }
+
+    // Notify parent comment author if replying (if not self)
+    if (parentComment && parentComment.authorId !== session.user.id && commenter) {
+      await createNotification(
+        parentComment.authorId,
+        'comment',
+        'Nuova Risposta',
+        `${commenter.name || commenter.username || 'Qualcuno'} ha risposto al tuo commento`,
+        `/dashboard#post-${postId}`
+      )
     }
 
     return NextResponse.json(comment, { status: 201 })
@@ -113,4 +135,3 @@ export async function POST(
     )
   }
 }
-

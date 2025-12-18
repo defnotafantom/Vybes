@@ -225,12 +225,22 @@ model Comment {
   authorId  String
   author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   content   String
+  
+  // Reply support
+  parentId  String?
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("CommentReplies")
+  
+  // Likes on comments
+  likesCount Int      @default(0)
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Performance indexes
   @@index([postId])
   @@index([authorId])
+  @@index([parentId])
 }
 
 model Like {
