@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { motion } from "framer-motion"
 import { Check, Clock } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -32,11 +32,7 @@ export function PollDisplay({ postId }: PollDisplayProps) {
   const [loading, setLoading] = useState(true)
   const [voting, setVoting] = useState(false)
 
-  useEffect(() => {
-    fetchPoll()
-  }, [postId])
-
-  const fetchPoll = async () => {
+  const fetchPoll = useCallback(async () => {
     try {
       const res = await fetch(`/api/posts/${postId}/poll`)
       if (res.ok) {
@@ -48,7 +44,11 @@ export function PollDisplay({ postId }: PollDisplayProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [postId])
+
+  useEffect(() => {
+    fetchPoll()
+  }, [fetchPoll])
 
   const handleVote = async (optionId: string) => {
     if (voting || poll?.userVote) return

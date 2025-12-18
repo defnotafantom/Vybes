@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useRef, useEffect, useCallback } from "react"
-import { X, AtSign, Loader2 } from "lucide-react"
+import { X, AtSign, Loader2, BarChart3, Plus, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { motion, AnimatePresence } from "framer-motion"
@@ -22,11 +22,17 @@ interface UserSuggestion {
   image: string | null
 }
 
+interface PollData {
+  question: string
+  options: string[]
+  endsAt?: string
+}
+
 interface NewPostPopupProps {
   isOpen: boolean
   onClose: () => void
   artTags?: Tag[]
-  onPostSubmit: (data: { title: string; description: string; tags: string[]; fileUrl?: string | null; mentions?: string[] }) => Promise<void>
+  onPostSubmit: (data: { title: string; description: string; tags: string[]; fileUrl?: string | null; mentions?: string[]; poll?: PollData }) => Promise<void>
 }
 
 export function NewPostPopup({ isOpen, onClose, artTags = [], onPostSubmit }: NewPostPopupProps) {
@@ -45,6 +51,11 @@ export function NewPostPopup({ isOpen, onClose, artTags = [], onPostSubmit }: Ne
   const [mentionLoading, setMentionLoading] = useState(false)
   const [cursorPosition, setCursorPosition] = useState(0)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  // Poll state
+  const [showPoll, setShowPoll] = useState(false)
+  const [pollQuestion, setPollQuestion] = useState("")
+  const [pollOptions, setPollOptions] = useState(["", ""])
 
   // Search users for @ mentions
   const searchUsers = useCallback(async (query: string) => {
@@ -145,11 +156,24 @@ export function NewPostPopup({ isOpen, onClose, artTags = [], onPostSubmit }: Ne
       }
       
       const mentions = extractMentions(description)
-      await onPostSubmit({ title, description, tags, fileUrl, mentions })
+      
+      // Prepare poll data if enabled
+      let poll: PollData | undefined
+      if (showPoll && pollQuestion.trim() && pollOptions.filter(o => o.trim()).length >= 2) {
+        poll = {
+          question: pollQuestion.trim(),
+          options: pollOptions.filter(o => o.trim()),
+        }
+      }
+      
+      await onPostSubmit({ title, description, tags, fileUrl, mentions, poll })
       setTitle("")
       setDescription("")
       setTags([])
       setFile(null)
+      setShowPoll(false)
+      setPollQuestion("")
+      setPollOptions(["", ""])
       onClose()
     } catch (error) {
       console.error("Error submitting post:", error)
@@ -252,10 +276,73 @@ export function NewPostPopup({ isOpen, onClose, artTags = [], onPostSubmit }: Ne
                   </AnimatePresence>
                 </div>
 
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <AtSign className="h-4 w-4" />
-                  <span>Digita @ per menzionare altri utenti</span>
+                <div className="flex items-center gap-4 text-xs text-gray-500">
+                  <div className="flex items-center gap-1">
+                    <AtSign className="h-4 w-4" />
+                    <span>@ per menzionare</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowPoll(!showPoll)}
+                    className={`flex items-center gap-1 px-2 py-1 rounded-lg transition-colors ${
+                      showPoll ? "bg-sky-100 dark:bg-sky-900/30 text-sky-600" : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                    }`}
+                  >
+                    <BarChart3 className="h-4 w-4" />
+                    <span>Sondaggio</span>
+                  </button>
                 </div>
+
+                {/* Poll Section */}
+                {showPoll && (
+                  <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-sm text-gray-700 dark:text-gray-300">Crea sondaggio</span>
+                      <button onClick={() => setShowPoll(false)} className="text-gray-500 hover:text-gray-700">
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <Input
+                      placeholder="Domanda del sondaggio"
+                      value={pollQuestion}
+                      onChange={(e) => setPollQuestion(e.target.value)}
+                      className="bg-white dark:bg-gray-800"
+                    />
+                    <div className="space-y-2">
+                      {pollOptions.map((option, idx) => (
+                        <div key={idx} className="flex gap-2">
+                          <Input
+                            placeholder={`Opzione ${idx + 1}`}
+                            value={option}
+                            onChange={(e) => {
+                              const newOptions = [...pollOptions]
+                              newOptions[idx] = e.target.value
+                              setPollOptions(newOptions)
+                            }}
+                            className="bg-white dark:bg-gray-800"
+                          />
+                          {pollOptions.length > 2 && (
+                            <button
+                              onClick={() => setPollOptions(pollOptions.filter((_, i) => i !== idx))}
+                              className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    {pollOptions.length < 4 && (
+                      <button
+                        onClick={() => setPollOptions([...pollOptions, ""])}
+                        className="flex items-center gap-2 text-sm text-sky-500 hover:text-sky-600"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Aggiungi opzione
+                      </button>
+                    )}
+                  </div>
+                )}
 
                 <label className="block">
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">{t('feed.newPost.fileLabel')}:</span>

@@ -30,6 +30,9 @@ export async function GET(
         likes: {
           select: { userId: true },
         },
+        reactions: {
+          select: { emoji: true, userId: true },
+        },
         comments: {
           include: {
             author: {
@@ -45,6 +48,16 @@ export async function GET(
         },
         savedBy: {
           select: { userId: true },
+        },
+        poll: {
+          include: {
+            options: {
+              include: { _count: { select: { votes: true } } },
+            },
+          },
+        },
+        _count: {
+          select: { likes: true, comments: true, reposts: true },
         },
         collaborationArtists: {
           select: {
@@ -64,11 +77,16 @@ export async function GET(
       )
     }
 
+    // Group reactions
+    const reactionCounts = new Map<string, number>()
+    post.reactions.forEach((r) => {
+      reactionCounts.set(r.emoji, (reactionCounts.get(r.emoji) || 0) + 1)
+    })
+
     return NextResponse.json({
       ...post,
-      likes: post.likes.length,
-      comments: post.comments.length,
-      commentsData: post.comments,
+      reactions: Array.from(reactionCounts.entries()).map(([emoji, count]) => ({ emoji, count })),
+      userReactions: userId ? post.reactions.filter(r => r.userId === userId).map(r => r.emoji) : [],
       liked: userId ? post.likes.some(like => like.userId === userId) : false,
       saved: userId ? post.savedBy.some(saved => saved.userId === userId) : false,
     })

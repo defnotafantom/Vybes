@@ -14,6 +14,7 @@ import { CollaborationPost } from '@/components/posts/collaboration-post'
 import { SearchBar } from '@/components/search/search-bar'
 import { useLanguage } from '@/components/providers/language-provider'
 import { FeedSkeleton } from '@/components/ui/skeleton'
+import { TrendingSidebar } from '@/components/feed/trending-sidebar'
 
 interface Post {
   id: string
@@ -112,7 +113,7 @@ export default function DashboardFeed() {
     }
   }, [selectedTags])
 
-  const handleCreatePostWithDetails = async (data: { title: string; description: string; tags: string[]; fileUrl?: string | null }) => {
+  const handleCreatePostWithDetails = async (data: { title: string; description: string; tags: string[]; fileUrl?: string | null; poll?: { question: string; options: string[] } }) => {
     try {
       const response = await fetch('/api/posts', {
         method: 'POST',
@@ -121,6 +122,7 @@ export default function DashboardFeed() {
           content: `${data.title}\n\n${data.description}`,
           images: data.fileUrl ? [data.fileUrl] : [],
           tags: data.tags || [],
+          poll: data.poll,
         }),
       })
 
@@ -306,10 +308,11 @@ export default function DashboardFeed() {
   return (
     <div className="w-full">
       <div className={cn(
-        "mx-auto transition-all duration-300",
+        "mx-auto transition-all duration-300 flex gap-6",
         feedWidth[viewMode as keyof typeof feedWidth] || feedWidth.social
       )}>
-        <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/40 dark:border-gray-700/40 p-4 md:p-6 flex flex-col gap-4 md:gap-5">
+        {/* Main Feed */}
+        <div className="flex-1 min-w-0 bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/40 dark:border-gray-700/40 p-4 md:p-6 flex flex-col gap-4 md:gap-5">
         {/* Top controls */}
         <div className="flex flex-col gap-3 md:gap-4">
           {/* Search Bar */}
@@ -407,6 +410,11 @@ export default function DashboardFeed() {
           onSave={handleEditSave}
         />
       )}
+
+      {/* Trending Sidebar - Desktop only */}
+      <div className="hidden lg:block w-80 flex-shrink-0 sticky top-4 h-fit">
+        <TrendingSidebar onTagClick={toggleTag} />
+      </div>
     </div>
   )
 }

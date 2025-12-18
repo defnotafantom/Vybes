@@ -172,6 +172,7 @@ export default function AdminPage() {
     if (tab === "users") fetchUsers()
     if (tab === "database" && permissions?.canReadDB) fetchDBRecords(dbModel)
     if (tab === "roles") fetchRoles()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab])
 
   if (status === "loading" || loading) {

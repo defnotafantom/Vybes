@@ -2,7 +2,7 @@
 
 import React, { memo, useState, useCallback } from "react"
 import Image from "next/image"
-import { Heart, Bookmark, Share2, MoreHorizontal, MessageCircle, Pencil, Trash2, Flag, Link2, X } from "lucide-react"
+import { Heart, Bookmark, Share2, MoreHorizontal, MessageCircle, Pencil, Trash2, Flag, Link2, X, Repeat2, Pin } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { PostTags } from "./tag-filters"
 import { cn } from "@/lib/utils"
@@ -15,6 +15,16 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { CommentsModal } from "./comments-modal"
+import { RichText } from "./rich-text"
+import { ReactionsPicker } from "./reactions-picker"
+import { ImageCarousel } from "./image-carousel"
+import { LinkPreview, extractUrls } from "./link-preview"
+import { PollDisplay } from "./poll-display"
+
+interface ReactionCount {
+  emoji: string
+  count: number
+}
 
 interface Post {
   id: string
@@ -39,8 +49,13 @@ interface Post {
   type?: string
   likes?: number
   comments?: number
+  reposts?: number
   isLiked?: boolean
   isSaved?: boolean
+  isPinned?: boolean
+  hasPoll?: boolean
+  reactions?: ReactionCount[]
+  userReactions?: string[]
   createdAt?: Date | string
 }
 
@@ -270,8 +285,15 @@ function PostCardComponent({
   const [commentCount, setCommentCount] = useState(post.comments || 0)
   const [likeCount, setLikeCount] = useState(post.likes || 0)
   const [isLiked, setIsLiked] = useState(post.isLiked || false)
+  const [reactions, setReactions] = useState<ReactionCount[]>(post.reactions || [])
+  const [userReactions, setUserReactions] = useState<string[]>(post.userReactions || [])
+  const [repostCount, setRepostCount] = useState(post.reposts || 0)
+  const [hasReposted, setHasReposted] = useState(false)
   
   const imageUrl = post.imageUrl || post.image_url || post.media_url || (post.images && post.images[0])
+  const hasMultipleImages = post.images && post.images.length > 1
+  const contentText = post.description || post.content || ""
+  const urls = extractUrls(contentText)
   const isVideo = typeof imageUrl === 'string' && /\.(mp4|webm)(\?|$)/i.test(imageUrl)
   const authorName = post.author?.name || post.author?.username || post.author_name || "Utente"
   const authorImage = post.author?.image
@@ -304,6 +326,52 @@ function PostCardComponent({
   const handleOpenComments = useCallback(() => {
     setShowComments(true)
   }, [])
+
+  const handleReact = useCallback(async (emoji: string) => {
+    try {
+      const res = await fetch(`/api/posts/${post.id}/reactions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emoji }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.added) {
+          setUserReactions(prev => [...prev, emoji])
+          setReactions(prev => {
+            const existing = prev.find(r => r.emoji === emoji)
+            if (existing) {
+              return prev.map(r => r.emoji === emoji ? { ...r, count: r.count + 1 } : r)
+            }
+            return [...prev, { emoji, count: 1 }]
+          })
+        } else {
+          setUserReactions(prev => prev.filter(e => e !== emoji))
+          setReactions(prev => prev.map(r => r.emoji === emoji ? { ...r, count: r.count - 1 } : r).filter(r => r.count > 0))
+        }
+      }
+    } catch (error) {
+      console.error('Error reacting:', error)
+    }
+  }, [post.id])
+
+  const handleRepost = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/posts/${post.id}/repost`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setHasReposted(data.reposted)
+        setRepostCount(prev => data.reposted ? prev + 1 : prev - 1)
+        toast({ title: data.reposted ? "Repostato!" : "Repost rimosso" })
+      }
+    } catch (error) {
+      toast({ title: "Errore", variant: "destructive" })
+    }
+  }, [post.id, toast])
 
   // Close dropdown when clicking outside
   const handleClickOutside = useCallback(() => {
@@ -369,16 +437,28 @@ function PostCardComponent({
           </div>
         </div>
 
+        {/* Pinned indicator */}
+        {post.isPinned && (
+          <div className="flex items-center gap-1 text-xs text-sky-500 -mt-2 mb-2">
+            <Pin className="h-3 w-3" />
+            <span>Post in evidenza</span>
+          </div>
+        )}
+
         {/* Content */}
         <div>
           {post.title && (
             <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{post.title}</h3>
           )}
-          <p className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{post.description || post.content}</p>
+          <p className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
+            <RichText text={contentText} onHashtagClick={onTagClick} />
+          </p>
         </div>
 
-        {/* Media */}
-        {imageUrl && !imageError && (
+        {/* Media - Carousel if multiple images */}
+        {hasMultipleImages ? (
+          <ImageCarousel images={post.images!} aspectRatio="video" />
+        ) : imageUrl && !imageError && (
           <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800">
             {!imageLoaded && (
               <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700" />
@@ -399,17 +479,22 @@ function PostCardComponent({
           </div>
         )}
 
+        {/* Link Preview */}
+        {urls.length > 0 && <LinkPreview url={urls[0]} />}
+
+        {/* Poll */}
+        {post.hasPoll && <PollDisplay postId={post.id} />}
+
         {/* Tags */}
         {tags.length > 0 && <PostTags tags={tags} onTagClick={onTagClick} />}
 
         {/* Actions */}
-        <div className="flex items-center gap-6 pt-3 border-t border-gray-200 dark:border-gray-700">
-          <ActionButton
-            onClick={handleLike}
-            isActive={isLiked}
-            activeColor="text-red-500"
-            icon={Heart}
-            count={likeCount}
+        <div className="flex items-center gap-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+          <ReactionsPicker
+            postId={post.id}
+            reactions={reactions}
+            userReactions={userReactions}
+            onReact={handleReact}
           />
           <ActionButton
             onClick={handleOpenComments}
@@ -417,6 +502,13 @@ function PostCardComponent({
             activeColor="text-sky-500"
             icon={MessageCircle}
             count={commentCount}
+          />
+          <ActionButton
+            onClick={handleRepost}
+            isActive={hasReposted}
+            activeColor="text-green-500"
+            icon={Repeat2}
+            count={repostCount}
           />
           <ActionButton
             onClick={handleShare}
@@ -524,15 +616,16 @@ function PostCardComponent({
               <h3 className="font-semibold text-gray-900 dark:text-white mb-1 line-clamp-2">{post.title}</h3>
             )}
             <p className="text-gray-500 dark:text-gray-400 text-sm line-clamp-2">
-              {post.description || post.content}
+              <RichText text={contentText} onHashtagClick={onTagClick} />
             </p>
             {tags.length > 0 && <PostTags tags={tags} onTagClick={onTagClick} />}
+            {post.hasPoll && <PollDisplay postId={post.id} />}
           </div>
           {/* Actions */}
-          <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-            <ActionButton onClick={handleLike} isActive={isLiked} activeColor="text-red-500" icon={Heart} count={likeCount} />
+          <div className="flex items-center gap-3 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+            <ReactionsPicker postId={post.id} reactions={reactions} userReactions={userReactions} onReact={handleReact} compact />
             <ActionButton onClick={handleOpenComments} isActive={false} activeColor="text-sky-500" icon={MessageCircle} count={commentCount} />
-            <ActionButton onClick={handleShare} isActive={false} activeColor="text-sky-500" icon={Share2} />
+            <ActionButton onClick={handleRepost} isActive={hasReposted} activeColor="text-green-500" icon={Repeat2} count={repostCount} />
             <ActionButton onClick={handleSave} isActive={post.isSaved} activeColor="text-sky-500" icon={Bookmark} className="ml-auto" />
           </div>
         </div>
@@ -622,19 +715,15 @@ function PostCardComponent({
           {post.title && (
             <h3 className="font-medium text-sm text-gray-900 dark:text-white mb-1 line-clamp-1">{post.title}</h3>
           )}
-          <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">{post.description || post.content}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
+            <RichText text={contentText} onHashtagClick={onTagClick} />
+          </p>
           {/* Actions */}
-          <div className="flex items-center gap-3 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700 text-gray-500">
-            <button onClick={handleLike} className={cn("flex items-center gap-1 text-xs hover:text-red-500 transition-colors", isLiked && "text-red-500")}>
-              <Heart className={cn("h-3.5 w-3.5", isLiked && "fill-current")} />
-              {likeCount}
-            </button>
+          <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700 text-gray-500">
+            <ReactionsPicker postId={post.id} reactions={reactions} userReactions={userReactions} onReact={handleReact} compact />
             <button onClick={handleOpenComments} className="flex items-center gap-1 text-xs hover:text-sky-500 transition-colors">
               <MessageCircle className="h-3.5 w-3.5" />
               {commentCount}
-            </button>
-            <button onClick={handleShare} className="hover:text-sky-500 transition-colors">
-              <Share2 className="h-3.5 w-3.5" />
             </button>
             <button onClick={handleSave} className={cn("ml-auto hover:text-sky-500 transition-colors", post.isSaved && "text-sky-500")}>
               <Bookmark className={cn("h-3.5 w-3.5", post.isSaved && "fill-current")} />
@@ -708,10 +797,16 @@ function PostCardComponent({
               </AnimatePresence>
             </div>
           </div>
-          <p className="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-wrap">{post.description || post.content}</p>
+          <p className="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-wrap">
+            <RichText text={contentText} onHashtagClick={onTagClick} />
+          </p>
           
           {/* Media */}
-          {imageUrl && !imageError && (
+          {hasMultipleImages ? (
+            <div className="mt-3">
+              <ImageCarousel images={post.images!} aspectRatio="video" />
+            </div>
+          ) : imageUrl && !imageError && (
             <div className="relative w-full mt-3 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800">
               {!imageLoaded && (
                 <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 aspect-video" />
@@ -731,17 +826,24 @@ function PostCardComponent({
               )}
             </div>
           )}
+
+          {/* Link Preview */}
+          {urls.length > 0 && <LinkPreview url={urls[0]} />}
+
+          {/* Poll */}
+          {post.hasPoll && <PollDisplay postId={post.id} />}
           
           {tags.length > 0 && <PostTags tags={tags} onTagClick={onTagClick} />}
           
-          <div className="flex items-center gap-4 mt-3 text-gray-500">
-            <button onClick={handleLike} className={cn("flex items-center gap-1 text-sm hover:text-red-500 transition-colors", isLiked && "text-red-500")}>
-              <Heart className={cn("h-4 w-4", isLiked && "fill-current")} />
-              {likeCount}
-            </button>
+          <div className="flex items-center gap-3 mt-3 text-gray-500">
+            <ReactionsPicker postId={post.id} reactions={reactions} userReactions={userReactions} onReact={handleReact} />
             <button onClick={handleOpenComments} className="flex items-center gap-1 text-sm hover:text-sky-500 transition-colors">
               <MessageCircle className="h-4 w-4" />
               {commentCount}
+            </button>
+            <button onClick={handleRepost} className={cn("flex items-center gap-1 text-sm hover:text-green-500 transition-colors", hasReposted && "text-green-500")}>
+              <Repeat2 className="h-4 w-4" />
+              {repostCount > 0 && repostCount}
             </button>
             <button onClick={handleShare} className="flex items-center gap-1 text-sm hover:text-sky-500 transition-colors">
               <Share2 className="h-4 w-4" />
