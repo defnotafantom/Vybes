@@ -17,6 +17,13 @@ enum UserRole {
   ARTIST_RECRUITER
 }
 
+enum AdminRole {
+  USER          // Nessun accesso admin
+  MODERATOR     // Può moderare contenuti
+  ADMIN         // Gestione utenti e contenuti
+  SUPERADMIN    // Accesso completo incluso DB
+}
+
 enum EventStatus {
   DRAFT
   PUBLISHED
@@ -47,9 +54,13 @@ model User {
   username      String?   @unique
   image         String?
   role          UserRole  @default(DEFAULT)
+  adminRole     AdminRole @default(USER)
   bio           String?
   location      String?
   website       String?
+  
+  // OAuth accounts
+  accounts      Account[]
   
   // Gamification
   level         Int       @default(1)
@@ -317,6 +328,35 @@ model VerificationToken {
   expires    DateTime
   
   @@unique([identifier, token])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model AdminPermission {
+  id          String   @id @default(cuid())
+  role        AdminRole
+  permission  String   // db_read, db_write, users_manage, content_moderate, roles_manage, etc.
+  createdAt   DateTime @default(now())
+  
+  @@unique([role, permission])
+  @@index([role])
 }
 
 model Notification {

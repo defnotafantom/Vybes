@@ -16,9 +16,10 @@ import {
   Settings,
   LogOut,
   Gift,
+  Shield,
   type LucideIcon,
 } from 'lucide-react'
-import { signOut } from 'next-auth/react'
+import { signOut, useSession } from 'next-auth/react'
 import { useLanguage } from '@/components/providers/language-provider'
 import Image from 'next/image'
 
@@ -35,7 +36,12 @@ const navItems = [
 export function Sidebar() {
   const pathname = usePathname()
   const { t } = useLanguage()
+  const { data: session } = useSession()
   const [hover, setHover] = useState(false)
+  
+  // Check if user has admin access
+  const adminRole = session?.user?.adminRole
+  const hasAdminAccess = adminRole && ['MODERATOR', 'ADMIN', 'SUPERADMIN'].includes(adminRole)
 
   const renderButton = (
     IconComponent: LucideIcon,
@@ -195,6 +201,15 @@ export function Sidebar() {
 
       {/* Settings & Logout */}
       <div className="px-2 pb-4 space-y-2">
+        {/* Hidden Admin Panel - only visible to admins */}
+        {hasAdminAccess && renderButton(
+          Shield,
+          'Admin Panel',
+          '/dashboard/admin',
+          undefined,
+          pathname?.startsWith('/dashboard/admin'),
+          "bg-gradient-to-r from-red-500 via-red-600 to-rose-600 text-white hover:from-red-600 hover:via-rose-600 hover:to-rose-700 shadow-xl shadow-red-500/40 border-2 border-red-400/50"
+        )}
         {renderButton(
           Settings,
           t('common.settings') || 'Impostazioni',

@@ -1,23 +1,31 @@
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
+import GoogleProvider from 'next-auth/providers/google'
+import AppleProvider from 'next-auth/providers/apple'
+import { PrismaAdapter } from '@auth/prisma-adapter'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 
 type UserRole = 'DEFAULT' | 'ARTIST' | 'RECRUITER' | 'ARTIST_RECRUITER'
+type AdminRole = 'USER' | 'MODERATOR' | 'ADMIN' | 'SUPERADMIN'
 
-// Validate required environment variables (runtime-safe)
-// IMPORTANT: Do not throw at module import time, otherwise Next.js can fail builds
-// when importing this file during "Collecting page data".
 if (!process.env.NEXTAUTH_SECRET) {
-  console.warn('⚠️ NEXTAUTH_SECRET is not set. Authentication will fail at runtime until it is configured.')
-}
-
-if (!process.env.NEXTAUTH_URL && process.env.NODE_ENV === 'production') {
-  console.warn('⚠️ NEXTAUTH_URL is not set in production. This may cause callback URL issues.')
+  console.warn('⚠️ NEXTAUTH_SECRET is not set.')
 }
 
 export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prisma) as any,
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID || '',
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+      allowDangerousEmailAccountLinking: true,
+    }),
+    AppleProvider({
+      clientId: process.env.APPLE_CLIENT_ID || '',
+      clientSecret: process.env.APPLE_CLIENT_SECRET || '',
+      allowDangerousEmailAccountLinking: true,
+    }),
     CredentialsProvider({
       name: 'Credentials',
       credentials: {
@@ -29,19 +37,17 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
-        // Support both email and username login
         const isEmail = credentials.email.includes('@')
         const user = await prisma.user.findUnique({
           where: isEmail 
             ? { email: credentials.email }
-            : { username: credentials.email } // username is stored in email field
+            : { username: credentials.email }
         })
 
-        if (!user) {
+        if (!user || !user.password) {
           return null
         }
 
-        // In development, allow login without email verification if NODE_ENV is development
         if (!user.emailVerified && process.env.NODE_ENV === 'production') {
           return null
         }
@@ -60,22 +66,35 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           role: user.role,
+          adminRole: user.adminRole,
         }
       }
     })
   ],
-        pages: {
-          signIn: '/auth',
-          signOut: '/',
-        },
+  pages: {
+    signIn: '/auth',
+    signOut: '/',
+  },
   session: {
     strategy: 'jwt',
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
         token.role = user.role as UserRole
+        token.adminRole = user.adminRole as AdminRole
         token.id = user.id
+      }
+      // For OAuth users, fetch adminRole from DB
+      if (account && token.email) {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: token.email },
+          select: { adminRole: true, role: true }
+        })
+        if (dbUser) {
+          token.adminRole = dbUser.adminRole as AdminRole
+          token.role = dbUser.role as UserRole
+        }
       }
       return token
     },
@@ -83,11 +102,32 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id as string
         session.user.role = token.role
+        session.user.adminRole = token.adminRole as AdminRole
       }
       return session
     },
+    async signIn({ user, account }) {
+      // For OAuth, ensure user has password field (set empty for OAuth users)
+      if (account?.provider !== 'credentials' && user.email) {
+        const existingUser = await prisma.user.findUnique({
+          where: { email: user.email }
+        })
+        if (!existingUser) {
+          // Create user for OAuth
+          await prisma.user.create({
+            data: {
+              email: user.email,
+              name: user.name,
+              image: user.image,
+              password: '', // OAuth users don't have password
+              emailVerified: new Date(),
+            }
+          })
+        }
+      }
+      return true
+    }
   },
   secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === 'development',
 }
-
