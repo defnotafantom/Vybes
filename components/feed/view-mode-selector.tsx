@@ -19,7 +19,7 @@ export function ViewModeSelector({ viewMode, setViewMode }: ViewModeSelectorProp
   ]
 
   return (
-    <div className="inline-flex items-center p-1 rounded-xl bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-sm">
+    <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-gray-100/80 dark:bg-gray-800/80 min-w-max">
       {modes.map((mode) => {
         const Icon = mode.icon
         const isActive = viewMode === mode.id
@@ -28,22 +28,22 @@ export function ViewModeSelector({ viewMode, setViewMode }: ViewModeSelectorProp
             key={mode.id}
             onClick={() => setViewMode(mode.id)}
             className={cn(
-              "relative flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+              "relative flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap",
               isActive
                 ? "text-white"
-                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
             )}
           >
             {isActive && (
               <motion.div
-                layoutId="activeTab"
-                className="absolute inset-0 bg-gradient-to-r from-sky-500 to-blue-600 rounded-lg shadow-lg"
-                transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
+                layoutId="viewTab"
+                className="absolute inset-0 bg-gradient-to-r from-sky-500 to-blue-600 rounded-lg shadow-md"
+                transition={{ type: "spring", bounce: 0.15, duration: 0.35 }}
               />
             )}
             <span className="relative z-10 flex items-center gap-1.5">
-              <Icon size={16} />
-              <span className="hidden sm:inline">{mode.label}</span>
+              <Icon size={14} className="sm:w-4 sm:h-4" />
+              <span className="hidden xs:inline">{mode.label}</span>
             </span>
           </button>
         )
