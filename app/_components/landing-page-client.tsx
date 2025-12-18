@@ -67,10 +67,11 @@ function TestimonialCard({ name, role, text, avatar, delay }: {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay, duration: 0.4 }}
-      className="p-6 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700"
+      whileHover={{ y: -4 }}
+      className="p-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-white/40 dark:border-gray-700/40 shadow-lg shadow-black/5 dark:shadow-black/20"
     >
       <div className="flex items-center gap-3 mb-4">
-        <div className="w-10 h-10 rounded-full bg-sky-100 dark:bg-sky-900/50 flex items-center justify-center text-sky-600 dark:text-sky-400 font-semibold">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center text-white font-semibold shadow-md">
           {avatar}
         </div>
         <div>
@@ -134,7 +135,7 @@ export function LandingPageClient() {
       description: language === 'it' 
         ? 'Trova artisti e recruiter nella tua area e inizia a collaborare' 
         : 'Find artists and recruiters in your area and start collaborating',
-      color: 'from-sky-500 to-blue-500',
+      color: 'from-sky-400 to-blue-500',
     },
     {
       icon: Calendar,
@@ -142,7 +143,7 @@ export function LandingPageClient() {
       description: language === 'it' 
         ? 'Scopri e partecipa a eventi culturali esclusivi' 
         : 'Discover and join exclusive cultural events',
-      color: 'from-purple-500 to-pink-500',
+      color: 'from-violet-400 to-purple-500',
     },
     {
       icon: Palette,
@@ -150,7 +151,7 @@ export function LandingPageClient() {
       description: language === 'it' 
         ? 'Mostra il tuo talento con un portfolio professionale' 
         : 'Showcase your talent with a professional portfolio',
-      color: 'from-orange-500 to-red-500',
+      color: 'from-orange-400 to-rose-500',
     },
     {
       icon: Zap,
@@ -158,7 +159,7 @@ export function LandingPageClient() {
       description: language === 'it' 
         ? 'Trova collaborazioni, lavori e nuove esperienze' 
         : 'Find collaborations, jobs and new experiences',
-      color: 'from-green-500 to-emerald-500',
+      color: 'from-emerald-400 to-teal-500',
     },
     {
       icon: MessageCircle,
@@ -166,7 +167,7 @@ export function LandingPageClient() {
       description: language === 'it' 
         ? 'Comunica in tempo reale con altri artisti' 
         : 'Communicate in real-time with other artists',
-      color: 'from-cyan-500 to-teal-500',
+      color: 'from-cyan-400 to-sky-500',
     },
     {
       icon: MapPin,
@@ -174,7 +175,7 @@ export function LandingPageClient() {
       description: language === 'it' 
         ? 'Esplora eventi e artisti sulla mappa interattiva' 
         : 'Explore events and artists on the interactive map',
-      color: 'from-rose-500 to-pink-500',
+      color: 'from-pink-400 to-rose-500',
     },
   ]
 
@@ -219,37 +220,58 @@ export function LandingPageClient() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-sky-50/30 to-white dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 relative overflow-x-hidden">
       
-      {/* Header */}
+      {/* Header - Glass Effect */}
       <motion.header 
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-gray-950/90 backdrop-blur-lg border-b border-gray-200/50 dark:border-gray-800/50"
+        className="fixed top-0 left-0 right-0 z-50"
       >
-        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-3 group select-none" aria-label="Vybes">
-            <motion.div 
-              whileHover={{ scale: 1.05 }}
-              transition={{ type: "spring", stiffness: 400 }}
-              className="h-10 w-10 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center overflow-hidden"
-            >
-              <img
-                src="https://i.imgur.com/gGwB8VE.png"
-                alt="Vybes"
-                className="h-7 w-7 object-contain"
-              />
-            </motion.div>
-            <span className="text-xl font-bold text-gray-900 dark:text-white">
-              Vybes
-            </span>
-          </Link>
-          <div className="flex items-center gap-3">
-            <LanguageToggle />
-            <ThemeToggle />
-            <Button asChild size="sm" className="hidden sm:flex bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100">
-              <Link href="/auth">
-                {language === 'it' ? 'Inizia' : 'Start'}
+        <div className="mx-4 mt-4">
+          <div className="container mx-auto px-4 py-3 bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl border border-white/20 dark:border-gray-700/30 shadow-lg shadow-black/5 dark:shadow-black/20">
+            <div className="flex justify-between items-center">
+              {/* Logo Section */}
+              <Link href="/" className="flex items-center gap-3 group select-none" aria-label="Vybes">
+                <motion.div 
+                  whileHover={{ scale: 1.05, rotate: 5 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                  className="relative h-11 w-11 rounded-xl bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-600 grid place-items-center overflow-hidden shadow-lg shadow-sky-500/25"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                  <img
+                    src="https://i.imgur.com/gGwB8VE.png"
+                    alt="Vybes"
+                    className="h-7 w-7 object-contain relative z-10 drop-shadow-sm"
+                  />
+                </motion.div>
+                <div className="flex flex-col">
+                  <span className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+                    Vybes
+                  </span>
+                  <span className="text-[10px] text-gray-500 dark:text-gray-400 font-medium tracking-wider uppercase hidden sm:block">
+                    Creative Hub
+                  </span>
+                </div>
               </Link>
-            </Button>
+
+              {/* Right Section */}
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-gray-800/80 rounded-xl">
+                  <LanguageToggle />
+                  <ThemeToggle />
+                </div>
+                <Button 
+                  asChild 
+                  size="sm" 
+                  className="hidden sm:flex bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40 transition-all duration-300 rounded-xl px-5"
+                >
+                  <Link href="/auth">
+                    {language === 'it' ? 'Inizia' : 'Start'}
+                    <ArrowRight className="ml-1.5 h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </motion.header>
@@ -276,7 +298,7 @@ export function LandingPageClient() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-600 dark:text-gray-300 text-sm font-medium mb-6 border border-gray-200 dark:border-gray-700"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-full text-gray-600 dark:text-gray-300 text-sm font-medium mb-6 border border-white/40 dark:border-gray-700/40 shadow-sm"
             >
               <Sparkles className="h-4 w-4 text-sky-500" />
               {language === 'it' ? 'La community #1 per artisti' : '#1 community for artists'}
@@ -422,10 +444,11 @@ export function LandingPageClient() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.05, duration: 0.4 }}
-                className="p-6 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+                whileHover={{ y: -4 }}
+                className="p-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-white/40 dark:border-gray-700/40 shadow-lg shadow-black/5 dark:shadow-black/20 hover:shadow-xl transition-shadow"
               >
-                <div className="w-12 h-12 rounded-xl bg-sky-100 dark:bg-sky-900/50 flex items-center justify-center mb-4">
-                  <feature.icon className="h-6 w-6 text-sky-500" />
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-4 shadow-md`}>
+                  <feature.icon className="h-6 w-6 text-white" />
                 </div>
                 <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-2">
                   {feature.title}
