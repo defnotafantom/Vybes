@@ -118,16 +118,16 @@ export function SearchBar() {
   return (
     <div ref={searchRef} className="relative w-full">
       <div className="relative">
-        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-sky-400 dark:text-sky-500" />
-        <Input
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <input
           type="text"
-          placeholder={t('placeholder.search')}
+          placeholder={t('placeholder.search') || 'Cerca utenti, post, eventi...'}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => {
             if (results) setIsOpen(true)
           }}
-          className="pl-12 pr-12 h-12 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-2 border-sky-200/60 dark:border-sky-800/60 focus:border-sky-500 dark:focus:border-sky-500 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 text-base font-medium"
+          className="w-full pl-10 pr-10 h-10 bg-gray-100/80 dark:bg-gray-800/80 border-0 focus:ring-2 focus:ring-sky-500/30 rounded-full text-sm placeholder:text-gray-400 transition-all duration-200"
         />
         {query && (
           <button
@@ -136,9 +136,9 @@ export function SearchBar() {
               setResults(null)
               setIsOpen(false)
             }}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors p-1 rounded-full hover:bg-sky-100 dark:hover:bg-sky-900/30"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         )}
       </div>

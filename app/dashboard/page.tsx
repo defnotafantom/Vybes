@@ -307,87 +307,104 @@ export default function DashboardFeed() {
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full min-h-screen">
       <div className={cn(
         "mx-auto transition-all duration-300 flex gap-6",
         feedWidth[viewMode as keyof typeof feedWidth] || feedWidth.social
       )}>
         {/* Main Feed */}
-        <div className="flex-1 min-w-0 glass-card p-4 md:p-6 flex flex-col gap-4 md:gap-5">
-        {/* Stories */}
-        <div className="-mx-4 md:-mx-6 -mt-4 md:-mt-6 mb-2 bg-gradient-to-b from-white/50 to-transparent dark:from-gray-800/50 border-b border-white/30 dark:border-gray-700/30 rounded-t-2xl">
-          <StoryBar currentUserId={session?.user?.id} />
-        </div>
-
-        {/* Top controls */}
-        <div className="flex flex-col gap-3 md:gap-4">
-          {/* Search Bar */}
-          <div className="w-full">
-            <SearchBar />
+        <div className="flex-1 min-w-0 space-y-4">
+          {/* Stories Card */}
+          <div className="glass-card overflow-hidden">
+            <StoryBar currentUserId={session?.user?.id} />
           </div>
-          
-          {/* New Post Button */}
-          <button
-            onClick={() => setShowNewPostPopup(true)}
-            className="flex items-center gap-3 w-full p-3.5 rounded-xl bg-white/60 dark:bg-gray-800/60 hover:bg-white/90 dark:hover:bg-gray-800/90 transition-all duration-200 border border-white/50 dark:border-gray-700/50 hover:border-sky-200/50 dark:hover:border-sky-700/50 group shadow-sm hover:shadow-md"
-          >
-            <div className="w-10 h-10 bg-gradient-to-br from-sky-400 to-blue-500 rounded-xl flex justify-center items-center text-white shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all">
-              <Plus className="h-5 w-5" />
-            </div>
-            <span className="text-gray-600 dark:text-gray-300 font-medium text-left flex-1">
-              {t('feed.newPost') || 'Crea nuovo post'}
-            </span>
-          </button>
 
-          {/* View Mode Selector */}
-          <ViewModeSelector viewMode={viewMode} setViewMode={handleViewChange} />
-
-          {/* Tag Filters */}
-          <TagFilters
-            artTags={artTags}
-            selectedTags={selectedTags}
-            toggleTag={toggleTag}
-            clearAll={clearAllTags}
-          />
-        </div>
-
-        {/* FEED – transizione fluida */}
-        <div className={cn(
-          "transition-all duration-300",
-          transitioning ? "opacity-0 scale-95" : "opacity-100 scale-100"
-        )}>
-          {filteredPosts.length === 0 ? (
-            <div className="py-16 text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                <Plus className="h-8 w-8 text-gray-400" />
+          {/* Create Post Card */}
+          <div className="glass-card p-4">
+            <button
+              onClick={() => setShowNewPostPopup(true)}
+              className="flex items-center gap-3 w-full p-3 rounded-xl bg-gray-50/80 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-all duration-200 group"
+            >
+              <div className="w-10 h-10 bg-gradient-to-br from-sky-400 to-blue-500 rounded-full flex justify-center items-center text-white shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all">
+                <Plus className="h-5 w-5" />
               </div>
-              <p className="text-gray-500 dark:text-gray-400 mb-2">Nessun post ancora</p>
-              <p className="text-sm text-gray-400 dark:text-gray-500">Sii il primo a condividere qualcosa!</p>
+              <span className="text-gray-500 dark:text-gray-400 text-sm text-left flex-1">
+                {t('feed.newPost') || 'A cosa stai pensando?'}
+              </span>
+            </button>
+          </div>
+
+          {/* Controls Card */}
+          <div className="glass-card p-4 space-y-3">
+            {/* Search */}
+            <SearchBar />
+            
+            {/* View Mode & Filters in row */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <ViewModeSelector viewMode={viewMode} setViewMode={handleViewChange} />
             </div>
-          ) : (
-            renderPosts()
+            
+            {/* Tags */}
+            <TagFilters
+              artTags={artTags}
+              selectedTags={selectedTags}
+              toggleTag={toggleTag}
+              clearAll={clearAllTags}
+            />
+          </div>
+
+          {/* Feed Content */}
+          <div className={cn(
+            "transition-all duration-300",
+            transitioning ? "opacity-0 translate-y-2" : "opacity-100 translate-y-0"
+          )}>
+            {filteredPosts.length === 0 ? (
+              <div className="glass-card p-12 text-center">
+                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-sky-100 to-blue-100 dark:from-sky-900/30 dark:to-blue-900/30 flex items-center justify-center">
+                  <Plus className="h-10 w-10 text-sky-500" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Nessun post ancora</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Sii il primo a condividere qualcosa!</p>
+                <Button 
+                  onClick={() => setShowNewPostPopup(true)}
+                  className="rounded-full"
+                >
+                  Crea il tuo primo post
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {renderPosts()}
+              </div>
+            )}
+          </div>
+
+          {/* Load More */}
+          {hasMore && filteredPosts.length > 0 && (
+            <div className="flex justify-center py-6">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setCurrentPage(prev => prev + 1)
+                  fetchPosts(currentPage + 1)
+                }}
+                className="rounded-full px-8 hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:border-sky-300 dark:hover:border-sky-700"
+              >
+                Carica altri post
+              </Button>
+            </div>
           )}
         </div>
 
-        {/* Load More */}
-        {hasMore && filteredPosts.length > 0 && (
-          <div className="flex justify-center pt-4">
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setCurrentPage(prev => prev + 1)
-                fetchPosts(currentPage + 1)
-              }}
-              className="rounded-xl"
-            >
-              Carica altri post
-            </Button>
+        {/* Trending Sidebar - Desktop only */}
+        <div className="hidden lg:block w-80 flex-shrink-0">
+          <div className="sticky top-4 space-y-4">
+            <TrendingSidebar onTagClick={toggleTag} />
           </div>
-        )}
         </div>
       </div>
 
-      {/* New Post Popup */}
+      {/* Modals */}
       <NewPostPopup
         isOpen={showNewPostPopup}
         onClose={() => setShowNewPostPopup(false)}
@@ -395,9 +412,8 @@ export default function DashboardFeed() {
         onPostSubmit={handleCreatePostWithDetails}
       />
 
-      {/* Collaboration Popup */}
       {showCollaborationPopup && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-md z-[100] flex items-center justify-center p-4">
           <div className="max-w-2xl w-full">
             <CollaborationPost
               onPostCreate={handleCreateCollaboration}
@@ -407,7 +423,6 @@ export default function DashboardFeed() {
         </div>
       )}
 
-      {/* Edit Post Modal */}
       {editingPost && (
         <EditPostModal
           isOpen={!!editingPost}
@@ -416,11 +431,6 @@ export default function DashboardFeed() {
           onSave={handleEditSave}
         />
       )}
-
-      {/* Trending Sidebar - Desktop only */}
-      <div className="hidden lg:block w-80 flex-shrink-0 sticky top-4 h-fit">
-        <TrendingSidebar onTagClick={toggleTag} />
-      </div>
     </div>
   )
 }

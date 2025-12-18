@@ -21,48 +21,37 @@ export function TagFilters({ artTags = [], selectedTags = [], toggleTag, clearAl
   if (!artTags || artTags.length === 0) return null
 
   return (
-    <div className="flex flex-wrap items-center gap-2 mt-4 mb-2">
-      <AnimatePresence>
-        {artTags.map((tag) => {
-          const isSelected = selectedTags.includes(tag.name)
+    <div className="flex flex-wrap items-center gap-2">
+      {artTags.map((tag) => {
+        const isSelected = selectedTags.includes(tag.name)
 
-          return (
-            <motion.button
-              key={tag.id}
-              layout
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: isSelected ? 1.1 : 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              onClick={() => toggleTag?.(tag.name)}
-              className={cn(
-                "px-3 py-1.5 rounded-xl shadow-md text-sm font-semibold transition-all duration-200 flex items-center gap-1.5 h-8",
-                isSelected
-                  ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white scale-105 shadow-lg shadow-sky-500/30"
-                  : "bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm text-slate-700 dark:text-slate-300 hover:bg-sky-50 dark:hover:bg-sky-900/20 border border-sky-200 dark:border-sky-800"
-              )}
-            >
-              <span className="flex items-center gap-1">
-                {tag.name}
-                {tag.name === "Musica" && (
-                  <Music size={14} className={isSelected ? "text-white" : "text-sky-600 dark:text-sky-400"} />
-                )}
-              </span>
-            </motion.button>
-          )
-        })}
-      </AnimatePresence>
+        return (
+          <motion.button
+            key={tag.id}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => toggleTag?.(tag.name)}
+            className={cn(
+              "px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 flex items-center gap-1",
+              isSelected
+                ? "bg-sky-500 text-white shadow-md shadow-sky-500/25"
+                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+            )}
+          >
+            #{tag.name}
+            {tag.name === "Musica" && <Music size={12} />}
+          </motion.button>
+        )
+      })}
 
       {selectedTags.length > 0 && clearAll && (
         <motion.button
-          layout
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
           onClick={clearAll}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="ml-2 px-3 py-1.5 rounded-xl shadow-md text-sm font-semibold bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm text-slate-700 dark:text-slate-300 hover:bg-sky-50 dark:hover:bg-sky-900/20 border border-sky-200 dark:border-sky-800 h-8 transition-all"
+          className="px-3 py-1.5 rounded-full text-xs font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
         >
-          Pulisci
+          ✕ Pulisci
         </motion.button>
       )}
     </div>
