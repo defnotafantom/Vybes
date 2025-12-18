@@ -227,6 +227,16 @@ export default function DashboardFeed() {
     }, 200)
   }
 
+  const handleDelete = useCallback((postId: string) => {
+    setPosts(prev => prev.filter(p => p.id !== postId))
+  }, [])
+
+  const handleEdit = useCallback((postId: string) => {
+    // For now, just redirect to a hypothetical edit page or open modal
+    // In production you'd open an edit modal
+    console.log('Edit post:', postId)
+  }, [])
+
   const renderPosts = () => {
     const commonProps = {
       posts: filteredPosts.map(post => ({
@@ -238,9 +248,12 @@ export default function DashboardFeed() {
         isLiked: post.liked,
         isSaved: post.saved,
       })),
+      currentUserId: session?.user?.id,
       onTagClick: toggleTag,
       onLike: handleLike,
       onSave: handleSave,
+      onDelete: handleDelete,
+      onEdit: handleEdit,
       onShare: (postId: string) => {
         if (typeof window !== 'undefined') {
           navigator.clipboard.writeText(`${window.location.origin}/dashboard#post-${postId}`)

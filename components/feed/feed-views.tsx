@@ -11,11 +11,14 @@ interface Post {
 
 interface FeedViewProps {
   posts: Post[]
+  currentUserId?: string
   onTagClick?: (tag: string) => void
   onLike?: (postId: string) => void
   onSave?: (postId: string) => void
   onShare?: (postId: string) => void
-  onReport?: (postId: string) => void
+  onReport?: (postId: string, reason: string) => void
+  onEdit?: (postId: string) => void
+  onDelete?: (postId: string) => void
   onCopyLink?: (postId: string) => void
 }
 
