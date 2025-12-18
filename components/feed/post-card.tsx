@@ -477,36 +477,35 @@ function PostCardComponent({
         )}
         <div className="p-4 flex-1 flex flex-col justify-between">
           <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Link href={post.author?.id ? `/dashboard/users/${post.author.id}` : '#'} className="flex items-center gap-2 group/author">
+                <Avatar className="h-7 w-7 ring-2 ring-white dark:ring-gray-800">
+                  <AvatarImage src={authorImage || undefined} />
+                  <AvatarFallback className="bg-gradient-to-br from-sky-400 to-blue-500 text-white text-xs font-medium">
+                    {authorName.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover/author:text-sky-500 transition-colors truncate">
+                  {authorName}
+                </span>
+              </Link>
+              <RoleBadge role={authorRole} />
+              {timeAgo && <span className="text-xs text-gray-500 ml-auto">{timeAgo}</span>}
+            </div>
             {post.title && (
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2">{post.title}</h3>
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-1 line-clamp-2">{post.title}</h3>
             )}
             <p className="text-gray-500 dark:text-gray-400 text-sm line-clamp-2">
               {post.description || post.content}
             </p>
             {tags.length > 0 && <PostTags tags={tags} onTagClick={onTagClick} />}
           </div>
-          <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
-            <Link 
-              href={post.author?.id ? `/dashboard/users/${post.author.id}` : '#'} 
-              className="flex items-center gap-2 group/author"
-            >
-              <Avatar className="h-8 w-8 ring-2 ring-white dark:ring-gray-800">
-                <AvatarImage src={authorImage || undefined} />
-                <AvatarFallback className="bg-gradient-to-br from-sky-400 to-blue-500 text-white text-xs font-medium">
-                  {authorName.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover/author:text-sky-500 transition-colors truncate">
-                  {authorName}
-                </span>
-                <RoleBadge role={authorRole} />
-              </div>
-            </Link>
-            <div className="flex items-center gap-3">
-              <ActionButton onClick={handleLike} isActive={post.isLiked} activeColor="text-red-500" icon={Heart} count={post.likes || 0} />
-              <ActionButton onClick={handleSave} isActive={post.isSaved} activeColor="text-sky-500" icon={Bookmark} />
-            </div>
+          {/* Actions */}
+          <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+            <ActionButton onClick={handleLike} isActive={post.isLiked} activeColor="text-red-500" icon={Heart} count={post.likes || 0} />
+            <ActionButton onClick={() => {}} isActive={false} activeColor="text-sky-500" icon={MessageCircle} count={post.comments || 0} />
+            <ActionButton onClick={handleShare} isActive={false} activeColor="text-sky-500" icon={Share2} />
+            <ActionButton onClick={handleSave} isActive={post.isSaved} activeColor="text-sky-500" icon={Bookmark} className="ml-auto" />
           </div>
         </div>
       </motion.article>
@@ -568,30 +567,41 @@ function PostCardComponent({
                 sizes="(max-width: 768px) 50vw, 25vw"
               />
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
-              <div className="flex items-center gap-3 text-white w-full justify-between">
-                <div className="flex items-center gap-3">
-                  <button onClick={handleLike} className="flex items-center gap-1">
-                    <Heart className={cn("h-4 w-4", post.isLiked && "fill-current")} />
-                    <span className="text-sm">{post.likes || 0}</span>
-                  </button>
-                  <span className="flex items-center gap-1 text-sm">
-                    <MessageCircle className="h-4 w-4" />
-                    {post.comments || 0}
-                  </span>
-                </div>
-                <button onClick={handleSave}>
-                  <Bookmark className={cn("h-4 w-4", post.isSaved && "fill-current")} />
-                </button>
-              </div>
-            </div>
           </div>
         )}
         <div className="p-3">
+          <div className="flex items-center gap-2 mb-2">
+            <Link href={post.author?.id ? `/dashboard/users/${post.author.id}` : '#'} className="flex items-center gap-1.5">
+              <Avatar className="h-6 w-6">
+                <AvatarImage src={authorImage || undefined} />
+                <AvatarFallback className="bg-gradient-to-br from-sky-400 to-blue-500 text-white text-xs">
+                  {authorName.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">{authorName}</span>
+            </Link>
+          </div>
           {post.title && (
             <h3 className="font-medium text-sm text-gray-900 dark:text-white mb-1 line-clamp-1">{post.title}</h3>
           )}
           <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">{post.description || post.content}</p>
+          {/* Actions */}
+          <div className="flex items-center gap-3 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700 text-gray-500">
+            <button onClick={handleLike} className={cn("flex items-center gap-1 text-xs hover:text-red-500 transition-colors", post.isLiked && "text-red-500")}>
+              <Heart className={cn("h-3.5 w-3.5", post.isLiked && "fill-current")} />
+              {post.likes || 0}
+            </button>
+            <span className="flex items-center gap-1 text-xs">
+              <MessageCircle className="h-3.5 w-3.5" />
+              {post.comments || 0}
+            </span>
+            <button onClick={handleShare} className="hover:text-sky-500 transition-colors">
+              <Share2 className="h-3.5 w-3.5" />
+            </button>
+            <button onClick={handleSave} className={cn("ml-auto hover:text-sky-500 transition-colors", post.isSaved && "text-sky-500")}>
+              <Bookmark className={cn("h-3.5 w-3.5", post.isSaved && "fill-current")} />
+            </button>
+          </div>
         </div>
       </motion.article>
     )
