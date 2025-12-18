@@ -14,8 +14,6 @@ import { CollaborationPost } from '@/components/posts/collaboration-post'
 import { SearchBar } from '@/components/search/search-bar'
 import { useLanguage } from '@/components/providers/language-provider'
 import { FeedSkeleton } from '@/components/ui/skeleton'
-import { TrendingSidebar } from '@/components/feed/trending-sidebar'
-import { StoryBar } from '@/components/stories/story-bar'
 
 interface Post {
   id: string
@@ -296,113 +294,95 @@ export default function DashboardFeed() {
 
   if (loading) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-4">
+      <div className="max-w-xl mx-auto px-4 py-6">
         <FeedSkeleton count={3} />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen pb-20 md:pb-4">
-      {/* Main Container */}
+    <div className="min-h-screen pb-20 md:pb-6">
       <div className={cn(
-        "mx-auto px-0 sm:px-4 transition-all duration-200",
+        "mx-auto transition-all duration-200",
         feedWidth[viewMode as keyof typeof feedWidth] || feedWidth.social
       )}>
-        <div className="flex gap-6">
-          {/* Main Column */}
-          <div className="flex-1 min-w-0">
-            {/* Stories - full width on mobile */}
-            <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 sm:rounded-xl sm:border sm:mb-4 sm:border-gray-200/60 dark:sm:border-gray-700/60">
-              <StoryBar currentUserId={session?.user?.id} />
+        {/* Create Post */}
+        <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 sm:mx-4 sm:mt-4 sm:rounded-2xl sm:border p-4">
+          <button
+            onClick={() => setShowNewPostPopup(true)}
+            className="flex items-center gap-3 w-full"
+          >
+            <div className="w-10 h-10 bg-gradient-to-br from-sky-400 to-blue-500 rounded-full flex items-center justify-center text-white shadow-md">
+              <Plus className="h-5 w-5" />
             </div>
-
-            {/* Create Post - compact */}
-            <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 sm:rounded-xl sm:border sm:mb-4 sm:border-gray-200/60 dark:sm:border-gray-700/60 p-3">
-              <button
-                onClick={() => setShowNewPostPopup(true)}
-                className="flex items-center gap-3 w-full"
-              >
-                <div className="w-9 h-9 bg-gradient-to-br from-sky-400 to-blue-500 rounded-full flex items-center justify-center text-white flex-shrink-0">
-                  <Plus className="h-4 w-4" />
-                </div>
-                <div className="flex-1 text-left py-2 px-3 bg-gray-100 dark:bg-gray-800 rounded-full text-sm text-gray-500 dark:text-gray-400">
-                  {t('feed.newPost') || 'A cosa stai pensando?'}
-                </div>
-              </button>
+            <div className="flex-1 text-left py-2.5 px-4 bg-gray-100 dark:bg-gray-800 rounded-full text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+              {t('feed.newPost') || 'A cosa stai pensando?'}
             </div>
+          </button>
+        </div>
 
-            {/* Filters Bar - sticky */}
-            <div className="sticky top-0 z-20 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-gray-100 dark:border-gray-800 sm:rounded-xl sm:border sm:mb-4 sm:border-gray-200/60 dark:sm:border-gray-700/60">
-              <div className="p-3 space-y-2">
-                {/* Search */}
+        {/* Filters */}
+        <div className="sticky top-0 z-20 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 sm:mx-4 sm:mt-3 sm:rounded-2xl sm:border">
+          <div className="p-3">
+            <div className="flex items-center gap-3">
+              <div className="flex-1">
                 <SearchBar />
-                
-                {/* View Mode + Tags Row */}
-                <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide -mx-3 px-3">
-                  <ViewModeSelector viewMode={viewMode} setViewMode={handleViewChange} />
-                  <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 flex-shrink-0" />
-                  <TagFilters
-                    artTags={artTags}
-                    selectedTags={selectedTags}
-                    toggleTag={toggleTag}
-                    clearAll={clearAllTags}
-                  />
-                </div>
               </div>
+              <ViewModeSelector viewMode={viewMode} setViewMode={handleViewChange} />
             </div>
-
-            {/* Feed */}
-            <div className={cn(
-              "transition-opacity duration-150",
-              transitioning ? "opacity-60" : "opacity-100"
-            )}>
-              {filteredPosts.length === 0 ? (
-                <div className="bg-white dark:bg-gray-900 sm:rounded-xl sm:border sm:border-gray-200/60 dark:sm:border-gray-700/60 p-12 text-center">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                    <Plus className="h-8 w-8 text-gray-400" />
-                  </div>
-                  <p className="font-medium text-gray-900 dark:text-white mb-1">Nessun post</p>
-                  <p className="text-sm text-gray-500 mb-4">Sii il primo a condividere!</p>
-                  <Button 
-                    onClick={() => setShowNewPostPopup(true)}
-                    size="sm"
-                    className="rounded-full"
-                  >
-                    Crea post
-                  </Button>
-                </div>
-              ) : (
-                <div className="divide-y divide-gray-100 dark:divide-gray-800 sm:space-y-4 sm:divide-y-0">
-                  {renderPosts()}
-                </div>
-              )}
-            </div>
-
-            {/* Load More */}
-            {hasMore && filteredPosts.length > 0 && (
-              <div className="p-4 flex justify-center">
-                <Button 
-                  variant="ghost" 
-                  onClick={() => {
-                    setCurrentPage(prev => prev + 1)
-                    fetchPosts(currentPage + 1)
-                  }}
-                  className="text-sky-500 hover:text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-900/20"
-                >
-                  Carica altri
-                </Button>
-              </div>
-            )}
-          </div>
-
-          {/* Sidebar - Desktop */}
-          <div className="hidden lg:block w-72 flex-shrink-0">
-            <div className="sticky top-4">
-              <TrendingSidebar onTagClick={toggleTag} />
+            
+            <div className="flex items-center gap-2 mt-3 overflow-x-auto scrollbar-hide -mx-3 px-3 pb-1">
+              <TagFilters
+                artTags={artTags}
+                selectedTags={selectedTags}
+                toggleTag={toggleTag}
+                clearAll={clearAllTags}
+              />
             </div>
           </div>
         </div>
+
+        {/* Feed */}
+        <div className={cn(
+          "sm:mx-4 sm:mt-3 transition-opacity duration-150",
+          transitioning ? "opacity-50" : "opacity-100"
+        )}>
+          {filteredPosts.length === 0 ? (
+            <div className="bg-white dark:bg-gray-900 sm:rounded-2xl sm:border border-gray-100 dark:border-gray-800 p-16 text-center">
+              <div className="w-20 h-20 mx-auto mb-5 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 flex items-center justify-center">
+                <Plus className="h-10 w-10 text-gray-400" />
+              </div>
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Nessun post</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">Sii il primo a condividere qualcosa!</p>
+              <Button 
+                onClick={() => setShowNewPostPopup(true)}
+                className="rounded-full px-6"
+              >
+                Crea il primo post
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3 sm:space-y-4">
+              {renderPosts()}
+            </div>
+          )}
+        </div>
+
+        {/* Load More */}
+        {hasMore && filteredPosts.length > 0 && (
+          <div className="py-8 flex justify-center">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setCurrentPage(prev => prev + 1)
+                fetchPosts(currentPage + 1)
+              }}
+              className="rounded-full px-8 border-gray-200 dark:border-gray-700 hover:border-sky-300 dark:hover:border-sky-700 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+            >
+              Carica altri post
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Modals */}
