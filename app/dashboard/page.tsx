@@ -307,77 +307,74 @@ export default function DashboardFeed() {
   }
 
   return (
-    <div className="w-full px-2 sm:px-4 pb-20 md:pb-4">
+    <div className="w-full px-3 sm:px-4 lg:px-6 pb-24 md:pb-6">
       <div className={cn(
-        "mx-auto transition-all duration-300 flex flex-col lg:flex-row gap-4 lg:gap-6",
+        "mx-auto transition-all duration-300 flex flex-col lg:flex-row gap-5 lg:gap-8",
         feedWidth[viewMode as keyof typeof feedWidth] || feedWidth.social
       )}>
         {/* Main Feed */}
-        <div className="flex-1 min-w-0 space-y-3 sm:space-y-4">
+        <div className="flex-1 min-w-0 space-y-4 sm:space-y-5">
           {/* Stories */}
-          <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl border border-white/30 dark:border-gray-700/30 shadow-sm overflow-hidden">
+          <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-sm overflow-hidden">
             <StoryBar currentUserId={session?.user?.id} />
           </div>
 
           {/* Create Post */}
-          <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl border border-white/30 dark:border-gray-700/30 shadow-sm p-3 sm:p-4">
+          <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-sm p-4 sm:p-5">
             <button
               onClick={() => setShowNewPostPopup(true)}
-              className="flex items-center gap-3 w-full p-2.5 sm:p-3 rounded-xl bg-gray-100/60 dark:bg-gray-800/60 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors group"
+              className="flex items-center gap-4 w-full p-3 sm:p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors group"
             >
-              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-sky-400 to-blue-500 rounded-full flex justify-center items-center text-white shadow-md group-hover:scale-105 transition-transform">
-                <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
+              <div className="w-10 h-10 sm:w-11 sm:h-11 bg-gradient-to-br from-sky-400 to-blue-500 rounded-full flex justify-center items-center text-white shadow-lg group-hover:scale-105 transition-transform flex-shrink-0">
+                <Plus className="h-5 w-5" />
               </div>
-              <span className="text-gray-500 dark:text-gray-400 text-sm flex-1 text-left">
+              <span className="text-gray-500 dark:text-gray-400 text-sm sm:text-base flex-1 text-left">
                 {t('feed.newPost') || 'A cosa stai pensando?'}
               </span>
             </button>
           </div>
 
           {/* Controls */}
-          <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl border border-white/30 dark:border-gray-700/30 shadow-sm p-3 sm:p-4 space-y-3">
+          <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-sm p-4 sm:p-5 space-y-4">
             <SearchBar />
             
-            {/* View Mode - scrollable on mobile */}
-            <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0 scrollbar-hide">
+            {/* View Mode */}
+            <div className="overflow-x-auto pb-1 -mb-1 scrollbar-hide">
               <ViewModeSelector viewMode={viewMode} setViewMode={handleViewChange} />
             </div>
             
-            {/* Tags - scrollable on mobile */}
-            <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0 scrollbar-hide">
-              <div className="min-w-max sm:min-w-0">
-                <TagFilters
-                  artTags={artTags}
-                  selectedTags={selectedTags}
-                  toggleTag={toggleTag}
-                  clearAll={clearAllTags}
-                />
-              </div>
+            {/* Tags */}
+            <div className="overflow-x-auto pb-1 -mb-1 scrollbar-hide">
+              <TagFilters
+                artTags={artTags}
+                selectedTags={selectedTags}
+                toggleTag={toggleTag}
+                clearAll={clearAllTags}
+              />
             </div>
           </div>
 
           {/* Feed Content */}
           <div className={cn(
             "transition-all duration-200",
-            transitioning ? "opacity-50 scale-[0.99]" : "opacity-100 scale-100"
+            transitioning ? "opacity-50" : "opacity-100"
           )}>
             {filteredPosts.length === 0 ? (
-              <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl border border-white/30 dark:border-gray-700/30 shadow-sm p-8 sm:p-12 text-center">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-sky-100 to-blue-100 dark:from-sky-900/30 dark:to-blue-900/30 flex items-center justify-center">
-                  <Plus className="h-8 w-8 sm:h-10 sm:w-10 text-sky-500" />
+              <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-sm p-10 sm:p-14 text-center">
+                <div className="w-20 h-20 mx-auto mb-5 rounded-full bg-gradient-to-br from-sky-100 to-blue-100 dark:from-sky-900/30 dark:to-blue-900/30 flex items-center justify-center">
+                  <Plus className="h-10 w-10 text-sky-500" />
                 </div>
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-1">Nessun post ancora</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Sii il primo a condividere qualcosa!</p>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Nessun post ancora</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">Sii il primo a condividere qualcosa!</p>
                 <Button 
                   onClick={() => setShowNewPostPopup(true)}
-                  className="rounded-full"
-                  size="sm"
+                  className="rounded-full px-6"
                 >
                   Crea il tuo primo post
                 </Button>
               </div>
             ) : (
-              <div className="space-y-3 sm:space-y-4">
+              <div className="space-y-4 sm:space-y-5">
                 {renderPosts()}
               </div>
             )}
@@ -385,15 +382,14 @@ export default function DashboardFeed() {
 
           {/* Load More */}
           {hasMore && filteredPosts.length > 0 && (
-            <div className="flex justify-center py-4 sm:py-6">
+            <div className="flex justify-center py-6 sm:py-8">
               <Button 
                 variant="outline" 
                 onClick={() => {
                   setCurrentPage(prev => prev + 1)
                   fetchPosts(currentPage + 1)
                 }}
-                className="rounded-full px-6 sm:px-8 text-sm"
-                size="sm"
+                className="rounded-full px-8"
               >
                 Carica altri post
               </Button>
@@ -403,7 +399,7 @@ export default function DashboardFeed() {
 
         {/* Trending Sidebar - Desktop only */}
         <div className="hidden lg:block w-72 xl:w-80 flex-shrink-0">
-          <div className="sticky top-4">
+          <div className="sticky top-6">
             <TrendingSidebar onTagClick={toggleTag} />
           </div>
         </div>
