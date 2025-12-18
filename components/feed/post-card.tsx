@@ -424,8 +424,34 @@ function PostCardComponent({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         whileHover={{ y: -4 }}
-        className="flex flex-col rounded-2xl bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border border-white/40 dark:border-gray-700/40 shadow-lg hover:shadow-xl transition-shadow overflow-hidden group"
+        className="flex flex-col rounded-2xl bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border border-white/40 dark:border-gray-700/40 shadow-lg hover:shadow-xl transition-shadow overflow-hidden group relative"
       >
+        {/* Actions dropdown */}
+        <div className="absolute top-2 right-2 z-10">
+          <button 
+            onClick={() => setShowDropdown(!showDropdown)}
+            className="p-2 rounded-xl bg-black/20 hover:bg-black/40 backdrop-blur-sm transition-colors"
+          >
+            <MoreHorizontal className="h-4 w-4 text-white" />
+          </button>
+          <AnimatePresence>
+            {showDropdown && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={handleClickOutside} />
+                <PostActionsDropdown
+                  post={post}
+                  isOwner={!!isOwner}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  onReport={onReport}
+                  onCopyLink={onCopyLink}
+                  onClose={() => setShowDropdown(false)}
+                />
+              </>
+            )}
+          </AnimatePresence>
+        </div>
+
         {imageUrl && !imageError && (
           <div className="relative w-full aspect-[4/3] overflow-hidden bg-gray-100 dark:bg-gray-800">
             {!imageLoaded && (
@@ -477,13 +503,10 @@ function PostCardComponent({
                 <RoleBadge role={authorRole} />
               </div>
             </Link>
-            <ActionButton
-              onClick={handleLike}
-              isActive={post.isLiked}
-              activeColor="text-red-500"
-              icon={Heart}
-              count={post.likes || 0}
-            />
+            <div className="flex items-center gap-3">
+              <ActionButton onClick={handleLike} isActive={post.isLiked} activeColor="text-red-500" icon={Heart} count={post.likes || 0} />
+              <ActionButton onClick={handleSave} isActive={post.isSaved} activeColor="text-sky-500" icon={Bookmark} />
+            </div>
           </div>
         </div>
       </motion.article>
@@ -496,8 +519,34 @@ function PostCardComponent({
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         whileHover={{ y: -4 }}
-        className="break-inside-avoid mb-4 rounded-2xl overflow-hidden bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border border-white/40 dark:border-gray-700/40 shadow-lg hover:shadow-xl transition-shadow group"
+        className="break-inside-avoid mb-4 rounded-2xl overflow-hidden bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border border-white/40 dark:border-gray-700/40 shadow-lg hover:shadow-xl transition-shadow group relative"
       >
+        {/* Actions dropdown */}
+        <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button 
+            onClick={() => setShowDropdown(!showDropdown)}
+            className="p-1.5 rounded-lg bg-black/30 hover:bg-black/50 backdrop-blur-sm transition-colors"
+          >
+            <MoreHorizontal className="h-4 w-4 text-white" />
+          </button>
+          <AnimatePresence>
+            {showDropdown && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={handleClickOutside} />
+                <PostActionsDropdown
+                  post={post}
+                  isOwner={!!isOwner}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  onReport={onReport}
+                  onCopyLink={onCopyLink}
+                  onClose={() => setShowDropdown(false)}
+                />
+              </>
+            )}
+          </AnimatePresence>
+        </div>
+
         {imageUrl && !imageError && (
           <div className="relative w-full aspect-square overflow-hidden bg-gray-100 dark:bg-gray-800">
             {!imageLoaded && (
@@ -520,10 +569,19 @@ function PostCardComponent({
               />
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
-              <div className="flex items-center gap-3 text-white">
-                <button onClick={handleLike} className="flex items-center gap-1">
-                  <Heart className={cn("h-4 w-4", post.isLiked && "fill-current")} />
-                  <span className="text-sm">{post.likes || 0}</span>
+              <div className="flex items-center gap-3 text-white w-full justify-between">
+                <div className="flex items-center gap-3">
+                  <button onClick={handleLike} className="flex items-center gap-1">
+                    <Heart className={cn("h-4 w-4", post.isLiked && "fill-current")} />
+                    <span className="text-sm">{post.likes || 0}</span>
+                  </button>
+                  <span className="flex items-center gap-1 text-sm">
+                    <MessageCircle className="h-4 w-4" />
+                    {post.comments || 0}
+                  </span>
+                </div>
+                <button onClick={handleSave}>
+                  <Bookmark className={cn("h-4 w-4", post.isSaved && "fill-current")} />
                 </button>
               </div>
             </div>
@@ -556,17 +614,68 @@ function PostCardComponent({
           </Avatar>
         </Link>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <Link 
-              href={post.author?.id ? `/dashboard/users/${post.author.id}` : '#'}
-              className="font-medium text-sm text-gray-900 dark:text-white hover:text-sky-500 transition-colors"
-            >
-              {authorName}
-            </Link>
-            {timeAgo && <span className="text-xs text-gray-500">· {timeAgo}</span>}
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-2">
+              <Link 
+                href={post.author?.id ? `/dashboard/users/${post.author.id}` : '#'}
+                className="font-medium text-sm text-gray-900 dark:text-white hover:text-sky-500 transition-colors"
+              >
+                {authorName}
+              </Link>
+              {timeAgo && <span className="text-xs text-gray-500">· {timeAgo}</span>}
+            </div>
+            {/* Actions dropdown */}
+            <div className="relative">
+              <button 
+                onClick={() => setShowDropdown(!showDropdown)}
+                className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                <MoreHorizontal className="h-4 w-4 text-gray-500" />
+              </button>
+              <AnimatePresence>
+                {showDropdown && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={handleClickOutside} />
+                    <PostActionsDropdown
+                      post={post}
+                      isOwner={!!isOwner}
+                      onEdit={onEdit}
+                      onDelete={onDelete}
+                      onReport={onReport}
+                      onCopyLink={onCopyLink}
+                      onClose={() => setShowDropdown(false)}
+                    />
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
           <p className="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-wrap">{post.description || post.content}</p>
+          
+          {/* Media */}
+          {imageUrl && !imageError && (
+            <div className="relative w-full mt-3 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800">
+              {!imageLoaded && (
+                <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 aspect-video" />
+              )}
+              {isVideo ? (
+                <video src={imageUrl} controls className="w-full max-h-80 object-contain" />
+              ) : (
+                <Image
+                  src={imageUrl}
+                  alt={post.title || ""}
+                  width={600}
+                  height={400}
+                  className={cn("w-full max-h-80 object-contain transition-opacity", imageLoaded ? "opacity-100" : "opacity-0")}
+                  onLoad={() => setImageLoaded(true)}
+                  onError={() => setImageError(true)}
+                />
+              )}
+            </div>
+          )}
+          
           {tags.length > 0 && <PostTags tags={tags} onTagClick={onTagClick} />}
+          
           <div className="flex items-center gap-4 mt-3 text-gray-500">
             <button onClick={handleLike} className={cn("flex items-center gap-1 text-sm hover:text-red-500 transition-colors", post.isLiked && "text-red-500")}>
               <Heart className={cn("h-4 w-4", post.isLiked && "fill-current")} />
@@ -576,6 +685,12 @@ function PostCardComponent({
               <MessageCircle className="h-4 w-4" />
               {post.comments || 0}
             </span>
+            <button onClick={handleShare} className="flex items-center gap-1 text-sm hover:text-sky-500 transition-colors">
+              <Share2 className="h-4 w-4" />
+            </button>
+            <button onClick={handleSave} className={cn("flex items-center gap-1 text-sm hover:text-sky-500 transition-colors ml-auto", post.isSaved && "text-sky-500")}>
+              <Bookmark className={cn("h-4 w-4", post.isSaved && "fill-current")} />
+            </button>
           </div>
         </div>
       </div>
