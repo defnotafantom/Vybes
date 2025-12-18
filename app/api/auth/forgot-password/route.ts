@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import crypto from 'crypto'
 import { sendPasswordResetEmail } from '@/lib/email'
+import { rateLimit, getClientIP, rateLimitConfigs } from '@/lib/rate-limit'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,6 +17,23 @@ function getBaseUrl() {
 
 export async function POST(request: Request) {
   try {
+    // Rate limiting
+    const clientIP = getClientIP(request)
+    const rateLimitResult = rateLimit(`forgot-password:${clientIP}`, rateLimitConfigs.forgotPassword)
+    
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Troppe richieste. Riprova più tardi.' },
+        { 
+          status: 429,
+          headers: {
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
+          }
+        }
+      )
+    }
+
     const body = await request.json().catch(() => ({}))
     const identifierRaw = (body?.identifier || body?.email || '') as string
     const identifier = identifierRaw.trim().toLowerCase()
@@ -59,4 +77,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Errore durante la richiesta.' }, { status: 500 })
   }
 }
+
+
 

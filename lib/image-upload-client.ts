@@ -142,3 +142,5 @@ export async function prepareMediaForUpload(file: File, preset: ImageUploadPrese
   // normal image -> optimize
   return await prepareImageForUpload(file, preset)
 }
+
+

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Trophy, Star, TrendingUp, Users, UserPlus, UserMinus, Calendar, CheckCircle, Clock, Bookmark, Plus, Edit, Image as ImageIcon, Video, FileText } from 'lucide-react'
 import Image from 'next/image'
 import { FittingRoomModal } from '@/components/profile/fitting-room-modal'
+import { ProfileSkeleton } from '@/components/ui/skeleton'
 import { ProfileEditModal } from '@/components/profile/profile-edit-modal'
 import { Progress } from '@/components/ui/progress'
 import { getExperienceProgress } from '@/lib/utils'
@@ -147,7 +148,11 @@ export default function ProfilePage() {
   }
 
   if (loading) {
-    return <div className="text-center py-12">Caricamento profilo...</div>
+    return (
+      <div className="max-w-4xl mx-auto">
+        <ProfileSkeleton />
+      </div>
+    )
   }
 
   if (!profile) {

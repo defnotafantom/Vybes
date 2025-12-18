@@ -3,9 +3,28 @@ import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
 import { sendVerificationEmail } from '@/lib/email'
+import { rateLimit, getClientIP, rateLimitConfigs } from '@/lib/rate-limit'
+import { registerSchema, validateData } from '@/lib/validations'
 
 export async function POST(request: Request) {
   try {
+    // Rate limiting
+    const clientIP = getClientIP(request)
+    const rateLimitResult = rateLimit(`register:${clientIP}`, rateLimitConfigs.register)
+    
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Troppe richieste. Riprova più tardi.' },
+        { 
+          status: 429,
+          headers: {
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
+          }
+        }
+      )
+    }
+
     console.log('📥 Registration request received')
     
     // Check if DATABASE_URL is configured
@@ -23,17 +42,17 @@ export async function POST(request: Request) {
     const body = await request.json()
     console.log('📋 Request body:', { ...body, password: '[HIDDEN]' })
     
-    const { name, email, password, role } = body
-
-    // Validate input
-    if (!email || !password || !name) {
-      console.log('❌ Validation failed: missing fields')
+    // Validate input with Zod
+    const validation = validateData(registerSchema, body)
+    if (!validation.success) {
+      console.log('❌ Validation failed:', validation.error)
       return NextResponse.json(
-        { error: 'Email, password e nome sono richiesti' },
+        { error: validation.error },
         { status: 400 }
       )
     }
 
+    const { name, email, password, role } = validation.data
     console.log('✅ Input validation passed')
 
     // Test database connection

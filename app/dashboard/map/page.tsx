@@ -16,7 +16,17 @@ import { cn } from '@/lib/utils'
 import { prepareMediaForUpload } from '@/lib/image-upload-client'
 
 // Dynamically import Map component to avoid SSR issues with Leaflet
-const Map = dynamic(() => import('@/components/map/event-map'), { ssr: false })
+const Map = dynamic(() => import('@/components/map/event-map'), { 
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-sky-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-12 h-12 border-4 border-sky-200 border-t-sky-500 rounded-full animate-spin" />
+        <span className="text-slate-600 dark:text-slate-400 text-sm">Caricamento mappa...</span>
+      </div>
+    </div>
+  )
+})
 
 interface Event {
   id: string
@@ -962,4 +972,6 @@ function NewPostForm({ onSubmit, selectedLocation, t }: { onSubmit: (data: any) 
     </form>
   )
 }
+
+
 

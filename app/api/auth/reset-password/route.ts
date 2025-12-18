@@ -1,11 +1,29 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { rateLimit, getClientIP, rateLimitConfigs } from '@/lib/rate-limit'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: Request) {
   try {
+    // Rate limiting
+    const clientIP = getClientIP(request)
+    const rateLimitResult = rateLimit(`reset-password:${clientIP}`, rateLimitConfigs.resetPassword)
+    
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Troppe richieste. Riprova più tardi.' },
+        { 
+          status: 429,
+          headers: {
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
+          }
+        }
+      )
+    }
+
     const body = await request.json().catch(() => ({}))
     const emailRaw = (body?.email || '') as string
     const tokenRaw = (body?.token || '') as string
@@ -44,4 +62,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Errore durante il reset password.' }, { status: 500 })
   }
 }
+
+
 

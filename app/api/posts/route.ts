@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { updateQuestProgress } from '@/lib/quests'
+import { createPostSchema, validateData } from '@/lib/validations'
 
 export const dynamic = 'force-dynamic'
 
@@ -104,21 +105,24 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { content, images, type, tags } = body
-
-    if (!content || content.trim().length === 0) {
+    
+    // Validate input with Zod
+    const validation = validateData(createPostSchema, body)
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Il contenuto è richiesto' },
+        { error: validation.error },
         { status: 400 }
       )
     }
 
+    const { content, images, type, tags } = validation.data
+
     const post = await prisma.post.create({
       data: {
         content: content.trim(),
-        images: images || [],
-        tags: tags || [],
-        type: type || 'POST',
+        images: images,
+        tags: tags,
+        type: type,
         authorId: session.user.id,
       },
       include: {

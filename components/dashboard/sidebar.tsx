@@ -77,6 +77,7 @@ export function Sidebar() {
           key={label}
           whileHover={{ scale: 1.05 }}
           onClick={onClick}
+          aria-label={label}
           className={cn(
             "flex items-center h-14 rounded-2xl w-full shadow-lg px-4 transition-all duration-300 mb-2",
             bgColor || (            isActive
@@ -98,6 +99,8 @@ export function Sidebar() {
         <Link
           href={href}
           onClick={onClick}
+          aria-label={label}
+          aria-current={isActive ? 'page' : undefined}
           data-guide={
             href === '/dashboard/map'
               ? 'nav-map'
@@ -127,6 +130,8 @@ export function Sidebar() {
       initial={{ width: 72 }}
       animate={{ width: hover ? 256 : 72 }}
       transition={{ type: "spring", stiffness: 200, damping: 25 }}
+      role="navigation"
+      aria-label="Menu principale"
       className="hidden md:flex h-full bg-gradient-to-b from-gray-200/50 via-sky-100/30 to-blue-100/30 dark:from-gray-900/50 dark:via-sky-900/20 dark:to-blue-900/20 backdrop-blur-xl shadow-2xl flex flex-col justify-between rounded-tr-3xl rounded-br-3xl border-r-2 border-sky-200/50 dark:border-sky-800/50 overflow-hidden"
     >
       {/* Logo */}

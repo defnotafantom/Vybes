@@ -19,6 +19,7 @@ import { FeedCover, FeedSocial, FeedMasonry, FeedThreads } from '@/components/fe
 import { CollaborationPost } from '@/components/posts/collaboration-post'
 import { SearchBar } from '@/components/search/search-bar'
 import { useLanguage } from '@/components/providers/language-provider'
+import { FeedSkeleton } from '@/components/ui/skeleton'
 
 interface Post {
   id: string
@@ -369,7 +370,15 @@ export default function DashboardFeed() {
   }
 
   if (loading) {
-    return <div className="text-center py-12">Caricamento feed...</div>
+    return (
+      <div className="w-full">
+        <div className="mx-auto max-w-3xl">
+          <div className="bg-gradient-to-br from-white/90 via-sky-50/30 to-blue-50/30 dark:from-gray-800/90 dark:via-sky-900/20 dark:to-blue-900/20 backdrop-blur-xl rounded-3xl shadow-2xl p-4 md:p-6">
+            <FeedSkeleton count={3} />
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

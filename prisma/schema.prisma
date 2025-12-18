@@ -136,6 +136,11 @@ model Post {
   
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  // Performance indexes
+  @@index([authorId])
+  @@index([createdAt])
+  @@index([type])
 }
 
 model Event {
@@ -170,6 +175,13 @@ model Event {
   
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  // Performance indexes
+  @@index([recruiterId])
+  @@index([city])
+  @@index([status])
+  @@index([startDate])
+  @@index([createdAt])
 }
 
 model EventParticipant {
@@ -204,6 +216,10 @@ model Comment {
   content   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Performance indexes
+  @@index([postId])
+  @@index([authorId])
 }
 
 model Like {
@@ -288,6 +304,11 @@ model Message {
   content        String
   status         MessageStatus @default(SENT)
   createdAt      DateTime     @default(now())
+
+  // Performance indexes
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([createdAt])
 }
 
 model VerificationToken {
