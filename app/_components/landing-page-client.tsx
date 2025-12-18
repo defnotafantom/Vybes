@@ -230,28 +230,18 @@ export function LandingPageClient() {
           <div className="container mx-auto px-4 py-3 bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl border border-white/20 dark:border-gray-700/30 shadow-lg shadow-black/5 dark:shadow-black/20">
             <div className="flex justify-between items-center">
               {/* Logo Section */}
-              <Link href="/" className="flex items-center gap-3 group select-none" aria-label="Vybes">
+              <Link href="/" className="flex items-center gap-2.5 group select-none" aria-label="Vybes">
                 <motion.div 
-                  whileHover={{ scale: 1.05, rotate: 5 }}
+                  whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                  className="relative h-11 w-11 rounded-xl bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-600 grid place-items-center overflow-hidden shadow-lg shadow-sky-500/25"
+                  className="relative h-10 w-10 rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 grid place-items-center shadow-md shadow-sky-500/20"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-                  <img
-                    src="https://i.imgur.com/gGwB8VE.png"
-                    alt="Vybes"
-                    className="h-7 w-7 object-contain relative z-10 drop-shadow-sm"
-                  />
+                  <span className="text-white font-black text-xl">V</span>
                 </motion.div>
-                <div className="flex flex-col">
-                  <span className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
-                    Vybes
-                  </span>
-                  <span className="text-[10px] text-gray-500 dark:text-gray-400 font-medium tracking-wider uppercase hidden sm:block">
-                    Creative Hub
-                  </span>
-                </div>
+                <span className="text-xl font-bold text-gray-900 dark:text-white">
+                  Vybes
+                </span>
               </Link>
 
               {/* Right Section */}

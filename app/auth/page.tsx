@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Logo } from '@/components/logo'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { LanguageToggle } from '@/components/language-toggle'
 import { Button } from '@/components/ui/button'
@@ -39,12 +38,10 @@ export default function AuthPage() {
     role: 'DEFAULT' as 'DEFAULT' | 'ARTIST' | 'RECRUITER',
   })
 
-  // Already logged in -> dashboard
   useEffect(() => {
     if (status === 'authenticated') router.replace('/dashboard')
   }, [status, router])
 
-  // Verification / error toasts (from email links)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (params.get('verified') === 'true') {
@@ -119,57 +116,78 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-purple-900 dark:to-indigo-900 flex items-center justify-center p-4">
-      <div className="absolute top-4 right-4 flex gap-2">
-        <LanguageToggle />
-        <ThemeToggle />
+    <div className="min-h-screen bg-gradient-to-b from-white via-sky-50/30 to-white dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 flex items-center justify-center p-4">
+      {/* Header controls */}
+      <div className="fixed top-4 right-4 z-50">
+        <div className="flex items-center gap-1 p-1 bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-xl border border-white/40 dark:border-gray-700/40 shadow-lg">
+          <LanguageToggle />
+          <ThemeToggle />
+        </div>
       </div>
 
       <AnimatePresence mode="wait">
         <motion.div
           key={mode}
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -16 }}
-          transition={{ duration: 0.35 }}
-          className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 md:p-8 border border-sky-100 dark:border-sky-900 relative max-w-md w-full"
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.3 }}
+          className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/20 p-6 md:p-8 border border-white/40 dark:border-gray-700/40 relative max-w-md w-full"
         >
+          {/* Back button */}
           <Link
             href="/"
-            className="absolute top-4 left-4 text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-slate-100"
+            className="absolute top-4 left-4 p-2 rounded-xl text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             aria-label={t('events.back')}
           >
-            <ArrowLeft size={24} />
+            <ArrowLeft size={20} />
           </Link>
 
-          <div className="flex justify-center mb-4">
-            <Logo />
+          {/* Logo */}
+          <div className="flex justify-center mb-6">
+            <Link href="/" className="flex items-center gap-2.5">
+              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 grid place-items-center shadow-lg shadow-sky-500/20">
+                <span className="text-white font-black text-2xl">V</span>
+              </div>
+              <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                Vybes
+              </span>
+            </Link>
           </div>
 
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2 text-center">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 text-center">
             {mode === 'login' ? t('auth.login.title') : t('auth.register.title')}
           </h2>
-          <p className="text-slate-600 dark:text-slate-400 text-center mb-6">
+          <p className="text-gray-500 dark:text-gray-400 text-center mb-6">
             {mode === 'login' ? t('auth.login.subtitle') : t('auth.register.subtitle')}
           </p>
 
-          <div className="flex gap-2 mb-6">
-            <Button
+          {/* Mode tabs */}
+          <div className="flex gap-2 mb-6 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl">
+            <button
               type="button"
-              variant={mode === 'login' ? 'default' : 'outline'}
-              className="flex-1"
               onClick={() => setMode('login')}
+              className={cn(
+                "flex-1 py-2.5 text-sm font-medium rounded-lg transition-all",
+                mode === 'login' 
+                  ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm" 
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              )}
             >
               {t('auth.cta.login')}
-            </Button>
-            <Button
+            </button>
+            <button
               type="button"
-              variant={mode === 'register' ? 'default' : 'outline'}
-              className="flex-1"
               onClick={() => setMode('register')}
+              className={cn(
+                "flex-1 py-2.5 text-sm font-medium rounded-lg transition-all",
+                mode === 'register' 
+                  ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm" 
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              )}
             >
               {t('auth.cta.register')}
-            </Button>
+            </button>
           </div>
 
           {mode === 'login' ? (
@@ -177,7 +195,7 @@ export default function AuthPage() {
           ) : (
             <form onSubmit={handleRegister} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">{t('auth.register.nameLabel')}</Label>
+                <Label htmlFor="name" className="text-gray-700 dark:text-gray-300 text-sm">{t('auth.register.nameLabel')}</Label>
                 <Input
                   id="name"
                   type="text"
@@ -186,11 +204,12 @@ export default function AuthPage() {
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
                   disabled={loading}
+                  className="bg-white/50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 rounded-xl h-11"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">{t('auth.register.emailLabel')}</Label>
+                <Label htmlFor="email" className="text-gray-700 dark:text-gray-300 text-sm">{t('auth.register.emailLabel')}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -199,26 +218,27 @@ export default function AuthPage() {
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
                   disabled={loading}
+                  className="bg-white/50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 rounded-xl h-11"
                 />
               </div>
 
-              <div className="rounded-xl border border-sky-200 dark:border-sky-800 bg-white/60 dark:bg-gray-900/30 p-3">
+              <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/30 p-3">
                 <button
                   type="button"
                   onClick={() => setShowRole((v) => !v)}
-                  className="w-full flex items-center justify-between text-sm font-semibold text-slate-800 dark:text-slate-100"
+                  className="w-full flex items-center justify-between text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
                   <span>Opzioni avanzate</span>
-                  <span className="text-slate-500 dark:text-slate-400">{showRole ? 'Nascondi' : 'Mostra'}</span>
+                  <span className="text-xs text-gray-500">{showRole ? '−' : '+'}</span>
                 </button>
                 {showRole && (
                   <div className="mt-3 space-y-2">
-                    <Label htmlFor="role" className="text-slate-700 dark:text-slate-300">
+                    <Label htmlFor="role" className="text-gray-600 dark:text-gray-400 text-sm">
                       {t('auth.register.roleLabel')}
                     </Label>
                     <select
                       id="role"
-                      className="flex h-10 w-full rounded-xl border-2 border-sky-200 dark:border-sky-800 bg-white/90 dark:bg-gray-700/90 backdrop-blur-sm px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:border-sky-500 dark:focus-visible:border-sky-500 transition-all duration-200 shadow-sm hover:shadow-md focus-visible:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex h-10 w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 px-3 py-2 text-sm focus:outline-none focus:border-sky-500 transition-colors"
                       value={formData.role}
                       onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
                       disabled={loading}
@@ -227,15 +247,15 @@ export default function AuthPage() {
                       <option value="ARTIST">{t('auth.register.role.artist')}</option>
                       <option value="RECRUITER">{t('auth.register.role.recruiter')}</option>
                     </select>
-                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                    <p className="text-xs text-gray-500">
                       Puoi cambiare questo anche più avanti dalle impostazioni.
-                    </div>
+                    </p>
                   </div>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">{t('auth.register.passwordLabel')}</Label>
+                <Label htmlFor="password" className="text-gray-700 dark:text-gray-300 text-sm">{t('auth.register.passwordLabel')}</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -246,24 +266,22 @@ export default function AuthPage() {
                     required
                     disabled={loading}
                     autoComplete="new-password"
-                    className="pr-12"
+                    className="pr-12 bg-white/50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 rounded-xl h-11"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 z-20 inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-gray-800/60 transition-colors"
-                    aria-label={showPassword ? 'Nascondi password' : 'Mostra password'}
-                    title={showPassword ? 'Nascondi password' : 'Mostra password'}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                   >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
                 <PasswordStrength password={formData.password} />
-                {fieldError.password && <div className="text-xs text-red-600 dark:text-red-400">{fieldError.password}</div>}
+                {fieldError.password && <p className="text-xs text-red-500">{fieldError.password}</p>}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">{t('auth.register.passwordConfirmLabel')}</Label>
+                <Label htmlFor="confirmPassword" className="text-gray-700 dark:text-gray-300 text-sm">{t('auth.register.passwordConfirmLabel')}</Label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
@@ -274,26 +292,28 @@ export default function AuthPage() {
                     required
                     disabled={loading}
                     autoComplete="new-password"
-                    className="pr-12"
+                    className="pr-12 bg-white/50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 rounded-xl h-11"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword((v) => !v)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 z-20 inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-gray-800/60 transition-colors"
-                    aria-label={showConfirmPassword ? 'Nascondi password' : 'Mostra password'}
-                    title={showConfirmPassword ? 'Nascondi password' : 'Mostra password'}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                   >
-                    {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
-                {fieldError.confirmPassword && <div className="text-xs text-red-600 dark:text-red-400">{fieldError.confirmPassword}</div>}
+                {fieldError.confirmPassword && <p className="text-xs text-red-500">{fieldError.confirmPassword}</p>}
               </div>
 
-              <div className="text-xs text-slate-500 dark:text-slate-400">
-                Registrandoti accetti i termini e riceverai un’email di verifica.
-              </div>
+              <p className="text-xs text-gray-500">
+                Registrandoti accetti i termini e riceverai un&apos;email di verifica.
+              </p>
 
-              <Button type="submit" disabled={loading} className="w-full">
+              <Button 
+                type="submit" 
+                disabled={loading} 
+                className="w-full bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white rounded-xl h-11 font-medium"
+              >
                 {loading ? t('auth.register.submitting') : t('auth.register.submit')}
               </Button>
             </form>
@@ -321,16 +341,16 @@ function PasswordStrength({ password }: { password: string }) {
 
   const width = `${(score / 5) * 100}%`
   const color =
-    score <= 1 ? 'bg-red-500' : score === 2 ? 'bg-amber-500' : score === 3 ? 'bg-yellow-500' : score === 4 ? 'bg-sky-500' : 'bg-emerald-500'
+    score <= 1 ? 'bg-red-500' : score === 2 ? 'bg-amber-500' : score === 3 ? 'bg-yellow-400' : score === 4 ? 'bg-sky-500' : 'bg-emerald-500'
 
   return (
     <div className="space-y-1">
-      <div className="h-2 w-full rounded-full bg-slate-200/70 dark:bg-gray-700/70 overflow-hidden">
-        <div className={cn('h-full rounded-full transition-all', color)} style={{ width }} />
+      <div className="h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
+        <div className={cn('h-full rounded-full transition-all duration-300', color)} style={{ width }} />
       </div>
-      <div className="flex justify-between text-[11px] text-slate-500 dark:text-slate-400">
-        <span>Sicurezza password</span>
-        <span className="font-semibold">{label}</span>
+      <div className="flex justify-between text-[11px] text-gray-500">
+        <span>Sicurezza</span>
+        <span className="font-medium">{label}</span>
       </div>
     </div>
   )
