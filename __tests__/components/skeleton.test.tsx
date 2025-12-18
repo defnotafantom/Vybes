@@ -37,14 +37,16 @@ describe('Skeleton Components', () => {
   describe('FeedSkeleton', () => {
     it('renders default 3 post skeletons', () => {
       const { container } = render(<FeedSkeleton />)
-      // Count the post card skeleton containers
-      const postCards = container.querySelectorAll('.space-y-4 > div')
+      // Count the direct children of the feed container (PostCardSkeletons)
+      const feedContainer = container.querySelector('.space-y-4')
+      const postCards = feedContainer?.children || []
       expect(postCards.length).toBe(3)
     })
 
     it('renders custom count of post skeletons', () => {
       const { container } = render(<FeedSkeleton count={5} />)
-      const postCards = container.querySelectorAll('.space-y-4 > div')
+      const feedContainer = container.querySelector('.space-y-4')
+      const postCards = feedContainer?.children || []
       expect(postCards.length).toBe(5)
     })
   })

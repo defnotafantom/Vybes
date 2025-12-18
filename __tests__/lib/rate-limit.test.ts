@@ -59,35 +59,36 @@ describe('Rate Limiter', () => {
   })
 
   describe('getClientIP', () => {
+    // Mock request with headers
+    const createMockRequest = (headers: Record<string, string> = {}) => ({
+      headers: {
+        get: (name: string) => headers[name.toLowerCase()] || null,
+      },
+    } as unknown as Request)
+
     it('extracts IP from x-forwarded-for header', () => {
-      const request = new Request('http://localhost', {
-        headers: {
-          'x-forwarded-for': '192.168.1.1, 10.0.0.1',
-        },
+      const request = createMockRequest({
+        'x-forwarded-for': '192.168.1.1, 10.0.0.1',
       })
       expect(getClientIP(request)).toBe('192.168.1.1')
     })
 
     it('extracts IP from x-real-ip header', () => {
-      const request = new Request('http://localhost', {
-        headers: {
-          'x-real-ip': '192.168.1.2',
-        },
+      const request = createMockRequest({
+        'x-real-ip': '192.168.1.2',
       })
       expect(getClientIP(request)).toBe('192.168.1.2')
     })
 
     it('returns unknown when no IP headers', () => {
-      const request = new Request('http://localhost')
+      const request = createMockRequest({})
       expect(getClientIP(request)).toBe('unknown')
     })
 
     it('prefers x-forwarded-for over x-real-ip', () => {
-      const request = new Request('http://localhost', {
-        headers: {
-          'x-forwarded-for': '192.168.1.1',
-          'x-real-ip': '192.168.1.2',
-        },
+      const request = createMockRequest({
+        'x-forwarded-for': '192.168.1.1',
+        'x-real-ip': '192.168.1.2',
       })
       expect(getClientIP(request)).toBe('192.168.1.1')
     })
