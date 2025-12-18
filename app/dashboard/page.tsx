@@ -9,6 +9,7 @@ import { ViewModeSelector } from '@/components/feed/view-mode-selector'
 import { TagFilters } from '@/components/feed/tag-filters'
 import { NewPostPopup } from '@/components/feed/new-post-popup'
 import { FeedCover, FeedSocial, FeedMasonry, FeedThreads } from '@/components/feed/feed-views'
+import { EditPostModal } from '@/components/feed/edit-post-modal'
 import { CollaborationPost } from '@/components/posts/collaboration-post'
 import { SearchBar } from '@/components/search/search-bar'
 import { useLanguage } from '@/components/providers/language-provider'
@@ -73,6 +74,7 @@ export default function DashboardFeed() {
   const [transitioning, setTransitioning] = useState(false)
   const [hasMore, setHasMore] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
+  const [editingPost, setEditingPost] = useState<Post | null>(null)
 
   const fetchPosts = useCallback(async (page: number = 1) => {
     try {
@@ -232,9 +234,17 @@ export default function DashboardFeed() {
   }, [])
 
   const handleEdit = useCallback((postId: string) => {
-    // For now, just redirect to a hypothetical edit page or open modal
-    // In production you'd open an edit modal
-    console.log('Edit post:', postId)
+    const post = posts.find(p => p.id === postId)
+    if (post) {
+      setEditingPost(post)
+    }
+  }, [posts])
+
+  const handleEditSave = useCallback((postId: string, data: { content: string; tags: string[] }) => {
+    setPosts(prev => prev.map(p => 
+      p.id === postId ? { ...p, content: data.content } : p
+    ))
+    setEditingPost(null)
   }, [])
 
   const renderPosts = () => {
@@ -386,6 +396,16 @@ export default function DashboardFeed() {
             />
           </div>
         </div>
+      )}
+
+      {/* Edit Post Modal */}
+      {editingPost && (
+        <EditPostModal
+          isOpen={!!editingPost}
+          onClose={() => setEditingPost(null)}
+          post={editingPost}
+          onSave={handleEditSave}
+        />
       )}
     </div>
   )
