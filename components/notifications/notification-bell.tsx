@@ -38,9 +38,38 @@ export function NotificationBell() {
   useEffect(() => {
     if (session?.user?.id) {
       fetchNotifications()
-      // Poll for new notifications every 10 seconds
-      const interval = setInterval(fetchNotifications, 10000)
-      return () => clearInterval(interval)
+      
+      // Poll less frequently and only when tab is visible
+      let interval: NodeJS.Timeout | null = null
+      
+      const startPolling = () => {
+        if (interval) clearInterval(interval)
+        interval = setInterval(fetchNotifications, 30000) // 30 seconds
+      }
+      
+      const stopPolling = () => {
+        if (interval) {
+          clearInterval(interval)
+          interval = null
+        }
+      }
+      
+      const handleVisibility = () => {
+        if (document.visibilityState === 'visible') {
+          fetchNotifications()
+          startPolling()
+        } else {
+          stopPolling()
+        }
+      }
+      
+      startPolling()
+      document.addEventListener('visibilitychange', handleVisibility)
+      
+      return () => {
+        stopPolling()
+        document.removeEventListener('visibilitychange', handleVisibility)
+      }
     }
   }, [session])
 

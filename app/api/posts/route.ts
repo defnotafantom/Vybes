@@ -117,7 +117,7 @@ export async function GET(request: Request) {
       }
     })
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       posts: formattedPosts,
       pagination: {
         page,
@@ -127,6 +127,11 @@ export async function GET(request: Request) {
         hasMore: skip + limit < total,
       },
     })
+    
+    // Add cache headers for better performance
+    response.headers.set('Cache-Control', 'private, max-age=10, stale-while-revalidate=30')
+    
+    return response
   } catch (error) {
     console.error('Error fetching posts:', error)
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
