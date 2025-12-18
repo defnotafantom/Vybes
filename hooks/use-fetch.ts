@@ -244,3 +244,4 @@ export function useInfiniteScroll<T>(
 
   return { items, loading, hasMore, error, loadMore, refresh }
 }
+

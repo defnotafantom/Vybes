@@ -58,3 +58,4 @@ export function hasPermission(adminRole: string, permission: Permission): boolea
 export function getPermissionsForRole(adminRole: string): Permission[] {
   return ROLE_PERMISSIONS[adminRole] || []
 }
+

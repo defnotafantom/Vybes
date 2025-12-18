@@ -93,3 +93,4 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Errore' }, { status: 500 })
   }
 }
+

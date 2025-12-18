@@ -111,6 +111,27 @@ model User {
   avatarItems     UserAvatarItem[]
   transactions    Transaction[]
   
+  // Stories
+  stories          Story[]
+  storyViews       StoryView[] @relation("StoryViews")
+  
+  // Blocking/Muting
+  blockedUsers     UserBlock[] @relation("BlockedUsers")
+  blockedBy        UserBlock[] @relation("BlockedBy")
+  mutedUsers       UserMute[]  @relation("MutedUsers")
+  mutedBy          UserMute[]  @relation("MutedBy")
+  
+  // Achievements
+  achievements     UserAchievement[]
+  dailyRewards     UserDailyReward[]
+  
+  // Analytics
+  profileVisits    ProfileVisit[] @relation("ProfileVisits")
+  visitedProfiles  ProfileVisit[] @relation("VisitedProfiles")
+  
+  // Pinned posts
+  pinnedPostId     String?
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -164,6 +185,9 @@ model Post {
   
   // Views tracking
   viewsCount    Int      @default(0)
+  
+  // Analytics
+  analytics     PostAnalytics?
   
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -369,6 +393,128 @@ model LinkPreview {
   siteName    String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+// Stories (24h posts)
+model Story {
+  id          String      @id @default(cuid())
+  authorId    String
+  author      User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  mediaUrl    String
+  mediaType   String      // image, video
+  caption     String?
+  views       StoryView[]
+  expiresAt   DateTime
+  createdAt   DateTime    @default(now())
+  
+  @@index([authorId])
+  @@index([expiresAt])
+}
+
+model StoryView {
+  id        String   @id @default(cuid())
+  storyId   String
+  story     Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation("StoryViews", fields: [userId], references: [id], onDelete: Cascade)
+  viewedAt  DateTime @default(now())
+  
+  @@unique([storyId, userId])
+}
+
+// User blocking/muting
+model UserBlock {
+  id          String   @id @default(cuid())
+  blockerId   String
+  blocker     User     @relation("BlockedUsers", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockedId   String
+  blocked     User     @relation("BlockedBy", fields: [blockedId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  
+  @@unique([blockerId, blockedId])
+}
+
+model UserMute {
+  id        String   @id @default(cuid())
+  muterId   String
+  muter     User     @relation("MutedUsers", fields: [muterId], references: [id], onDelete: Cascade)
+  mutedId   String
+  muted     User     @relation("MutedBy", fields: [mutedId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  
+  @@unique([muterId, mutedId])
+}
+
+// Achievements/Badges
+model Achievement {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String
+  icon        String   // emoji or icon name
+  category    String   // social, creative, engagement, special
+  requirement String   // JSON with conditions
+  xpReward    Int      @default(50)
+  rarity      String   @default("common") // common, rare, epic, legendary
+  
+  unlockedBy  UserAchievement[]
+  createdAt   DateTime @default(now())
+}
+
+model UserAchievement {
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievementId String
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+  unlockedAt    DateTime    @default(now())
+  
+  @@unique([userId, achievementId])
+}
+
+// Daily rewards
+model DailyReward {
+  id        String   @id @default(cuid())
+  day       Int      // 1-7 for weekly cycle
+  xpReward  Int
+  coinReward Int
+  
+  @@unique([day])
+}
+
+model UserDailyReward {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  claimedAt   DateTime @default(now())
+  streak      Int      @default(1)
+  lastClaimDay Int
+  
+  @@index([userId])
+}
+
+// Analytics for creators
+model PostAnalytics {
+  id          String   @id @default(cuid())
+  postId      String   @unique
+  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  impressions Int      @default(0)
+  reaches     Int      @default(0)
+  shares      Int      @default(0)
+  saves       Int      @default(0)
+  profileVisits Int    @default(0)
+  updatedAt   DateTime @updatedAt
+}
+
+model ProfileVisit {
+  id         String   @id @default(cuid())
+  profileId  String
+  profile    User     @relation("ProfileVisits", fields: [profileId], references: [id], onDelete: Cascade)
+  visitorId  String?
+  visitor    User?    @relation("VisitedProfiles", fields: [visitorId], references: [id], onDelete: SetNull)
+  visitedAt  DateTime @default(now())
+  
+  @@index([profileId])
+  @@index([visitedAt])
 }
 
 model SavedPost {

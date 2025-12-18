@@ -50,3 +50,4 @@ test.describe('Landing Page', () => {
     await expect(page.locator('text=Vybes')).toBeVisible()
   })
 })
+

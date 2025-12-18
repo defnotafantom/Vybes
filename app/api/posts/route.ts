@@ -220,3 +220,4 @@ export async function POST(request: Request) {
 
 // Quest progress is now handled by lib/quests.ts
 
+

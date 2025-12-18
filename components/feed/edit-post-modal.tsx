@@ -123,3 +123,4 @@ export function EditPostModal({ isOpen, onClose, post, onSave }: EditPostModalPr
     </AnimatePresence>
   )
 }
+

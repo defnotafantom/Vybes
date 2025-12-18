@@ -106,3 +106,4 @@ export const rateLimitConfigs = {
   // General API - more lenient
   api: { limit: 100, windowSeconds: 60 }, // 100 per minute
 }
+

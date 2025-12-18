@@ -583,3 +583,4 @@ function Counter({ end }: { end: number }) {
   const count = useCounter(end, 2000)
   return <>{count}</>
 }
+

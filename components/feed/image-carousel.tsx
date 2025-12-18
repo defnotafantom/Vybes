@@ -223,3 +223,4 @@ function Lightbox({
     </motion.div>
   )
 }
+

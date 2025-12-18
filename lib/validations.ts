@@ -177,3 +177,4 @@ export type CreateEventInput = z.infer<typeof createEventSchema>
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>
 export type CreatePortfolioItemInput = z.infer<typeof createPortfolioItemSchema>
 export type SendMessageInput = z.infer<typeof sendMessageSchema>
+

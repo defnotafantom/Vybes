@@ -62,3 +62,4 @@ test.describe('API Protected Routes', () => {
     expect(response.status()).toBe(401)
   })
 })
+

@@ -74,3 +74,4 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Errore server' }, { status: 500 })
   }
 }
+

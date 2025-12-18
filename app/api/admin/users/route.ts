@@ -192,3 +192,4 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: 'Errore server' }, { status: 500 })
   }
 }
+

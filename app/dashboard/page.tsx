@@ -15,6 +15,7 @@ import { SearchBar } from '@/components/search/search-bar'
 import { useLanguage } from '@/components/providers/language-provider'
 import { FeedSkeleton } from '@/components/ui/skeleton'
 import { TrendingSidebar } from '@/components/feed/trending-sidebar'
+import { StoryBar } from '@/components/stories/story-bar'
 
 interface Post {
   id: string
@@ -313,6 +314,11 @@ export default function DashboardFeed() {
       )}>
         {/* Main Feed */}
         <div className="flex-1 min-w-0 bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/40 dark:border-gray-700/40 p-4 md:p-6 flex flex-col gap-4 md:gap-5">
+        {/* Stories */}
+        <div className="-mx-4 md:-mx-6 -mt-4 md:-mt-6 mb-2 bg-gradient-to-b from-gray-50/80 to-transparent dark:from-gray-800/80 border-b border-gray-200/50 dark:border-gray-700/50">
+          <StoryBar currentUserId={session?.user?.id} />
+        </div>
+
         {/* Top controls */}
         <div className="flex flex-col gap-3 md:gap-4">
           {/* Search Bar */}
