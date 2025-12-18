@@ -1,6 +1,7 @@
 "use client"
 
 import React from "react"
+import { X } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface Tag {
@@ -19,7 +20,7 @@ export function TagFilters({ artTags = [], selectedTags = [], toggleTag, clearAl
   if (!artTags || artTags.length === 0) return null
 
   return (
-    <div className="flex items-center gap-1.5 flex-nowrap min-w-max">
+    <div className="flex items-center gap-2 flex-nowrap min-w-max">
       {artTags.map((tag) => {
         const isSelected = selectedTags.includes(tag.name)
         return (
@@ -27,22 +28,23 @@ export function TagFilters({ artTags = [], selectedTags = [], toggleTag, clearAl
             key={tag.id}
             onClick={() => toggleTag?.(tag.name)}
             className={cn(
-              "px-2.5 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap",
+              "px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 whitespace-nowrap border",
               isSelected
-                ? "bg-sky-100 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400"
-                : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                ? "bg-sky-500/10 border-sky-500/30 text-sky-600 dark:text-sky-400 shadow-sm"
+                : "bg-white/50 dark:bg-gray-800/50 border-gray-200/50 dark:border-gray-700/50 text-gray-600 dark:text-gray-400 hover:border-sky-300 dark:hover:border-sky-700 hover:text-sky-600 dark:hover:text-sky-400"
             )}
           >
-            {tag.name}
+            #{tag.name}
           </button>
         )
       })}
       {selectedTags.length > 0 && clearAll && (
         <button
           onClick={clearAll}
-          className="px-2 py-1 text-xs text-gray-400 hover:text-red-500"
+          className="p-1.5 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+          title="Rimuovi filtri"
         >
-          ×
+          <X size={14} />
         </button>
       )}
     </div>

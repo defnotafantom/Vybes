@@ -11,8 +11,8 @@ import {
   User,
   Calendar,
   MessageSquare,
-  Image as ImageIcon,
   Trophy,
+  Gift,
   Settings,
   LogOut,
   X,
@@ -27,8 +27,8 @@ const navItems = [
   { href: '/dashboard/events', icon: Calendar, label: 'dashboard.events', section: 'Opportunità' },
   { href: '/dashboard/messages', icon: MessageSquare, label: 'dashboard.messages', section: 'Inbox' },
   { href: '/dashboard/profile', icon: User, label: 'dashboard.profile', section: 'Profilo' },
-  { href: '/dashboard/portfolio', icon: ImageIcon, label: 'dashboard.portfolio', section: 'Portfolio' },
   { href: '/dashboard/quests', icon: Trophy, label: 'dashboard.quests', section: 'Missioni' },
+  { href: '/dashboard/minigames', icon: Gift, label: 'dashboard.minigames', section: 'Minigames' },
 ]
 
 interface MobileMenuProps {

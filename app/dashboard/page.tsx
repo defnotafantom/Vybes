@@ -294,75 +294,78 @@ export default function DashboardFeed() {
 
   if (loading) {
     return (
-      <div className="max-w-xl mx-auto px-4 py-6">
+      <div className="max-w-2xl mx-auto px-4 py-8">
         <FeedSkeleton count={3} />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen pb-20 md:pb-6">
+    <div className="min-h-screen pb-24 md:pb-8">
       <div className={cn(
-        "mx-auto transition-all duration-200",
+        "mx-auto px-3 sm:px-4 lg:px-6 transition-all duration-300",
         feedWidth[viewMode as keyof typeof feedWidth] || feedWidth.social
       )}>
-        {/* Create Post */}
-        <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 sm:mx-4 sm:mt-4 sm:rounded-2xl sm:border p-4">
+        {/* Create Post - Glass Card */}
+        <div className="mt-4 bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl border border-white/50 dark:border-gray-700/50 shadow-lg p-4">
           <button
             onClick={() => setShowNewPostPopup(true)}
-            className="flex items-center gap-3 w-full"
+            className="flex items-center gap-4 w-full group"
           >
-            <div className="w-10 h-10 bg-gradient-to-br from-sky-400 to-blue-500 rounded-full flex items-center justify-center text-white shadow-md">
+            <div className="w-11 h-11 bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-sky-500/25 group-hover:shadow-sky-500/40 group-hover:scale-105 transition-all duration-300">
               <Plus className="h-5 w-5" />
             </div>
-            <div className="flex-1 text-left py-2.5 px-4 bg-gray-100 dark:bg-gray-800 rounded-full text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-              {t('feed.newPost') || 'A cosa stai pensando?'}
+            <div className="flex-1 text-left py-3 px-5 bg-gray-100/80 dark:bg-gray-800/80 rounded-full text-sm text-gray-500 dark:text-gray-400 group-hover:bg-gray-200/80 dark:group-hover:bg-gray-700/80 transition-all duration-200 border border-transparent group-hover:border-sky-200/50 dark:group-hover:border-sky-800/50">
+              {t('feed.newPost') || 'Condividi qualcosa con la community...'}
             </div>
           </button>
         </div>
 
-        {/* Filters */}
-        <div className="sticky top-0 z-20 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 sm:mx-4 sm:mt-3 sm:rounded-2xl sm:border">
-          <div className="p-3">
-            <div className="flex items-center gap-3">
-              <div className="flex-1">
-                <SearchBar />
-              </div>
+        {/* Filters - Sticky Glass Bar */}
+        <div className="sticky top-0 z-20 mt-4 -mx-3 sm:-mx-4 lg:-mx-6 px-3 sm:px-4 lg:px-6 py-3 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50">
+          <div className="flex items-center gap-4">
+            <div className="flex-1 min-w-0">
+              <SearchBar />
+            </div>
+            <div className="flex-shrink-0">
               <ViewModeSelector viewMode={viewMode} setViewMode={handleViewChange} />
             </div>
-            
-            <div className="flex items-center gap-2 mt-3 overflow-x-auto scrollbar-hide -mx-3 px-3 pb-1">
-              <TagFilters
-                artTags={artTags}
-                selectedTags={selectedTags}
-                toggleTag={toggleTag}
-                clearAll={clearAllTags}
-              />
-            </div>
+          </div>
+          
+          {/* Tags - Horizontal scroll */}
+          <div className="flex items-center gap-2 mt-3 overflow-x-auto scrollbar-hide -mx-3 px-3 pb-1">
+            <TagFilters
+              artTags={artTags}
+              selectedTags={selectedTags}
+              toggleTag={toggleTag}
+              clearAll={clearAllTags}
+            />
           </div>
         </div>
 
-        {/* Feed */}
+        {/* Feed Content */}
         <div className={cn(
-          "sm:mx-4 sm:mt-3 transition-opacity duration-150",
-          transitioning ? "opacity-50" : "opacity-100"
+          "mt-4 transition-all duration-200",
+          transitioning ? "opacity-40 scale-[0.99]" : "opacity-100 scale-100"
         )}>
           {filteredPosts.length === 0 ? (
-            <div className="bg-white dark:bg-gray-900 sm:rounded-2xl sm:border border-gray-100 dark:border-gray-800 p-16 text-center">
-              <div className="w-20 h-20 mx-auto mb-5 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 flex items-center justify-center">
-                <Plus className="h-10 w-10 text-gray-400" />
+            <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl border border-white/50 dark:border-gray-700/50 shadow-lg p-12 sm:p-16 text-center">
+              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-sky-100 to-blue-100 dark:from-sky-900/30 dark:to-blue-900/30 flex items-center justify-center">
+                <Plus className="h-12 w-12 text-sky-500/60" />
               </div>
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Nessun post</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">Sii il primo a condividere qualcosa!</p>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Nessun post ancora</h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-sm mx-auto">
+                Sii il primo a condividere qualcosa con la community!
+              </p>
               <Button 
                 onClick={() => setShowNewPostPopup(true)}
-                className="rounded-full px-6"
+                className="rounded-full px-8 py-2.5 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40 transition-all duration-300"
               >
                 Crea il primo post
               </Button>
             </div>
           ) : (
-            <div className="space-y-3 sm:space-y-4">
+            <div className="space-y-4">
               {renderPosts()}
             </div>
           )}
@@ -370,14 +373,14 @@ export default function DashboardFeed() {
 
         {/* Load More */}
         {hasMore && filteredPosts.length > 0 && (
-          <div className="py-8 flex justify-center">
+          <div className="py-10 flex justify-center">
             <Button 
               variant="outline" 
               onClick={() => {
                 setCurrentPage(prev => prev + 1)
                 fetchPosts(currentPage + 1)
               }}
-              className="rounded-full px-8 border-gray-200 dark:border-gray-700 hover:border-sky-300 dark:hover:border-sky-700 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+              className="rounded-full px-10 py-2.5 border-gray-200/80 dark:border-gray-700/80 hover:border-sky-400 dark:hover:border-sky-600 hover:bg-sky-50/50 dark:hover:bg-sky-900/20 backdrop-blur-sm transition-all duration-300"
             >
               Carica altri post
             </Button>

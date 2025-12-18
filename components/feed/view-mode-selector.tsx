@@ -11,14 +11,14 @@ interface ViewModeSelectorProps {
 
 export function ViewModeSelector({ viewMode, setViewMode }: ViewModeSelectorProps) {
   const modes = [
-    { id: "social", icon: LayoutList },
-    { id: "cover", icon: LayoutGrid },
-    { id: "masonry", icon: Layout },
-    { id: "threads", icon: MessageSquare },
+    { id: "social", icon: LayoutList, label: "Social" },
+    { id: "cover", icon: LayoutGrid, label: "Cover" },
+    { id: "masonry", icon: Layout, label: "Masonry" },
+    { id: "threads", icon: MessageSquare, label: "Threads" },
   ]
 
   return (
-    <div className="flex items-center gap-0.5 flex-shrink-0">
+    <div className="flex items-center gap-1 p-1 bg-gray-100/80 dark:bg-gray-800/80 rounded-xl">
       {modes.map((mode) => {
         const Icon = mode.icon
         const isActive = viewMode === mode.id
@@ -27,14 +27,14 @@ export function ViewModeSelector({ viewMode, setViewMode }: ViewModeSelectorProp
             key={mode.id}
             onClick={() => setViewMode(mode.id)}
             className={cn(
-              "p-2 rounded-lg transition-colors",
+              "p-2 rounded-lg transition-all duration-200",
               isActive
-                ? "bg-sky-500 text-white"
-                : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                ? "bg-white dark:bg-gray-700 text-sky-600 dark:text-sky-400 shadow-sm"
+                : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
             )}
-            title={mode.id}
+            title={mode.label}
           >
-            <Icon size={16} />
+            <Icon size={18} />
           </button>
         )
       })}
