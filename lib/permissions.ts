@@ -59,3 +59,4 @@ export function getPermissionsForRole(adminRole: string): Permission[] {
   return ROLE_PERMISSIONS[adminRole] || []
 }
 
+

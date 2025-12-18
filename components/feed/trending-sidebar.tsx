@@ -139,3 +139,4 @@ export function TrendingSidebar({ onTagClick }: TrendingSidebarProps) {
   )
 }
 
+

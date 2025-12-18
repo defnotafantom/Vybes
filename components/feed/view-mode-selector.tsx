@@ -3,7 +3,6 @@
 import React from "react"
 import { LayoutGrid, LayoutList, Layout, MessageSquare } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { motion } from "framer-motion"
 
 interface ViewModeSelectorProps {
   viewMode: string
@@ -12,14 +11,14 @@ interface ViewModeSelectorProps {
 
 export function ViewModeSelector({ viewMode, setViewMode }: ViewModeSelectorProps) {
   const modes = [
-    { id: "social", icon: LayoutList, label: "Social" },
-    { id: "cover", icon: LayoutGrid, label: "Cover" },
-    { id: "masonry", icon: Layout, label: "Masonry" },
-    { id: "threads", icon: MessageSquare, label: "Threads" },
+    { id: "social", icon: LayoutList },
+    { id: "cover", icon: LayoutGrid },
+    { id: "masonry", icon: Layout },
+    { id: "threads", icon: MessageSquare },
   ]
 
   return (
-    <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-gray-100/80 dark:bg-gray-800/80 min-w-max">
+    <div className="flex items-center gap-0.5 flex-shrink-0">
       {modes.map((mode) => {
         const Icon = mode.icon
         const isActive = viewMode === mode.id
@@ -28,23 +27,14 @@ export function ViewModeSelector({ viewMode, setViewMode }: ViewModeSelectorProp
             key={mode.id}
             onClick={() => setViewMode(mode.id)}
             className={cn(
-              "relative flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap",
+              "p-2 rounded-lg transition-colors",
               isActive
-                ? "text-white"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                ? "bg-sky-500 text-white"
+                : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
             )}
+            title={mode.id}
           >
-            {isActive && (
-              <motion.div
-                layoutId="viewTab"
-                className="absolute inset-0 bg-gradient-to-r from-sky-500 to-blue-600 rounded-lg shadow-md"
-                transition={{ type: "spring", bounce: 0.15, duration: 0.35 }}
-              />
-            )}
-            <span className="relative z-10 flex items-center gap-1.5">
-              <Icon size={14} className="sm:w-4 sm:h-4" />
-              <span className="hidden xs:inline">{mode.label}</span>
-            </span>
+            <Icon size={16} />
           </button>
         )
       })}
