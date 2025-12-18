@@ -24,11 +24,8 @@ import {
   Heart,
   MessageCircle,
   MapPin,
-  TrendingUp,
   Shield,
-  Smartphone,
-  Play,
-  ChevronDown
+  Smartphone
 } from 'lucide-react'
 
 // Animated counter hook
@@ -56,33 +53,6 @@ function useCounter(end: number, duration: number = 2000) {
   return count
 }
 
-// Floating particles component
-function FloatingParticles() {
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {[...Array(20)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute w-2 h-2 bg-sky-400/20 dark:bg-sky-400/10 rounded-full"
-          initial={{
-            x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1000),
-            y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 800),
-          }}
-          animate={{
-            y: [null, Math.random() * -200 - 100],
-            opacity: [0, 1, 0],
-          }}
-          transition={{
-            duration: Math.random() * 10 + 10,
-            repeat: Infinity,
-            delay: Math.random() * 5,
-          }}
-        />
-      ))}
-    </div>
-  )
-}
-
 // Testimonial card component
 function TestimonialCard({ name, role, text, avatar, delay }: {
   name: string
@@ -93,24 +63,23 @@ function TestimonialCard({ name, role, text, avatar, delay }: {
 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ delay, duration: 0.5 }}
-      whileHover={{ y: -5 }}
-      className="p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl border border-sky-200/50 dark:border-sky-800/50 shadow-xl"
+      transition={{ delay, duration: 0.4 }}
+      className="p-6 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700"
     >
-      <div className="flex items-center gap-4 mb-4">
-        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center text-white font-bold text-lg">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-10 h-10 rounded-full bg-sky-100 dark:bg-sky-900/50 flex items-center justify-center text-sky-600 dark:text-sky-400 font-semibold">
           {avatar}
         </div>
         <div>
-          <div className="font-semibold text-slate-800 dark:text-slate-100">{name}</div>
-          <div className="text-sm text-sky-600 dark:text-sky-400">{role}</div>
+          <div className="font-medium text-gray-900 dark:text-white text-sm">{name}</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">{role}</div>
         </div>
       </div>
-      <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">{text}</p>
-      <div className="flex mt-4">
+      <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">{text}</p>
+      <div className="flex mt-4 gap-0.5">
         {[...Array(5)].map((_, i) => (
           <Star key={i} className="h-4 w-4 text-yellow-400 fill-yellow-400" />
         ))}
@@ -129,23 +98,18 @@ function HowItWorksStep({ number, title, description, icon: Icon, delay }: {
 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, x: -30 }}
-      whileInView={{ opacity: 1, x: 0 }}
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ delay, duration: 0.5 }}
-      className="flex gap-4 items-start"
+      transition={{ delay, duration: 0.4 }}
+      className="flex gap-4 items-start p-4 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
     >
-      <div className="relative">
-        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center shadow-lg shadow-sky-500/30">
-          <Icon className="h-7 w-7 text-white" />
-        </div>
-        <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-white dark:bg-gray-900 border-2 border-sky-500 flex items-center justify-center text-xs font-bold text-sky-600">
-          {number}
-        </div>
+      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-sky-100 dark:bg-sky-900/50 flex items-center justify-center text-sky-600 dark:text-sky-400 font-semibold">
+        {number}
       </div>
-      <div className="flex-1 pt-1">
-        <h4 className="font-bold text-lg text-slate-800 dark:text-slate-100 mb-1">{title}</h4>
-        <p className="text-slate-600 dark:text-slate-400 text-sm">{description}</p>
+      <div className="flex-1">
+        <h4 className="font-semibold text-gray-900 dark:text-white mb-1">{title}</h4>
+        <p className="text-gray-500 dark:text-gray-400 text-sm">{description}</p>
       </div>
     </motion.div>
   )
@@ -253,20 +217,20 @@ export function LandingPageClient() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-purple-900/50 dark:to-indigo-900 relative overflow-x-hidden">
-      <FloatingParticles />
+    <div className="min-h-screen bg-gradient-to-b from-white via-sky-50/30 to-white dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 relative overflow-x-hidden">
       
       {/* Header */}
       <motion.header 
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-sky-200/50 dark:border-sky-800/50"
+        className="fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-gray-950/90 backdrop-blur-lg border-b border-gray-200/50 dark:border-gray-800/50"
       >
-        <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
           <Link href="/" className="flex items-center gap-3 group select-none" aria-label="Vybes">
             <motion.div 
-              whileHover={{ rotate: 10 }}
-              className="h-10 w-10 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 shadow-lg shadow-sky-500/30 grid place-items-center overflow-hidden"
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 400 }}
+              className="h-10 w-10 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center overflow-hidden"
             >
               <img
                 src="https://i.imgur.com/gGwB8VE.png"
@@ -274,16 +238,14 @@ export function LandingPageClient() {
                 className="h-7 w-7 object-contain"
               />
             </motion.div>
-            <div className="leading-tight">
-              <div className="text-lg font-black bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">
-                Vybes
-              </div>
-            </div>
+            <span className="text-xl font-bold text-gray-900 dark:text-white">
+              Vybes
+            </span>
           </Link>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <LanguageToggle />
             <ThemeToggle />
-            <Button asChild size="sm" className="hidden sm:flex bg-gradient-to-r from-sky-500 to-blue-600 shadow-lg shadow-sky-500/30">
+            <Button asChild size="sm" className="hidden sm:flex bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100">
               <Link href="/auth">
                 {language === 'it' ? 'Inizia' : 'Start'}
               </Link>
@@ -314,9 +276,9 @@ export function LandingPageClient() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-sky-100 dark:bg-sky-900/50 rounded-full text-sky-700 dark:text-sky-300 text-sm font-medium mb-6"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-600 dark:text-gray-300 text-sm font-medium mb-6 border border-gray-200 dark:border-gray-700"
             >
-              <Sparkles className="h-4 w-4" />
+              <Sparkles className="h-4 w-4 text-sky-500" />
               {language === 'it' ? 'La community #1 per artisti' : '#1 community for artists'}
             </motion.div>
 
@@ -325,19 +287,19 @@ export function LandingPageClient() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.6 }}
-              className="text-3xl md:text-5xl lg:text-6xl font-black mb-6 leading-tight"
+              className="text-3xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight tracking-tight"
             >
-              <span className="text-slate-800 dark:text-white">
+              <span className="text-gray-900 dark:text-white">
                 {language === 'it' ? 'Dove la ' : 'Where '}
               </span>
-              <span className="bg-gradient-to-r from-sky-500 via-blue-500 to-purple-500 bg-clip-text text-transparent">
+              <span className="text-sky-500">
                 {language === 'it' ? 'creatività' : 'creativity'}
               </span>
               <br />
-              <span className="text-slate-800 dark:text-white">
+              <span className="text-gray-900 dark:text-white">
                 {language === 'it' ? 'incontra le ' : 'meets '}
               </span>
-              <span className="bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 bg-clip-text text-transparent">
+              <span className="text-sky-500">
                 {language === 'it' ? 'opportunità' : 'opportunity'}
               </span>
             </motion.h1>
@@ -347,7 +309,7 @@ export function LandingPageClient() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 0.6 }}
-              className="text-lg md:text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto mb-8"
+              className="text-lg md:text-xl text-gray-500 dark:text-gray-400 max-w-2xl mx-auto mb-10"
             >
               {language === 'it' 
                 ? 'Connetti con artisti, scopri eventi esclusivi e fai crescere la tua carriera creativa. Tutto in un unico posto.'
@@ -359,12 +321,12 @@ export function LandingPageClient() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6, duration: 0.6 }}
-              className="flex flex-col sm:flex-row justify-center gap-4 mb-8"
+              className="flex flex-col sm:flex-row justify-center gap-4 mb-10"
             >
               <Button
                 asChild
                 size="lg"
-                className="text-lg px-10 py-7 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 shadow-2xl shadow-sky-500/40 hover:shadow-sky-500/50 transition-all duration-300 hover:scale-105 font-bold rounded-2xl"
+                className="text-base px-8 py-6 bg-sky-500 hover:bg-sky-600 transition-colors font-semibold rounded-xl"
               >
                 <Link href="/auth">
                   {language === 'it' ? 'Inizia gratis' : 'Start free'}
@@ -375,11 +337,10 @@ export function LandingPageClient() {
                 asChild
                 variant="outline"
                 size="lg"
-                className="text-lg px-10 py-7 border-2 border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl"
+                className="text-base px-8 py-6 border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl"
               >
                 <Link href="#features">
-                  <Play className="mr-2 h-5 w-5" />
-                  {language === 'it' ? 'Scopri come funziona' : 'See how it works'}
+                  {language === 'it' ? 'Scopri di più' : 'Learn more'}
                 </Link>
               </Button>
             </motion.div>
@@ -389,7 +350,7 @@ export function LandingPageClient() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.7, duration: 0.6 }}
-              className="flex flex-wrap justify-center gap-3"
+              className="flex flex-wrap justify-center gap-2"
             >
               {categories.map((cat, i) => (
                 <motion.div
@@ -397,54 +358,35 @@ export function LandingPageClient() {
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.8 + i * 0.05 }}
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  className="flex items-center gap-2 px-4 py-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-700 dark:text-slate-300 shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
+                  whileHover={{ scale: 1.02 }}
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-full border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 dark:text-gray-300 cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
                 >
-                  <div className={`w-6 h-6 rounded-full ${cat.color} flex items-center justify-center`}>
-                    <cat.icon className="h-3 w-3 text-white" />
-                  </div>
+                  <cat.icon className="h-4 w-4 text-sky-500" />
                   {cat.label}
                 </motion.div>
               ))}
-            </motion.div>
-
-            {/* Scroll indicator */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1.2 }}
-              className="mt-12"
-            >
-              <motion.div
-                animate={{ y: [0, 10, 0] }}
-                transition={{ repeat: Infinity, duration: 2 }}
-                className="flex flex-col items-center text-slate-400"
-              >
-                <span className="text-xs mb-2">{language === 'it' ? 'Scorri per scoprire' : 'Scroll to discover'}</span>
-                <ChevronDown className="h-5 w-5" />
-              </motion.div>
             </motion.div>
           </div>
         </div>
       </motion.section>
 
       {/* Stats Section */}
-      <section className="py-16 relative z-10">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 max-w-4xl mx-auto">
+      <section className="py-20 relative z-10">
+        <div className="container mx-auto px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
             {stats.map((stat, i) => (
               <motion.div
                 key={stat.label}
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.1, duration: 0.5 }}
-                className="text-center p-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-3xl border border-sky-200/50 dark:border-sky-800/50 shadow-xl"
+                transition={{ delay: i * 0.1, duration: 0.4 }}
+                className="text-center"
               >
-                <div className="text-3xl md:text-5xl font-black bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">
+                <div className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white">
                   {isVisible && <Counter end={stat.value} />}{stat.suffix}
                 </div>
-                <div className="text-sm md:text-base text-slate-600 dark:text-slate-400 mt-2 font-medium">
+                <div className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                   {stat.label}
                 </div>
               </motion.div>
@@ -454,45 +396,41 @@ export function LandingPageClient() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-20 relative z-10">
-        <div className="container mx-auto px-4">
+      <section id="features" className="py-20 relative z-10 bg-gray-50/50 dark:bg-gray-900/50">
+        <div className="container mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <span className="inline-block px-4 py-1 bg-sky-100 dark:bg-sky-900/50 rounded-full text-sky-700 dark:text-sky-300 text-sm font-medium mb-4">
-              {language === 'it' ? 'Funzionalità' : 'Features'}
-            </span>
-            <h2 className="text-3xl md:text-5xl font-black text-slate-800 dark:text-white mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
               {language === 'it' ? 'Tutto ciò di cui hai bisogno' : 'Everything you need'}
             </h2>
-            <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+            <p className="text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
               {language === 'it' 
                 ? 'Strumenti potenti per artisti e recruiter in un\'unica piattaforma'
                 : 'Powerful tools for artists and recruiters in one platform'}
             </p>
           </motion.div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {features.map((feature, i) => (
               <motion.div
                 key={feature.title}
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.1, duration: 0.5 }}
-                whileHover={{ y: -8, scale: 1.02 }}
-                className="group p-8 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl border border-slate-200/50 dark:border-slate-700/50 shadow-xl hover:shadow-2xl transition-all duration-300"
+                transition={{ delay: i * 0.05, duration: 0.4 }}
+                className="p-6 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
               >
-                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-r ${feature.color} flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                  <feature.icon className="h-7 w-7 text-white" />
+                <div className="w-12 h-12 rounded-xl bg-sky-100 dark:bg-sky-900/50 flex items-center justify-center mb-4">
+                  <feature.icon className="h-6 w-6 text-sky-500" />
                 </div>
-                <h3 className="font-bold text-xl text-slate-800 dark:text-slate-100 mb-3">
+                <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-2">
                   {feature.title}
                 </h3>
-                <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
                   {feature.description}
                 </p>
               </motion.div>
@@ -502,23 +440,20 @@ export function LandingPageClient() {
       </section>
 
       {/* How it works */}
-      <section className="py-20 bg-gradient-to-b from-transparent via-sky-50/50 to-transparent dark:via-sky-900/10 relative z-10">
-        <div className="container mx-auto px-4">
+      <section className="py-20 relative z-10">
+        <div className="container mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <span className="inline-block px-4 py-1 bg-purple-100 dark:bg-purple-900/50 rounded-full text-purple-700 dark:text-purple-300 text-sm font-medium mb-4">
-              {language === 'it' ? 'Come funziona' : 'How it works'}
-            </span>
-            <h2 className="text-3xl md:text-5xl font-black text-slate-800 dark:text-white mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
               {language === 'it' ? 'Inizia in 4 semplici passi' : 'Start in 4 simple steps'}
             </h2>
           </motion.div>
 
-          <div className="max-w-2xl mx-auto space-y-8">
+          <div className="max-w-2xl mx-auto space-y-6">
             {howItWorks.map((step, i) => (
               <HowItWorksStep
                 key={step.title}
@@ -526,7 +461,7 @@ export function LandingPageClient() {
                 icon={step.icon}
                 title={step.title}
                 description={step.description}
-                delay={i * 0.15}
+                delay={i * 0.1}
               />
             ))}
           </div>
@@ -534,28 +469,25 @@ export function LandingPageClient() {
       </section>
 
       {/* Testimonials */}
-      <section className="py-20 relative z-10">
-        <div className="container mx-auto px-4">
+      <section className="py-20 relative z-10 bg-gray-50/50 dark:bg-gray-900/50">
+        <div className="container mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-12"
           >
-            <span className="inline-block px-4 py-1 bg-pink-100 dark:bg-pink-900/50 rounded-full text-pink-700 dark:text-pink-300 text-sm font-medium mb-4">
-              {language === 'it' ? 'Testimonianze' : 'Testimonials'}
-            </span>
-            <h2 className="text-3xl md:text-5xl font-black text-slate-800 dark:text-white mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
               {language === 'it' ? 'Cosa dicono di noi' : 'What they say about us'}
             </h2>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {testimonials.map((testimonial, i) => (
               <TestimonialCard
                 key={testimonial.name}
                 {...testimonial}
-                delay={i * 0.15}
+                delay={i * 0.1}
               />
             ))}
           </div>
@@ -563,50 +495,41 @@ export function LandingPageClient() {
       </section>
 
       {/* Trust badges */}
-      <section className="py-12 relative z-10">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="flex flex-wrap justify-center gap-8"
-          >
+      <section className="py-16 relative z-10">
+        <div className="container mx-auto px-6">
+          <div className="flex flex-wrap justify-center gap-x-8 gap-y-4">
             {[
               { icon: Shield, text: language === 'it' ? 'Sicuro' : 'Secure' },
               { icon: CheckCircle2, text: language === 'it' ? 'Gratuito' : 'Free' },
               { icon: Globe, text: language === 'it' ? 'Multilingua' : 'Multilingual' },
-              { icon: Smartphone, text: language === 'it' ? 'Mobile Ready' : 'Mobile Ready' },
+              { icon: Smartphone, text: language === 'it' ? 'Mobile' : 'Mobile' },
               { icon: Zap, text: language === 'it' ? 'Veloce' : 'Fast' },
-            ].map((badge, i) => (
-              <motion.div
+            ].map((badge) => (
+              <div
                 key={badge.text}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="flex items-center gap-2 text-slate-600 dark:text-slate-400"
+                className="flex items-center gap-2 text-gray-500 dark:text-gray-400"
               >
-                <badge.icon className="h-5 w-5 text-green-500" />
-                <span className="font-medium">{badge.text}</span>
-              </motion.div>
+                <badge.icon className="h-4 w-4" />
+                <span className="text-sm">{badge.text}</span>
+              </div>
             ))}
-          </motion.div>
+          </div>
         </div>
       </section>
 
       {/* Final CTA */}
       <section className="py-20 relative z-10">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-6">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="max-w-4xl mx-auto text-center p-12 bg-gradient-to-r from-sky-500 to-blue-600 rounded-[2.5rem] shadow-2xl shadow-sky-500/30"
+            className="max-w-2xl mx-auto text-center"
           >
-            <h2 className="text-3xl md:text-5xl font-black text-white mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
               {language === 'it' ? 'Pronto a iniziare?' : 'Ready to start?'}
             </h2>
-            <p className="text-sky-100 text-lg mb-8 max-w-xl mx-auto">
+            <p className="text-gray-500 dark:text-gray-400 mb-8">
               {language === 'it' 
                 ? 'Unisciti a migliaia di artisti e recruiter. È gratuito, per sempre.'
                 : 'Join thousands of artists and recruiters. It\'s free, forever.'}
@@ -614,7 +537,7 @@ export function LandingPageClient() {
             <Button
               asChild
               size="lg"
-              className="text-lg px-12 py-7 bg-white text-sky-600 hover:bg-sky-50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 font-bold rounded-2xl"
+              className="px-8 py-6 bg-sky-500 hover:bg-sky-600 transition-colors font-semibold rounded-xl"
             >
               <Link href="/auth">
                 {language === 'it' ? 'Crea il tuo account' : 'Create your account'}
@@ -626,16 +549,16 @@ export function LandingPageClient() {
       </section>
 
       {/* Footer */}
-      <footer className="py-8 relative z-10 border-t border-slate-200 dark:border-slate-800">
-        <div className="container mx-auto px-4 text-center">
-          <p className="text-slate-500 dark:text-slate-400 text-sm">
+      <footer className="py-8 relative z-10 border-t border-gray-200 dark:border-gray-800">
+        <div className="container mx-auto px-6 text-center">
+          <p className="text-gray-400 dark:text-gray-500 text-sm">
             © {new Date().getFullYear()} Vybes. {language === 'it' ? 'Tutti i diritti riservati.' : 'All rights reserved.'}
           </p>
         </div>
       </footer>
 
-      {/* Wave */}
-      <div className="fixed bottom-0 left-0 w-full z-0 pointer-events-none">
+      {/* Wave - positioned at very bottom, behind everything */}
+      <div className="fixed bottom-0 left-0 w-full -z-10 pointer-events-none opacity-30 dark:opacity-20">
         <WaveAnimation />
       </div>
     </div>
