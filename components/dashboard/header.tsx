@@ -34,9 +34,9 @@ export function DashboardHeader() {
 
   return (
     <>
-      <header className="relative h-16 border-b-2 border-sky-200/50 dark:border-sky-800/50 bg-gradient-to-r from-white/95 via-sky-50/40 to-blue-50/40 dark:from-gray-900/95 dark:via-sky-900/25 dark:to-blue-900/25 backdrop-blur-xl sticky top-0 z-40 shadow-lg shadow-sky-500/5 dark:shadow-sky-900/10">
-        {/* Decorative gradient line */}
-        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-sky-400/60 to-transparent"></div>
+      <header className="relative h-16 border-b border-white/40 dark:border-gray-700/40 bg-white/70 dark:bg-gray-900/70 backdrop-blur-2xl sticky top-0 z-40 shadow-sm">
+        {/* Subtle gradient line */}
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-sky-400/30 to-transparent"></div>
         
         <div className="h-full px-4 md:px-6 flex items-center justify-between relative z-10">
           <div className="flex items-center gap-4">
@@ -86,7 +86,7 @@ export function DashboardHeader() {
                   </span>
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-gradient-to-br from-white/95 via-sky-50/50 to-blue-50/50 dark:from-gray-900/95 dark:via-sky-900/30 dark:to-blue-900/30 backdrop-blur-xl border-2 border-sky-200/50 dark:border-sky-800/50 shadow-2xl">
+              <DropdownMenuContent align="end" className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-white/50 dark:border-gray-700/50 shadow-xl rounded-xl">
                 <DropdownMenuLabel className="text-slate-700 dark:text-slate-200 font-bold">{t('common.myAccount')}</DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-gradient-to-r from-transparent via-sky-300 dark:via-sky-700 to-transparent" />
                 <DropdownMenuItem asChild className="hover:bg-sky-50/80 dark:hover:bg-sky-900/30 rounded-lg transition-all">

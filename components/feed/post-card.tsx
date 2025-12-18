@@ -381,9 +381,9 @@ function PostCardComponent({
   if (mode === "social") {
     return (
       <motion.article 
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-white/40 dark:border-gray-700/40 shadow-lg p-4 space-y-4"
+        className="glass-card-hover p-4 space-y-4"
       >
         {/* Header */}
         <div className="flex items-center gap-3">
@@ -541,10 +541,10 @@ function PostCardComponent({
   if (mode === "cover") {
     return (
       <motion.article 
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         whileHover={{ y: -4 }}
-        className="flex flex-col rounded-2xl bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border border-white/40 dark:border-gray-700/40 shadow-lg hover:shadow-xl transition-shadow overflow-hidden group relative"
+        className="glass-card-hover overflow-hidden group relative"
       >
         {/* Actions dropdown */}
         <div className="absolute top-2 right-2 z-10">
@@ -646,10 +646,10 @@ function PostCardComponent({
   if (mode === "masonry") {
     return (
       <motion.article 
-        initial={{ opacity: 0, scale: 0.95 }}
+        initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         whileHover={{ y: -4 }}
-        className="break-inside-avoid mb-4 rounded-2xl overflow-hidden bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border border-white/40 dark:border-gray-700/40 shadow-lg hover:shadow-xl transition-shadow group relative"
+        className="break-inside-avoid mb-4 glass-card-hover overflow-hidden group relative"
       >
         {/* Actions dropdown */}
         <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -749,7 +749,7 @@ function PostCardComponent({
     <motion.article 
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
-      className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl p-4 mb-3 border border-white/40 dark:border-gray-700/40 shadow-sm hover:shadow-md transition-shadow"
+      className="glass-card-hover p-4 mb-3"
     >
       <div className="flex gap-3">
         <Link href={post.author?.id ? `/dashboard/users/${post.author.id}` : '#'}>

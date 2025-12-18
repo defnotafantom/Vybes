@@ -313,9 +313,9 @@ export default function DashboardFeed() {
         feedWidth[viewMode as keyof typeof feedWidth] || feedWidth.social
       )}>
         {/* Main Feed */}
-        <div className="flex-1 min-w-0 bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/40 dark:border-gray-700/40 p-4 md:p-6 flex flex-col gap-4 md:gap-5">
+        <div className="flex-1 min-w-0 glass-card p-4 md:p-6 flex flex-col gap-4 md:gap-5">
         {/* Stories */}
-        <div className="-mx-4 md:-mx-6 -mt-4 md:-mt-6 mb-2 bg-gradient-to-b from-gray-50/80 to-transparent dark:from-gray-800/80 border-b border-gray-200/50 dark:border-gray-700/50">
+        <div className="-mx-4 md:-mx-6 -mt-4 md:-mt-6 mb-2 bg-gradient-to-b from-white/50 to-transparent dark:from-gray-800/50 border-b border-white/30 dark:border-gray-700/30 rounded-t-2xl">
           <StoryBar currentUserId={session?.user?.id} />
         </div>
 
@@ -329,9 +329,9 @@ export default function DashboardFeed() {
           {/* New Post Button */}
           <button
             onClick={() => setShowNewPostPopup(true)}
-            className="flex items-center gap-3 w-full p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border border-gray-200 dark:border-gray-700 group"
+            className="flex items-center gap-3 w-full p-3.5 rounded-xl bg-white/60 dark:bg-gray-800/60 hover:bg-white/90 dark:hover:bg-gray-800/90 transition-all duration-200 border border-white/50 dark:border-gray-700/50 hover:border-sky-200/50 dark:hover:border-sky-700/50 group shadow-sm hover:shadow-md"
           >
-            <div className="w-10 h-10 bg-gradient-to-br from-sky-400 to-blue-500 rounded-xl flex justify-center items-center text-white shadow-md group-hover:shadow-lg transition-shadow">
+            <div className="w-10 h-10 bg-gradient-to-br from-sky-400 to-blue-500 rounded-xl flex justify-center items-center text-white shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all">
               <Plus className="h-5 w-5" />
             </div>
             <span className="text-gray-600 dark:text-gray-300 font-medium text-left flex-1">

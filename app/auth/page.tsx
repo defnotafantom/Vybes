@@ -132,7 +132,7 @@ export default function AuthPage() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
           transition={{ duration: 0.3 }}
-          className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/20 p-6 md:p-8 border border-white/40 dark:border-gray-700/40 relative max-w-md w-full"
+          className="glass-modal p-6 md:p-8 relative max-w-md w-full"
         >
           {/* Back button */}
           <Link

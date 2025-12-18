@@ -87,10 +87,10 @@ export function Sidebar() {
           onClick={onClick}
           aria-label={label}
           className={cn(
-            "flex items-center h-14 rounded-2xl w-full shadow-lg px-4 transition-all duration-300 mb-2",
-            bgColor || (            isActive
-              ? "bg-gradient-to-r from-sky-500 via-sky-600 to-blue-600 text-white shadow-xl shadow-sky-500/40 border-2 border-sky-400/50 ring-2 ring-sky-300/50 dark:ring-sky-500/50"
-              : "bg-white/70 dark:bg-gray-800/70 backdrop-blur-md text-slate-700 dark:text-slate-300 hover:bg-sky-50/80 dark:hover:bg-sky-900/40 border-2 border-sky-200/50 dark:border-sky-800/50 hover:border-sky-300 dark:hover:border-sky-700 hover:shadow-xl")
+            "flex items-center h-12 rounded-xl w-full px-3 transition-all duration-200 mb-1.5",
+            bgColor || (isActive
+              ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/30"
+              : "bg-white/50 dark:bg-gray-800/50 text-slate-600 dark:text-slate-300 hover:bg-white/80 dark:hover:bg-gray-800/80 border border-transparent hover:border-sky-200/50 dark:hover:border-sky-800/50")
           )}
         >
           {ButtonContent}
@@ -117,12 +117,12 @@ export function Sidebar() {
                 : undefined
           }
           className={cn(
-            "flex items-center h-14 rounded-2xl w-full shadow-lg px-4 transition-all duration-300",
+            "flex items-center h-12 rounded-xl w-full px-3 transition-all duration-200",
             bgColor
               ? bgColor
-              :             isActive
-              ? "bg-gradient-to-r from-sky-500 via-sky-600 to-blue-600 text-white shadow-xl shadow-sky-500/40 border-2 border-sky-400/50 ring-2 ring-sky-300/50 dark:ring-sky-500/50"
-              : "bg-white/70 dark:bg-gray-800/70 backdrop-blur-md text-slate-700 dark:text-slate-300 hover:bg-sky-50/80 dark:hover:bg-sky-900/40 border-2 border-sky-200/50 dark:border-sky-800/50 hover:border-sky-300 dark:hover:border-sky-700 hover:shadow-xl"
+              : isActive
+              ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/30"
+              : "bg-white/50 dark:bg-gray-800/50 text-slate-600 dark:text-slate-300 hover:bg-white/80 dark:hover:bg-gray-800/80 border border-transparent hover:border-sky-200/50 dark:hover:border-sky-800/50"
           )}
         >
           {ButtonContent}
@@ -140,7 +140,7 @@ export function Sidebar() {
       transition={{ type: "spring", stiffness: 200, damping: 25 }}
       role="navigation"
       aria-label="Menu principale"
-      className="hidden md:flex h-full bg-gradient-to-b from-gray-200/50 via-sky-100/30 to-blue-100/30 dark:from-gray-900/50 dark:via-sky-900/20 dark:to-blue-900/20 backdrop-blur-xl shadow-2xl flex flex-col justify-between rounded-tr-3xl rounded-br-3xl border-r-2 border-sky-200/50 dark:border-sky-800/50 overflow-hidden"
+      className="hidden md:flex h-full bg-white/60 dark:bg-gray-900/60 backdrop-blur-2xl shadow-xl flex flex-col justify-between rounded-tr-2xl rounded-br-2xl border-r border-white/40 dark:border-gray-700/40 overflow-hidden"
     >
       {/* Logo */}
       <div className="flex flex-col items-center py-8">
@@ -210,7 +210,7 @@ export function Sidebar() {
           '/dashboard/admin',
           undefined,
           pathname?.startsWith('/dashboard/admin'),
-          "bg-gradient-to-r from-red-500 via-red-600 to-rose-600 text-white hover:from-red-600 hover:via-rose-600 hover:to-rose-700 shadow-xl shadow-red-500/40 border-2 border-red-400/50"
+          "bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-lg shadow-red-500/30"
         )}
         {renderButton(
           Settings,
@@ -225,7 +225,7 @@ export function Sidebar() {
           '#',
           () => signOut({ callbackUrl: '/' }),
           false,
-          "bg-gradient-to-r from-sky-500 via-sky-600 to-blue-600 text-white hover:from-sky-600 hover:via-blue-600 hover:to-blue-700 shadow-xl shadow-sky-500/40 hover:shadow-2xl hover:shadow-sky-500/50 border-2 border-sky-400/50"
+          "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/30"
         )}
       </div>
     </motion.aside>

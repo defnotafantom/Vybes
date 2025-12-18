@@ -217,16 +217,16 @@ export default function SettingsPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-black bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
           {t('settings.title')}
         </h1>
-        <p className="text-slate-600 dark:text-slate-400 mt-1">
+        <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">
           {t('settings.description')}
         </p>
       </div>
 
       {/* Profile Information */}
-      <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-sky-100 dark:border-sky-900 shadow-xl">
+      <Card className="glass-card">
         <CardHeader className="bg-gradient-to-r from-sky-50 to-blue-50 dark:from-sky-900/30 dark:to-blue-900/30 rounded-t-xl">
           <CardTitle className="text-slate-800 dark:text-slate-100 flex items-center gap-2">
             <User className="h-5 w-5 text-sky-500" />

@@ -81,9 +81,9 @@ export function Logo() {
         />
       </motion.div>
 
-      <div className="text-center space-y-1 relative z-20">
+      <div className="text-center space-y-1 relative z-20 -mt-2">
         <h1 
-          className="text-5xl sm:text-6xl lg:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-600 to-blue-600 tracking-tight leading-none"
+          className="text-5xl sm:text-6xl lg:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-600 to-blue-600 tracking-tight leading-none pb-1"
         >
           Vybes
         </h1>

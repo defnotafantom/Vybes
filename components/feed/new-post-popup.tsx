@@ -196,14 +196,14 @@ export function NewPostPopup({ isOpen, onClose, artTags = [], onPostSubmit }: Ne
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex justify-center items-center p-4"
+            className="fixed inset-0 bg-black/40 backdrop-blur-md z-[100] flex justify-center items-center p-4"
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl w-full max-w-lg rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-6 relative max-h-[90vh] overflow-y-auto"
+              className="glass-modal w-full max-w-lg p-6 relative max-h-[90vh] overflow-y-auto scrollbar-thin"
             >
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t('feed.newPost.title')}</h2>

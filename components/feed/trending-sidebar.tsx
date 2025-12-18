@@ -61,7 +61,7 @@ export function TrendingSidebar({ onTagClick }: TrendingSidebarProps) {
   return (
     <div className="space-y-6">
       {/* Trending Tags */}
-      <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 p-4">
+      <div className="glass-card p-4">
         <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
           <TrendingUp className="h-5 w-5 text-sky-500" />
           Trending
@@ -98,7 +98,7 @@ export function TrendingSidebar({ onTagClick }: TrendingSidebarProps) {
 
       {/* Suggested Users */}
       {users.length > 0 && (
-        <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 p-4">
+        <div className="glass-card p-4">
           <h3 className="font-bold text-gray-900 dark:text-white mb-4">
             Creator da seguire
           </h3>
