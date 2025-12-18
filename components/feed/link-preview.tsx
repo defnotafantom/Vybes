@@ -66,6 +66,7 @@ export function LinkPreview({ url }: LinkPreviewProps) {
     >
       {preview.image && (
         <div className="aspect-video relative overflow-hidden bg-gray-100 dark:bg-gray-800">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={preview.image}
             alt={preview.title || "Preview"}

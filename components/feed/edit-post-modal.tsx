@@ -89,18 +89,20 @@ export function EditPostModal({ isOpen, onClose, post, onSave }: EditPostModalPr
                 placeholder="Scrivi qualcosa..."
               />
 
-              {post.images && post.images.length > 0 && (
-                <div className="flex gap-2 overflow-x-auto pb-2">
-                  {post.images.map((img, i) => (
-                    <img
-                      key={i}
-                      src={img}
-                      alt=""
-                      className="h-20 w-20 rounded-lg object-cover flex-shrink-0"
-                    />
-                  ))}
-                </div>
-              )}
+{post.images && post.images.length > 0 && (
+                            <div className="flex gap-2 overflow-x-auto pb-2">
+                              {post.images.map((img, i) => (
+                                <div key={i} className="relative h-20 w-20 flex-shrink-0">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                    src={img}
+                                    alt=""
+                                    className="h-20 w-20 rounded-lg object-cover"
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          )}
 
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <Button onClick={onClose} variant="outline" disabled={loading} className="rounded-xl">

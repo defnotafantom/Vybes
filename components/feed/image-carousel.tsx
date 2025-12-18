@@ -214,6 +214,7 @@ function Lightbox({
                 idx === currentIndex ? "border-white" : "border-transparent opacity-50 hover:opacity-80"
               )}
             >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={img} alt="" className="w-full h-full object-cover" />
             </button>
           ))}
