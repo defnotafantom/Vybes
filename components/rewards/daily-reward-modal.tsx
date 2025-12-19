@@ -196,3 +196,4 @@ export function DailyRewardModal({ isOpen, onClose }: DailyRewardModalProps) {
 }
 
 
+

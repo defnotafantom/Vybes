@@ -231,3 +231,4 @@ export function generateJsonLd(type: 'website' | 'profile' | 'event', data?: any
 }
 
 
+
