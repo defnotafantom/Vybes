@@ -1,9 +1,9 @@
 "use client"
 
-import { useEffect, useState, useMemo, useCallback } from 'react'
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { useSession } from 'next-auth/react'
-import { Plus } from 'lucide-react'
+import { Plus, RefreshCw, Loader2, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ViewModeSelector } from '@/components/feed/view-mode-selector'
 import { TagFilters } from '@/components/feed/tag-filters'
@@ -14,6 +14,8 @@ import { CollaborationPost } from '@/components/posts/collaboration-post'
 import { SearchBar } from '@/components/search/search-bar'
 import { useLanguage } from '@/components/providers/language-provider'
 import { FeedSkeleton } from '@/components/ui/skeleton'
+import { useToast } from '@/hooks/use-toast'
+import { CommentsModal } from '@/components/feed/comments-modal'
 
 interface Post {
   id: string
@@ -52,8 +54,12 @@ const feedWidth = {
 export default function DashboardFeed() {
   const { data: session } = useSession()
   const { t } = useLanguage()
+  const { toast } = useToast()
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
   
   // View mode state
   const [viewMode, setViewMode] = useState(() => {
@@ -75,11 +81,17 @@ export default function DashboardFeed() {
   const [hasMore, setHasMore] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const [editingPost, setEditingPost] = useState<Post | null>(null)
+  const [commentsPostId, setCommentsPostId] = useState<string | null>(null)
+  const loadMoreRef = useRef<HTMLDivElement>(null)
 
-  const fetchPosts = useCallback(async (page: number = 1) => {
+  const fetchPosts = useCallback(async (page: number = 1, showToast = false) => {
     try {
+      setError(null)
+      if (page > 1) setLoadingMore(true)
+      
       const response = await fetch(`/api/posts?page=${page}&limit=20`)
-      if (response.ok) {
+      if (!response.ok) throw new Error("Errore nel caricamento")
+      
         const data = await response.json()
         if (page === 1) {
           setPosts(data.posts || [])
@@ -87,17 +99,38 @@ export default function DashboardFeed() {
           setPosts((prev) => [...prev, ...(data.posts || [])])
         }
         setHasMore(data.pagination?.hasMore || false)
-      }
-    } catch (error) {
-      console.error('Error fetching posts:', error)
+    } catch (err) {
+      const msg = "Impossibile caricare i post"
+      setError(msg)
+      toast({ title: "Errore", description: msg, variant: "destructive" })
+      console.error('Error fetching posts:', err)
     } finally {
       setLoading(false)
+      setLoadingMore(false)
+      setRefreshing(false)
     }
-  }, [])
+  }, [toast])
 
   useEffect(() => {
     fetchPosts(1)
   }, [fetchPosts])
+
+  // Infinite scroll with IntersectionObserver
+  useEffect(() => {
+    if (!hasMore || loadingMore || loading) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore) {
+          const nextPage = currentPage + 1
+          setCurrentPage(nextPage)
+          fetchPosts(nextPage, true)
+        }
+      },
+      { threshold: 0.1, rootMargin: "200px" }
+    )
+    if (loadMoreRef.current) observer.observe(loadMoreRef.current)
+    return () => observer.disconnect()
+  }, [hasMore, loadingMore, loading, currentPage, fetchPosts])
 
   // Persist view mode and tags
   useEffect(() => {
@@ -111,6 +144,14 @@ export default function DashboardFeed() {
       localStorage.setItem('homeSelectedTags', JSON.stringify(selectedTags))
     }
   }, [selectedTags])
+
+  // Manual refresh handler
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true)
+    setCurrentPage(1)
+    await fetchPosts(1, false)
+    toast({ title: "Feed aggiornato", description: "I post sono stati aggiornati" })
+  }, [fetchPosts, toast])
 
   const handleCreatePostWithDetails = async (data: { title: string; description: string; tags: string[]; fileUrl?: string | null; poll?: { question: string; options: string[] } }) => {
     try {
@@ -248,6 +289,10 @@ export default function DashboardFeed() {
     setEditingPost(null)
   }, [])
 
+  const handleCommentClick = useCallback((postId: string) => {
+    setCommentsPostId(postId)
+  }, [])
+
   const renderPosts = () => {
     const commonProps = {
       posts: filteredPosts.map(post => ({
@@ -265,6 +310,7 @@ export default function DashboardFeed() {
       onSave: handleSave,
       onDelete: handleDelete,
       onEdit: handleEdit,
+      onCommentClick: handleCommentClick,
       onShare: (postId: string) => {
         if (typeof window !== 'undefined') {
           navigator.clipboard.writeText(`${window.location.origin}/dashboard#post-${postId}`)
@@ -323,10 +369,20 @@ export default function DashboardFeed() {
 
         {/* Filters - Sticky Glass Bar */}
         <div className="sticky top-0 z-20 mt-4 -mx-3 sm:-mx-4 lg:-mx-6 px-3 sm:px-4 lg:px-6 py-3 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <div className="flex-1 min-w-0">
               <SearchBar />
             </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="flex-shrink-0 hover:bg-sky-100 dark:hover:bg-sky-900/30"
+              title="Aggiorna feed"
+            >
+              <RefreshCw className={cn("h-5 w-5", refreshing && "animate-spin")} />
+            </Button>
             <div className="flex-shrink-0">
               <ViewModeSelector viewMode={viewMode} setViewMode={handleViewChange} />
             </div>
@@ -371,19 +427,23 @@ export default function DashboardFeed() {
           )}
         </div>
 
-        {/* Load More */}
-        {hasMore && filteredPosts.length > 0 && (
-          <div className="py-10 flex justify-center">
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setCurrentPage(prev => prev + 1)
-                fetchPosts(currentPage + 1)
-              }}
-              className="rounded-full px-10 py-2.5 border-gray-200/80 dark:border-gray-700/80 hover:border-sky-400 dark:hover:border-sky-600 hover:bg-sky-50/50 dark:hover:bg-sky-900/20 backdrop-blur-sm transition-all duration-300"
-            >
-              Carica altri post
-            </Button>
+        {/* Infinite Scroll Trigger / Loading More */}
+        {filteredPosts.length > 0 && (
+          <div ref={loadMoreRef} className="py-10 flex justify-center">
+            {loadingMore ? (
+              <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Caricamento altri post...</span>
+              </div>
+            ) : hasMore ? (
+              <div className="text-sm text-gray-400 dark:text-gray-500">
+                Scorri per caricare altri post
+              </div>
+            ) : (
+              <div className="text-sm text-gray-400 dark:text-gray-500">
+                Hai visto tutti i post disponibili
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -411,6 +471,22 @@ export default function DashboardFeed() {
           onClose={() => setEditingPost(null)}
           post={editingPost}
           onSave={handleEditSave}
+        />
+      )}
+
+      {/* Comments Modal - Centralized */}
+      {commentsPostId && (
+        <CommentsModal
+          isOpen={!!commentsPostId}
+          onClose={() => setCommentsPostId(null)}
+          postId={commentsPostId}
+          currentUserId={session?.user?.id}
+          postAuthorId={posts.find(p => p.id === commentsPostId)?.author.id}
+          onCommentCountChange={(count) => {
+            setPosts(prev => prev.map(p => 
+              p.id === commentsPostId ? { ...p, comments: count } : p
+            ))
+          }}
         />
       )}
     </div>
