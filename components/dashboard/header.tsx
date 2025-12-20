@@ -105,3 +105,11 @@ export function DashboardHeader() {
   )
 }
 
+
+        </div>
+      </header>
+      <MobileMenu isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
+    </>
+  )
+}
+

@@ -135,3 +135,24 @@ export async function POST(
     )
   }
 }
+
+    // Notify parent comment author if replying (if not self)
+    if (parentComment && parentComment.authorId !== session.user.id && commenter) {
+      await createNotification(
+        parentComment.authorId,
+        'comment',
+        'Nuova Risposta',
+        `${commenter.name || commenter.username || 'Qualcuno'} ha risposto al tuo commento`,
+        `/dashboard#post-${postId}`
+      )
+    }
+
+    return NextResponse.json(comment, { status: 201 })
+  } catch (error) {
+    console.error('Error creating comment:', error)
+    return NextResponse.json(
+      { error: 'Errore nella creazione del commento' },
+      { status: 500 }
+    )
+  }
+}

@@ -229,3 +229,29 @@ export function Sidebar() {
   )
 }
 
+
+          '/dashboard/admin',
+          undefined,
+          pathname?.startsWith('/dashboard/admin'),
+          "bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-lg shadow-red-500/30"
+        )}
+        {renderButton(
+          Settings,
+          t('common.settings') || 'Impostazioni',
+          '/dashboard/settings',
+          undefined,
+          pathname === '/dashboard/settings'
+        )}
+        {renderButton(
+          LogOut,
+          t('common.logout') || 'Logout',
+          '#',
+          () => signOut({ callbackUrl: '/' }),
+          false,
+          "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/30"
+        )}
+      </div>
+    </motion.aside>
+  )
+}
+

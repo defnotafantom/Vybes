@@ -230,3 +230,93 @@ export async function POST(request: Request) {
 
 
 
+        ...(process.env.NODE_ENV === 'development' && { details: errorMessage, stack: errorStack })
+      },
+      { status: 500 }
+    )
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const session = await getServerSession(authOptions)
+
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Non autorizzato' },
+        { status: 401 }
+      )
+    }
+
+    const body = await request.json()
+    
+    // Validate input with Zod
+    const validation = validateData(createPostSchema, body)
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: validation.error },
+        { status: 400 }
+      )
+    }
+
+    const { content, images, type, tags } = validation.data
+    const { poll, scheduledFor, isDraft } = body // Additional optional fields
+
+    const post = await prisma.post.create({
+      data: {
+        content: content.trim(),
+        images: images,
+        tags: tags,
+        type: type,
+        authorId: session.user.id,
+        scheduledFor: scheduledFor ? new Date(scheduledFor) : null,
+        isDraft: isDraft || false,
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            name: true,
+            image: true,
+            username: true,
+            role: true,
+          },
+        },
+      },
+    })
+
+    // Create poll if provided
+    if (poll && poll.question && poll.options?.length >= 2) {
+      await prisma.poll.create({
+        data: {
+          postId: post.id,
+          question: poll.question,
+          endsAt: poll.endsAt ? new Date(poll.endsAt) : null,
+          options: {
+            create: poll.options.map((text: string) => ({ text })),
+          },
+        },
+      })
+    }
+
+    // Update quest progress for first post
+    await updateQuestProgress(session.user.id, 'first_post', true)
+
+    return NextResponse.json(post, { status: 201 })
+  } catch (error) {
+    console.error('Error creating post:', error)
+    return NextResponse.json(
+      { error: 'Errore nella creazione del post' },
+      { status: 500 }
+    )
+  }
+}
+
+// Quest progress is now handled by lib/quests.ts
+
+
+
+
+
+
+

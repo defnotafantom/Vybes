@@ -400,3 +400,239 @@ export function NewPostPopup({ isOpen, onClose, artTags = [], onPostSubmit }: Ne
     </AnimatePresence>
   )
 }
+
+      
+      await onPostSubmit({ title, description, tags, fileUrl, mentions, poll })
+      setTitle("")
+      setDescription("")
+      setTags([])
+      setFile(null)
+      setShowPoll(false)
+      setPollQuestion("")
+      setPollOptions(["", ""])
+      onClose()
+    } catch (error) {
+      console.error("Error submitting post:", error)
+      toast({
+        title: t('toast.genericError'),
+        description: error instanceof Error ? error.message : t('feed.newPost.retry'),
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black/40 backdrop-blur-md z-[100] flex justify-center items-center p-4"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              onClick={(e) => e.stopPropagation()}
+              className="glass-modal w-full max-w-lg p-6 relative max-h-[90vh] overflow-y-auto scrollbar-thin"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t('feed.newPost.title')}</h2>
+                <button
+                  onClick={onClose}
+                  className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <X className="h-5 w-5 text-gray-500" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <Input
+                  type="text"
+                  placeholder={t('common.title')}
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="bg-white/50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 rounded-xl"
+                />
+
+                <div className="relative">
+                  <textarea
+                    ref={textareaRef}
+                    placeholder={`${t('common.description')} (usa @ per menzionare utenti)`}
+                    value={description}
+                    onChange={handleDescriptionChange}
+                    className="w-full min-h-[120px] rounded-xl border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 px-4 py-3 text-sm placeholder:text-gray-400 focus:outline-none focus:border-sky-500 transition-colors resize-none"
+                  />
+                  
+                  {/* Mention suggestions dropdown */}
+                  <AnimatePresence>
+                    {showMentions && (mentionSuggestions.length > 0 || mentionLoading) && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg z-10 overflow-hidden"
+                      >
+                        {mentionLoading ? (
+                          <div className="p-3 flex items-center justify-center text-gray-500">
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            Ricerca...
+                          </div>
+                        ) : (
+                          mentionSuggestions.map((user) => (
+                            <button
+                              key={user.id}
+                              onClick={() => insertMention(user)}
+                              className="w-full flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
+                            >
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage src={user.image || undefined} />
+                                <AvatarFallback className="bg-gradient-to-br from-sky-400 to-blue-500 text-white text-xs">
+                                  {(user.name || user.username || 'U').charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <div className="font-medium text-sm text-gray-900 dark:text-white">
+                                  {user.name || user.username}
+                                </div>
+                                {user.username && (
+                                  <div className="text-xs text-gray-500">@{user.username}</div>
+                                )}
+                              </div>
+                            </button>
+                          ))
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                <div className="flex items-center gap-4 text-xs text-gray-500">
+                  <div className="flex items-center gap-1">
+                    <AtSign className="h-4 w-4" />
+                    <span>@ per menzionare</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowPoll(!showPoll)}
+                    className={`flex items-center gap-1 px-2 py-1 rounded-lg transition-colors ${
+                      showPoll ? "bg-sky-100 dark:bg-sky-900/30 text-sky-600" : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                    }`}
+                  >
+                    <BarChart3 className="h-4 w-4" />
+                    <span>Sondaggio</span>
+                  </button>
+                </div>
+
+                {/* Poll Section */}
+                {showPoll && (
+                  <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-sm text-gray-700 dark:text-gray-300">Crea sondaggio</span>
+                      <button onClick={() => setShowPoll(false)} className="text-gray-500 hover:text-gray-700">
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <Input
+                      placeholder="Domanda del sondaggio"
+                      value={pollQuestion}
+                      onChange={(e) => setPollQuestion(e.target.value)}
+                      className="bg-white dark:bg-gray-800"
+                    />
+                    <div className="space-y-2">
+                      {pollOptions.map((option, idx) => (
+                        <div key={idx} className="flex gap-2">
+                          <Input
+                            placeholder={`Opzione ${idx + 1}`}
+                            value={option}
+                            onChange={(e) => {
+                              const newOptions = [...pollOptions]
+                              newOptions[idx] = e.target.value
+                              setPollOptions(newOptions)
+                            }}
+                            className="bg-white dark:bg-gray-800"
+                          />
+                          {pollOptions.length > 2 && (
+                            <button
+                              onClick={() => setPollOptions(pollOptions.filter((_, i) => i !== idx))}
+                              className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    {pollOptions.length < 4 && (
+                      <button
+                        onClick={() => setPollOptions([...pollOptions, ""])}
+                        className="flex items-center gap-2 text-sm text-sky-500 hover:text-sky-600"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Aggiungi opzione
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                <label className="block">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">{t('feed.newPost.fileLabel')}:</span>
+                  <input
+                    type="file"
+                    onChange={(e) => setFile(e.target.files?.[0] || null)}
+                    accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
+                    className="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-sky-500 file:text-white hover:file:bg-sky-600 file:cursor-pointer"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Immagini (JPG/PNG/WebP/GIF) o video (MP4/WebM)
+                  </p>
+                </label>
+
+                <div>
+                  <p className="font-medium mb-2 text-gray-700 dark:text-gray-300 text-sm">{t('feed.newPost.tags')}</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {artTags.map((tag) => (
+                      <button
+                        key={tag.id}
+                        onClick={() =>
+                          setTags((prev) =>
+                            prev.includes(tag.name) ? prev.filter((t) => t !== tag.name) : [...prev, tag.name]
+                          )
+                        }
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                          tags.includes(tag.name)
+                            ? "bg-sky-500 text-white"
+                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                        }`}
+                      >
+                        {tag.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <Button onClick={onClose} variant="outline" disabled={loading} className="rounded-xl">
+                    {t('feed.newPost.cancel')}
+                  </Button>
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={!title.trim() || !description.trim() || loading}
+                    className="bg-sky-500 hover:bg-sky-600 rounded-xl"
+                  >
+                    {loading ? t('feed.newPost.publishing') : t('feed.newPost.publish')}
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  )
+}

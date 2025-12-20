@@ -391,3 +391,85 @@ function PasswordStrength({ password }: { password: string }) {
     </div>
   )
 }
+
+                  </button>
+                </div>
+                <PasswordStrength password={formData.password} />
+                {fieldError.password && <p className="text-xs text-red-500">{fieldError.password}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword" className="text-gray-700 dark:text-gray-300 text-sm">{t('auth.register.passwordConfirmLabel')}</Label>
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    placeholder={t('auth.register.confirmPasswordPlaceholder')}
+                    value={formData.confirmPassword}
+                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                    required
+                    disabled={loading}
+                    autoComplete="new-password"
+                    className="pr-12 bg-white/50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 rounded-xl h-11"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((v) => !v)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {fieldError.confirmPassword && <p className="text-xs text-red-500">{fieldError.confirmPassword}</p>}
+              </div>
+
+              <p className="text-xs text-gray-500">
+                Registrandoti accetti i termini e riceverai un&apos;email di verifica.
+              </p>
+
+              <Button 
+                type="submit" 
+                disabled={loading} 
+                className="w-full bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white rounded-xl h-11 font-medium"
+              >
+                {loading ? t('auth.register.submitting') : t('auth.register.submit')}
+              </Button>
+            </form>
+          )}
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  )
+}
+
+function PasswordStrength({ password }: { password: string }) {
+  const score = (() => {
+    let s = 0
+    if (!password) return 0
+    if (password.length >= 8) s += 1
+    if (password.length >= 12) s += 1
+    if (/[A-Z]/.test(password)) s += 1
+    if (/[0-9]/.test(password)) s += 1
+    if (/[^A-Za-z0-9]/.test(password)) s += 1
+    return Math.min(5, s)
+  })()
+
+  const label =
+    score <= 1 ? 'Debole' : score === 2 ? 'Ok' : score === 3 ? 'Buona' : score === 4 ? 'Forte' : 'Molto forte'
+
+  const width = `${(score / 5) * 100}%`
+  const color =
+    score <= 1 ? 'bg-red-500' : score === 2 ? 'bg-amber-500' : score === 3 ? 'bg-yellow-400' : score === 4 ? 'bg-sky-500' : 'bg-emerald-500'
+
+  return (
+    <div className="space-y-1">
+      <div className="h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
+        <div className={cn('h-full rounded-full transition-all duration-300', color)} style={{ width }} />
+      </div>
+      <div className="flex justify-between text-[11px] text-gray-500">
+        <span>Sicurezza</span>
+        <span className="font-medium">{label}</span>
+      </div>
+    </div>
+  )
+}
