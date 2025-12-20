@@ -84,7 +84,3 @@ export function FeedThreads({ posts, ...props }: FeedViewProps) {
     </div>
   )
 }
-
-
-}
-

@@ -38,6 +38,19 @@ const nextConfig = {
       },
     ],
   },
+  webpack: (config, { isServer, dev }) => {
+    // Ottimizza la cache di webpack per gestire meglio le stringhe grandi
+    // Abilita la compressione gzip per ridurre le dimensioni delle stringhe serializzate
+    // Questo aiuta a ridurre i warning sulla serializzazione delle stringhe grandi
+    if (config.cache && typeof config.cache === 'object' && !dev) {
+      config.cache = {
+        ...config.cache,
+        compression: 'gzip',
+      }
+    }
+    
+    return config
+  },
 }
 
 module.exports = nextConfig
