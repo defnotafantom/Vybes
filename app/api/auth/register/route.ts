@@ -193,15 +193,6 @@ export async function POST(request: Request) {
     )
   }
 }
-
-
-      { 
-        message: 'Utente creato con successo. Controlla la tua email per verificare l\'account.',
-        userId: user.id 
-      },
-      { status: 201 }
-    )
-  } catch (error) {
     console.error('❌ Registration error:', error)
     return NextResponse.json(
       { 
