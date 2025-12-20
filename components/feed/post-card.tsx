@@ -870,62 +870,6 @@ function PostCardComponent({
 
 export const PostCard = memo(PostCardComponent)
 
-        <div className="p-3 space-y-3">
-          <p className="text-sm text-gray-600 dark:text-gray-400">Sei sicuro di voler eliminare questo post?</p>
-          <div className="flex gap-2">
-            <Button onClick={() => setConfirmDelete(false)} size="sm" variant="outline" className="flex-1">
-              Annulla
-            </Button>
-            <Button onClick={handleDelete} size="sm" className="flex-1 bg-red-500 hover:bg-red-600">
-              Elimina
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Normal Menu */}
-      {!showReportModal && !confirmDelete && (
-        <>
-          <button
-            onClick={handleCopyLink}
-            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-          >
-            <Link2 className="h-4 w-4" />
-            Copia link
-          </button>
-          
-          {isOwner ? (
-            <>
-              <button
-                onClick={() => { onEdit?.(post.id); onClose(); }}
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                <Pencil className="h-4 w-4" />
-                Modifica
-              </button>
-              <button
-                onClick={handleDelete}
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-              >
-                <Trash2 className="h-4 w-4" />
-                Elimina
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={() => setShowReportModal(true)}
-              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-            >
-              <Flag className="h-4 w-4" />
-              Segnala
-            </button>
-          )}
-        </>
-      )}
-    </motion.div>
-  )
-}
-
 function PostCardComponent({
   post,
   mode = "cover",
