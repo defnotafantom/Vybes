@@ -30,5 +30,3 @@ declare module 'next-auth/jwt' {
     adminRole: AdminRole
   }
 }
-
-}

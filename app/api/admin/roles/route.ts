@@ -66,3 +66,5 @@ function getPermissionDescription(permission: string): string {
   }
   return descriptions[permission] || permission
 }
+
+
