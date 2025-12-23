@@ -16,7 +16,6 @@ export default function ResetPasswordClient() {
   const params = useSearchParams()
   const { toast } = useToast()
 
-  const email = useMemo(() => (params.get('email') || '').trim().toLowerCase(), [params])
   const token = useMemo(() => (params.get('token') || '').trim(), [params])
 
   const [password, setPassword] = useState('')
@@ -25,11 +24,11 @@ export default function ResetPasswordClient() {
   const [showConfirm, setShowConfirm] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  const canSubmit = !!email && !!token && password.length >= 8 && password === confirm && !loading
+  const canSubmit = !!token && password.length >= 8 && password === confirm && !loading
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!email || !token) {
+    if (!token) {
       toast({ title: 'Errore', description: 'Link non valido.', variant: 'destructive' })
       return
     }
@@ -47,7 +46,7 @@ export default function ResetPasswordClient() {
       const res = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, token, password }),
+        body: JSON.stringify({ token, password }),
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
@@ -84,10 +83,10 @@ export default function ResetPasswordClient() {
 
         <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2 text-center">Reset password</h2>
         <p className="text-slate-600 dark:text-slate-400 text-center mb-6">
-          Scegli una nuova password per <span className="font-semibold">{email || 'il tuo account'}</span>.
+          Scegli una nuova password per il tuo account.
         </p>
 
-        {!email || !token ? (
+        {!token ? (
           <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50/70 dark:bg-red-900/20 p-4 text-sm text-red-700 dark:text-red-300">
             Link non valido o mancante. Richiedi di nuovo il reset dal login.
           </div>
@@ -151,6 +150,9 @@ export default function ResetPasswordClient() {
     </div>
   )
 }
+
+
+
 
 
 

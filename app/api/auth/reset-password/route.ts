@@ -25,25 +25,27 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json().catch(() => ({}))
-    const emailRaw = (body?.email || '') as string
     const tokenRaw = (body?.token || '') as string
     const passwordRaw = (body?.password || '') as string
 
-    const email = emailRaw.trim().toLowerCase()
     const token = tokenRaw.trim()
     const password = passwordRaw
 
-    if (!email || !token) {
+    if (!token) {
       return NextResponse.json({ error: 'Link non valido.' }, { status: 400 })
     }
     if (!password || password.length < 8) {
       return NextResponse.json({ error: 'Password troppo corta (min 8 caratteri).' }, { status: 400 })
     }
 
+    // Trova il token di verifica
     const vt = await prisma.verificationToken.findUnique({ where: { token } })
-    if (!vt || vt.identifier !== email) {
-      return NextResponse.json({ error: 'Token non valido.' }, { status: 400 })
+    if (!vt) {
+      return NextResponse.json({ error: 'Token non valido o scaduto.' }, { status: 400 })
     }
+    
+    // Usa l'identifier (email) del token per trovare l'utente
+    const email = vt.identifier
     if (vt.expires < new Date()) {
       await prisma.verificationToken.delete({ where: { token } }).catch(() => {})
       return NextResponse.json({ error: 'Token scaduto.' }, { status: 400 })

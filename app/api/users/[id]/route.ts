@@ -18,7 +18,7 @@ export async function GET(
       select: {
         id: true,
         name: true,
-        email: true,
+        email: true, // Selezioniamo sempre, ma rimuoveremo se non è il proprietario
         username: true,
         bio: true,
         image: true,
@@ -54,15 +54,20 @@ export async function GET(
       ? user.followers && Array.isArray(user.followers) && user.followers.length > 0
       : false
 
-    return NextResponse.json({
-      ...user,
+    // Rimuovi email se non è il proprietario
+    const { email, ...userWithoutEmail } = user
+    const response = {
+      ...userWithoutEmail,
+      ...(session?.user?.id === userId && { email }), // Includi email solo se è il proprietario
       followers: user._count.followers,
       following: user._count.following,
       postsCount: user._count.posts,
       portfolioCount: user._count.portfolio,
       isFollowing,
       isOwnProfile: session?.user?.id === userId,
-    })
+    }
+
+    return NextResponse.json(response)
   } catch (error) {
     console.error('Error fetching user:', error)
     return NextResponse.json(

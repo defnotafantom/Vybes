@@ -21,16 +21,15 @@ export const registerSchema = z.object({
 })
 
 export const loginSchema = z.object({
-  email: z.string().min(1, 'Email o username richiesto'),
+  email: z.string().min(1, 'Username richiesto'), // Il campo si chiama "email" ma accetta username
   password: z.string().min(1, 'Password richiesta'),
 })
 
 export const forgotPasswordSchema = z.object({
-  identifier: z.string().min(3, 'Inserisci email o username'),
+  identifier: z.string().min(3, 'Inserisci username'),
 })
 
 export const resetPasswordSchema = z.object({
-  email: z.string().email('Email non valida'),
   token: z.string().min(1, 'Token richiesto'),
   password: z.string()
     .min(8, 'Password deve avere almeno 8 caratteri')
@@ -177,6 +176,9 @@ export type CreateEventInput = z.infer<typeof createEventSchema>
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>
 export type CreatePortfolioItemInput = z.infer<typeof createPortfolioItemSchema>
 export type SendMessageInput = z.infer<typeof sendMessageSchema>
+
+
+
 
 
 

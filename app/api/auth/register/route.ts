@@ -70,33 +70,9 @@ export async function POST(request: Request) {
       )
     }
 
-    // Check if user already exists
-    console.log('🔍 Checking if user exists...')
-    let existingUser
-    try {
-      existingUser = await prisma.user.findUnique({
-        where: { email },
-      })
-    } catch (dbError) {
-      console.error('❌ Database query failed:', dbError)
-      return NextResponse.json(
-        { 
-          error: 'Errore nel controllo utente esistente',
-          details: dbError instanceof Error ? dbError.message : 'Il database potrebbe non essere inizializzato. Esegui: npm run db:push'
-        },
-        { status: 500 }
-      )
-    }
-
-    if (existingUser) {
-      console.log('❌ User already exists')
-      return NextResponse.json(
-        { error: 'Un utente con questa email esiste già' },
-        { status: 400 }
-      )
-    }
-
-    console.log('✅ User does not exist, proceeding...')
+    // Non controllare se l'utente esiste per evitare account enumeration
+    // Il database gestirà i constraint unici e restituirà P2002 se necessario
+    console.log('✅ Proceeding with user creation...')
 
     // Hash password
     console.log('🔐 Hashing password...')
@@ -126,10 +102,11 @@ export async function POST(request: Request) {
     } catch (dbError: any) {
       console.error('❌ User creation failed:', dbError)
       
-      // Check if it's a schema error
+      // Check if it's a unique constraint violation (email or username already exists)
       if (dbError.code === 'P2002') {
+        // Non rivelare quale campo viola il constraint per evitare account enumeration
         return NextResponse.json(
-          { error: 'Email già registrata' },
+          { error: 'Se questa email non è ancora registrata, riceverai un messaggio di conferma.' },
           { status: 400 }
         )
       }

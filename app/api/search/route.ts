@@ -47,7 +47,6 @@ export async function GET(request: Request) {
           OR: [
             { name: { contains: searchTerm, mode: 'insensitive' } },
             { username: { contains: searchTerm, mode: 'insensitive' } },
-            { email: { contains: searchTerm, mode: 'insensitive' } },
             { bio: { contains: searchTerm, mode: 'insensitive' } },
           ],
         },

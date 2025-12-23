@@ -28,31 +28,6 @@ import {
   Smartphone
 } from 'lucide-react'
 
-// Animated counter hook
-function useCounter(end: number, duration: number = 2000) {
-  const [count, setCount] = useState(0)
-  
-  useEffect(() => {
-    let startTime: number
-    let animationFrame: number
-    
-    const animate = (timestamp: number) => {
-      if (!startTime) startTime = timestamp
-      const progress = Math.min((timestamp - startTime) / duration, 1)
-      setCount(Math.floor(progress * end))
-      
-      if (progress < 1) {
-        animationFrame = requestAnimationFrame(animate)
-      }
-    }
-    
-    animationFrame = requestAnimationFrame(animate)
-    return () => cancelAnimationFrame(animationFrame)
-  }, [end, duration])
-  
-  return count
-}
-
 // Testimonial card component
 function TestimonialCard({ name, role, text, avatar, delay }: {
   name: string
@@ -122,12 +97,6 @@ export function LandingPageClient() {
   const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0])
   const scale = useTransform(scrollYProgress, [0, 0.2], [1, 0.95])
   
-  const [isVisible, setIsVisible] = useState(false)
-  
-  useEffect(() => {
-    setIsVisible(true)
-  }, [])
-
   const features = [
     {
       icon: Users,
@@ -179,13 +148,6 @@ export function LandingPageClient() {
     },
   ]
 
-  const stats = [
-    { value: 1000, label: language === 'it' ? 'Artisti' : 'Artists', suffix: '+' },
-    { value: 500, label: language === 'it' ? 'Eventi' : 'Events', suffix: '+' },
-    { value: 50, label: language === 'it' ? 'Città' : 'Cities', suffix: '+' },
-    { value: 98, label: language === 'it' ? 'Soddisfazione' : 'Satisfaction', suffix: '%' },
-  ]
-
   const categories = [
     { icon: Music, label: language === 'it' ? 'Musica' : 'Music', color: 'bg-purple-500' },
     { icon: Palette, label: language === 'it' ? 'Arte' : 'Art', color: 'bg-orange-500' },
@@ -224,7 +186,7 @@ export function LandingPageClient() {
       <motion.header 
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="fixed top-0 left-0 right-0 z-50"
+        className="relative z-50"
       >
         <div className="mx-4 mt-4">
           <div className="container mx-auto px-4 py-3 bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl border border-white/20 dark:border-gray-700/30 shadow-lg shadow-black/5 dark:shadow-black/20">
@@ -381,31 +343,6 @@ export function LandingPageClient() {
           </div>
         </div>
       </motion.section>
-
-      {/* Stats Section */}
-      <section className="py-20 relative z-10">
-        <div className="container mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
-            {stats.map((stat, i) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1, duration: 0.4 }}
-                className="text-center"
-              >
-                <div className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white">
-                  {isVisible && <Counter end={stat.value} />}{stat.suffix}
-                </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                  {stat.label}
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Features Section */}
       <section id="features" className="py-20 relative z-10 bg-gray-50/50 dark:bg-gray-900/50">
@@ -576,12 +513,6 @@ export function LandingPageClient() {
       </div>
     </div>
   )
-}
-
-// Counter component
-function Counter({ end }: { end: number }) {
-  const count = useCounter(end, 2000)
-  return <>{count}</>
 }
 
 

@@ -39,12 +39,12 @@ export async function POST(request: Request) {
     const identifier = identifierRaw.trim().toLowerCase()
 
     if (!identifier || identifier.length < 3) {
-      return NextResponse.json({ error: 'Inserisci email o username.' }, { status: 400 })
+      return NextResponse.json({ error: 'Inserisci username.' }, { status: 400 })
     }
 
-    const isEmail = identifier.includes('@')
+    // Cerca solo per username per evitare account enumeration tramite email
     const user = await prisma.user.findUnique({
-      where: isEmail ? { email: identifier } : { username: identifier },
+      where: { username: identifier },
       select: { email: true },
     })
 
@@ -68,7 +68,8 @@ export async function POST(request: Request) {
       },
     })
 
-    const resetUrl = `${getBaseUrl()}/auth/reset-password?email=${encodeURIComponent(user.email)}&token=${encodeURIComponent(token)}`
+    // Non includere email nell'URL per evitare esposizione in logs/server
+    const resetUrl = `${getBaseUrl()}/auth/reset-password?token=${encodeURIComponent(token)}`
     await sendPasswordResetEmail(user.email, resetUrl)
 
     return NextResponse.json({ ok: true })
@@ -77,6 +78,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Errore durante la richiesta.' }, { status: 500 })
   }
 }
+
+
+
 
 
 
