@@ -83,31 +83,67 @@ export default function DashboardFeed() {
   const [editingPost, setEditingPost] = useState<Post | null>(null)
   const [commentsPostId, setCommentsPostId] = useState<string | null>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
+  const fetchingRef = useRef(false) // Prevent duplicate fetches
+  const updatingPostsRef = useRef<Set<string>>(new Set()) // Track posts being updated
 
   const fetchPosts = useCallback(async (page: number = 1, showToast = false) => {
+    // Prevent duplicate fetches
+    if (fetchingRef.current && page > 1) return
+    fetchingRef.current = true
+    
     try {
       setError(null)
-      if (page > 1) setLoadingMore(true)
+      const isLoadingMore = page > 1
+      if (isLoadingMore) setLoadingMore(true)
       
       const response = await fetch(`/api/posts?page=${page}&limit=20`)
-      if (!response.ok) throw new Error("Errore nel caricamento")
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || "Errore nel caricamento")
+      }
       
-        const data = await response.json()
-        if (page === 1) {
-          setPosts(data.posts || [])
-        } else {
-          setPosts((prev) => [...prev, ...(data.posts || [])])
+      const data = await response.json()
+      const newPosts = data.posts || []
+      
+      if (page === 1) {
+        // Reset posts completely for first page
+        setPosts((prev) => {
+          // Use Set to ensure no duplicates even on refresh
+          const existingIds = new Set(prev.map(p => p.id))
+          const uniquePosts = newPosts.filter((p: Post) => !existingIds.has(p.id))
+          if (uniquePosts.length === newPosts.length) return newPosts
+          // Merge: keep old posts that aren't in new, then add new
+          const newPostIds = new Set(newPosts.map((p: Post) => p.id))
+          return [...prev.filter(p => !newPostIds.has(p.id)), ...newPosts]
+        })
+        if (showToast && newPosts.length > 0) {
+          toast({ title: "Feed aggiornato", description: `${newPosts.length} post caricati` })
         }
-        setHasMore(data.pagination?.hasMore || false)
+      } else {
+        // Prevent duplicates when loading more - improved
+        setPosts((prev) => {
+          const existingIds = new Set(prev.map(p => p.id))
+          const uniqueNewPosts = newPosts.filter((p: Post) => !existingIds.has(p.id))
+          if (uniqueNewPosts.length === 0) return prev // No new posts
+          return [...prev, ...uniqueNewPosts]
+        })
+      }
+      
+      // Better pagination handling
+      const totalPages = data.pagination?.totalPages || Math.ceil((data.pagination?.total || 0) / 20)
+      setHasMore(page < totalPages && newPosts.length > 0)
     } catch (err) {
-      const msg = "Impossibile caricare i post"
+      const msg = err instanceof Error ? err.message : "Impossibile caricare i post"
       setError(msg)
-      toast({ title: "Errore", description: msg, variant: "destructive" })
+      if (page === 1) {
+        toast({ title: "Errore", description: msg, variant: "destructive" })
+      }
       console.error('Error fetching posts:', err)
     } finally {
       setLoading(false)
       setLoadingMore(false)
       setRefreshing(false)
+      fetchingRef.current = false
     }
   }, [toast])
 
@@ -115,20 +151,22 @@ export default function DashboardFeed() {
     fetchPosts(1)
   }, [fetchPosts])
 
-  // Infinite scroll with IntersectionObserver
+  // Infinite scroll with IntersectionObserver - improved
   useEffect(() => {
-    if (!hasMore || loadingMore || loading) return
+    if (!hasMore || loadingMore || loading || !loadMoreRef.current) return
+    
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !loadingMore) {
+        if (entries[0].isIntersecting && hasMore && !loadingMore && !loading) {
           const nextPage = currentPage + 1
           setCurrentPage(nextPage)
-          fetchPosts(nextPage, true)
+          fetchPosts(nextPage, false)
         }
       },
-      { threshold: 0.1, rootMargin: "200px" }
+      { threshold: 0.1, rootMargin: "300px" }
     )
-    if (loadMoreRef.current) observer.observe(loadMoreRef.current)
+    
+    observer.observe(loadMoreRef.current)
     return () => observer.disconnect()
   }, [hasMore, loadingMore, loading, currentPage, fetchPosts])
 
@@ -145,15 +183,16 @@ export default function DashboardFeed() {
     }
   }, [selectedTags])
 
-  // Manual refresh handler
+  // Manual refresh handler - improved
   const handleRefresh = useCallback(async () => {
+    if (refreshing) return
     setRefreshing(true)
     setCurrentPage(1)
-    await fetchPosts(1, false)
-    toast({ title: "Feed aggiornato", description: "I post sono stati aggiornati" })
-  }, [fetchPosts, toast])
+    setHasMore(true)
+    await fetchPosts(1, true)
+  }, [fetchPosts, refreshing])
 
-  const handleCreatePostWithDetails = async (data: { title: string; description: string; tags: string[]; fileUrl?: string | null; poll?: { question: string; options: string[] } }) => {
+  const handleCreatePostWithDetails = useCallback(async (data: { title: string; description: string; tags: string[]; fileUrl?: string | null; poll?: { question: string; options: string[] } }) => {
     try {
       const response = await fetch('/api/posts', {
         method: 'POST',
@@ -167,16 +206,30 @@ export default function DashboardFeed() {
       })
 
       if (response.ok) {
-        fetchPosts(1)
+        const newPost = await response.json().catch(() => null)
+        // Add new post to the beginning of the list (optimistic add)
+        if (newPost?.post) {
+          setPosts(prev => {
+            // Prevent duplicates
+            const existingIds = new Set(prev.map(p => p.id))
+            if (existingIds.has(newPost.post.id)) return prev
+            return [newPost.post, ...prev]
+          })
+        } else {
+          // Fallback: refresh first page
+          setCurrentPage(1)
+          await fetchPosts(1, false)
+        }
         setCurrentPage(1)
+        setHasMore(true) // Reset pagination
       }
     } catch (error) {
       console.error('Error creating post:', error)
       throw error
     }
-  }
+  }, [fetchPosts])
 
-  const handleCreateCollaboration = async (data: { content: string; type: string; collaborationArtists: string[] }) => {
+  const handleCreateCollaboration = useCallback(async (data: { content: string; type: string; collaborationArtists: string[] }) => {
     try {
       const response = await fetch('/api/posts', {
         method: 'POST',
@@ -189,60 +242,110 @@ export default function DashboardFeed() {
       })
 
       if (response.ok) {
-        fetchPosts(1)
+        const newPost = await response.json().catch(() => null)
+        // Add new post to the beginning of the list (optimistic add)
+        if (newPost?.post) {
+          setPosts(prev => {
+            // Prevent duplicates
+            const existingIds = new Set(prev.map(p => p.id))
+            if (existingIds.has(newPost.post.id)) return prev
+            return [newPost.post, ...prev]
+          })
+        } else {
+          // Fallback: refresh first page
+          setCurrentPage(1)
+          await fetchPosts(1, false)
+        }
         setCurrentPage(1)
+        setHasMore(true) // Reset pagination
+        
         // Update quest progress for collaboration
         if (session?.user?.id) {
           const { updateQuestProgress } = await import('@/lib/quests')
-          await updateQuestProgress(session.user.id, 'collaboration', true)
+          await updateQuestProgress(session.user.id, 'collaboration', true).catch(() => {})
         }
       }
     } catch (error) {
       console.error('Error creating collaboration:', error)
       throw error
     }
-  }
+  }, [fetchPosts, session?.user?.id])
 
-  const handleLike = async (postId: string) => {
-    // Optimistic update: avoid refetching the entire feed
-    setPosts(prev =>
-      prev.map(p => {
+  const handleLike = useCallback(async (postId: string) => {
+    // Prevent multiple simultaneous updates for the same post
+    if (updatingPostsRef.current.has(postId)) return
+    updatingPostsRef.current.add(postId)
+    
+    // Store previous state for rollback
+    let previousPost: Post | null = null
+    setPosts(prev => {
+      const post = prev.find(p => p.id === postId)
+      if (post) previousPost = { ...post }
+      return prev.map(p => {
         if (p.id !== postId) return p
         const nextLiked = !p.liked
         return { ...p, liked: nextLiked, likes: Math.max(0, p.likes + (nextLiked ? 1 : -1)) }
       })
-    )
+    })
+    
     try {
       const response = await fetch(`/api/posts/${postId}/like`, {
         method: 'POST',
       })
 
       if (!response.ok) {
-        // Rollback by refetching this page (safe fallback)
-        fetchPosts(1)
+        // Rollback to previous state
+        if (previousPost) {
+          setPosts(prev => prev.map(p => p.id === postId ? previousPost! : p))
+        }
+        toast({ title: "Errore", description: "Impossibile aggiungere il like", variant: "destructive" })
       }
     } catch (error) {
       console.error('Error liking post:', error)
-      fetchPosts(1)
+      // Rollback to previous state
+      if (previousPost) {
+        setPosts(prev => prev.map(p => p.id === postId ? previousPost! : p))
+      }
+      toast({ title: "Errore", description: "Impossibile aggiungere il like", variant: "destructive" })
+    } finally {
+      updatingPostsRef.current.delete(postId)
     }
-  }
+  }, [toast])
 
-  const handleSave = async (postId: string) => {
-    // Optimistic update
-    setPosts(prev => prev.map(p => (p.id === postId ? { ...p, saved: !p.saved } : p)))
+  const handleSave = useCallback(async (postId: string) => {
+    // Prevent multiple simultaneous updates for the same post
+    if (updatingPostsRef.current.has(postId)) return
+    updatingPostsRef.current.add(postId)
+    
+    // Store previous state for rollback
+    let previousPost: Post | null = null
+    setPosts(prev => {
+      const post = prev.find(p => p.id === postId)
+      if (post) previousPost = { ...post }
+      return prev.map(p => (p.id === postId ? { ...p, saved: !p.saved } : p))
+    })
+    
     try {
       const response = await fetch(`/api/posts/${postId}/save`, {
         method: 'POST',
       })
 
       if (!response.ok) {
-        fetchPosts(1)
+        // Rollback to previous state
+        if (previousPost) {
+          setPosts(prev => prev.map(p => p.id === postId ? previousPost! : p))
+        }
       }
     } catch (error) {
       console.error('Error saving post:', error)
-      fetchPosts(1)
+      // Rollback to previous state
+      if (previousPost) {
+        setPosts(prev => prev.map(p => p.id === postId ? previousPost! : p))
+      }
+    } finally {
+      updatingPostsRef.current.delete(postId)
     }
-  }
+  }, [])
 
   const toggleTag = (tagName: string) => {
     setSelectedTags(prev =>
@@ -252,13 +355,32 @@ export default function DashboardFeed() {
 
   const clearAllTags = () => setSelectedTags([])
 
+  // Improved tag filtering logic - with deduplication
   const filteredPosts = useMemo(() => {
-    if (!selectedTags.length) return posts
-    return posts.filter(p => {
+    // First, ensure posts array has no duplicates
+    const uniquePosts = Array.from(
+      new Map(posts.map(p => [p.id, p])).values()
+    )
+    
+    if (!selectedTags.length) return uniquePosts
+    
+    return uniquePosts.filter(p => {
       const postTags = (p as any).tags || []
-      return selectedTags.some(tag => 
-        postTags.includes(tag) || p.content?.toLowerCase().includes(tag.toLowerCase())
-      )
+      const contentLower = (p.content || '').toLowerCase()
+      
+      // Check if post matches any selected tag (OR logic)
+      return selectedTags.some(tag => {
+        const tagLower = tag.toLowerCase().trim()
+        if (!tagLower) return false
+        
+        // Check in tags array (exact match or case-insensitive)
+        if (postTags.some((pt: string) => pt.toLowerCase().trim() === tagLower)) return true
+        // Check in content (word boundary for better matching)
+        if (contentLower.includes(tagLower)) return true
+        // Check exact tag match (e.g., #tag)
+        if (contentLower.includes(`#${tagLower}`)) return true
+        return false
+      })
     })
   }, [posts, selectedTags])
 
@@ -272,7 +394,13 @@ export default function DashboardFeed() {
   }
 
   const handleDelete = useCallback((postId: string) => {
-    setPosts(prev => prev.filter(p => p.id !== postId))
+    // Remove post from state immediately (optimistic delete)
+    setPosts(prev => {
+      const filtered = prev.filter(p => p.id !== postId)
+      // Also remove from updating set if present
+      updatingPostsRef.current.delete(postId)
+      return filtered
+    })
   }, [])
 
   const handleEdit = useCallback((postId: string) => {
@@ -283,9 +411,16 @@ export default function DashboardFeed() {
   }, [posts])
 
   const handleEditSave = useCallback((postId: string, data: { content: string; tags: string[] }) => {
-    setPosts(prev => prev.map(p => 
-      p.id === postId ? { ...p, content: data.content } : p
-    ))
+    // Update post content and tags
+    setPosts(prev => prev.map(p => {
+      if (p.id !== postId) return p
+      const updated = { ...p, content: data.content }
+      // Preserve existing tags structure if present
+      if ((p as any).tags !== undefined) {
+        (updated as any).tags = data.tags
+      }
+      return updated
+    }))
     setEditingPost(null)
   }, [])
 
@@ -367,81 +502,148 @@ export default function DashboardFeed() {
           </button>
         </div>
 
-        {/* Filters - Sticky Glass Bar */}
-        <div className="sticky top-0 z-20 mt-4 -mx-3 sm:-mx-4 lg:-mx-6 px-3 sm:px-4 lg:px-6 py-3 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50">
-          <div className="flex items-center gap-3">
-            <div className="flex-1 min-w-0">
-              <SearchBar />
+        {/* Filters - Sticky Glass Bar - Improved Layout */}
+        <div className="sticky top-0 z-20 mt-4 -mx-3 sm:-mx-4 lg:-mx-6 px-3 sm:px-4 lg:px-6 pt-3 pb-2 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border-b border-gray-200/60 dark:border-gray-700/60 shadow-sm">
+          <div className="flex flex-col gap-3">
+            {/* Top row: Search, Refresh, View Mode */}
+            <div className="flex items-center gap-3">
+              <div className="flex-1 min-w-0">
+                <SearchBar />
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleRefresh}
+                disabled={refreshing || loading}
+                className="flex-shrink-0 hover:bg-sky-100 dark:hover:bg-sky-900/30 transition-all duration-200"
+                title="Aggiorna feed"
+              >
+                <RefreshCw className={cn("h-5 w-5 transition-transform duration-300", refreshing && "animate-spin")} />
+              </Button>
+              <div className="flex-shrink-0">
+                <ViewModeSelector viewMode={viewMode} setViewMode={handleViewChange} />
+              </div>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="flex-shrink-0 hover:bg-sky-100 dark:hover:bg-sky-900/30"
-              title="Aggiorna feed"
-            >
-              <RefreshCw className={cn("h-5 w-5", refreshing && "animate-spin")} />
-            </Button>
-            <div className="flex-shrink-0">
-              <ViewModeSelector viewMode={viewMode} setViewMode={handleViewChange} />
+            
+            {/* Tags - Horizontal scroll with better styling */}
+            {selectedTags.length > 0 && (
+              <div className="flex items-center gap-2 px-1">
+                <span className="text-xs font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                  Filtri attivi:
+                </span>
+                <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide flex-1">
+                  {selectedTags.map(tag => (
+                    <span
+                      key={tag}
+                      className="px-2.5 py-1 rounded-full text-xs font-medium bg-sky-500/10 border border-sky-500/30 text-sky-600 dark:text-sky-400 whitespace-nowrap"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                  <button
+                    onClick={clearAllTags}
+                    className="px-2 py-1 rounded-full text-xs text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors whitespace-nowrap"
+                  >
+                    Rimuovi tutti
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            {/* Tags - Horizontal scroll */}
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide -mx-3 px-3 pb-1">
+              <TagFilters
+                artTags={artTags}
+                selectedTags={selectedTags}
+                toggleTag={toggleTag}
+                clearAll={clearAllTags}
+              />
             </div>
-          </div>
-          
-          {/* Tags - Horizontal scroll */}
-          <div className="flex items-center gap-2 mt-3 overflow-x-auto scrollbar-hide -mx-3 px-3 pb-1">
-            <TagFilters
-              artTags={artTags}
-              selectedTags={selectedTags}
-              toggleTag={toggleTag}
-              clearAll={clearAllTags}
-            />
           </div>
         </div>
 
-        {/* Feed Content */}
+        {/* Feed Content - Improved Layout */}
         <div className={cn(
-          "mt-4 transition-all duration-200",
-          transitioning ? "opacity-40 scale-[0.99]" : "opacity-100 scale-100"
+          "mt-4 transition-all duration-300 ease-out",
+          transitioning ? "opacity-50 scale-[0.98]" : "opacity-100 scale-100"
         )}>
-          {filteredPosts.length === 0 ? (
+          {error && !loading && (
+            <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 flex items-center gap-3">
+              <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-red-800 dark:text-red-200">{error}</p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefresh}
+                className="flex-shrink-0"
+              >
+                Riprova
+              </Button>
+            </div>
+          )}
+          
+          {filteredPosts.length === 0 && !loading ? (
             <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl border border-white/50 dark:border-gray-700/50 shadow-lg p-12 sm:p-16 text-center">
               <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-sky-100 to-blue-100 dark:from-sky-900/30 dark:to-blue-900/30 flex items-center justify-center">
                 <Plus className="h-12 w-12 text-sky-500/60" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Nessun post ancora</h3>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                {selectedTags.length > 0 ? "Nessun post trovato" : "Nessun post ancora"}
+              </h3>
               <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-sm mx-auto">
-                Sii il primo a condividere qualcosa con la community!
+                {selectedTags.length > 0 
+                  ? "Prova a rimuovere alcuni filtri o a condividere qualcosa nuovo!"
+                  : "Sii il primo a condividere qualcosa con la community!"}
               </p>
-              <Button 
-                onClick={() => setShowNewPostPopup(true)}
-                className="rounded-full px-8 py-2.5 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40 transition-all duration-300"
-              >
-                Crea il primo post
-              </Button>
+              {selectedTags.length > 0 ? (
+                <Button 
+                  onClick={clearAllTags}
+                  variant="outline"
+                  className="rounded-full px-6 py-2.5"
+                >
+                  Rimuovi filtri
+                </Button>
+              ) : (
+                <Button 
+                  onClick={() => setShowNewPostPopup(true)}
+                  className="rounded-full px-8 py-2.5 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40 transition-all duration-300"
+                >
+                  Crea il primo post
+                </Button>
+              )}
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-4 md:space-y-5">
               {renderPosts()}
             </div>
           )}
         </div>
 
-        {/* Infinite Scroll Trigger / Loading More */}
+        {/* Infinite Scroll Trigger / Loading More - Improved */}
         {filteredPosts.length > 0 && (
-          <div ref={loadMoreRef} className="py-10 flex justify-center">
+          <div ref={loadMoreRef} className="py-8 md:py-12 flex flex-col items-center justify-center gap-3">
             {loadingMore ? (
-              <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
-                <Loader2 className="h-5 w-5 animate-spin" />
-                <span>Caricamento altri post...</span>
+              <div className="flex items-center gap-3 text-gray-500 dark:text-gray-400">
+                <Loader2 className="h-5 w-5 animate-spin text-sky-500" />
+                <span className="text-sm font-medium">Caricamento altri post...</span>
               </div>
             ) : hasMore ? (
-              <div className="text-sm text-gray-400 dark:text-gray-500">
-                Scorri per caricare altri post
+              <div className="flex flex-col items-center gap-2">
+                <div className="text-xs text-gray-400 dark:text-gray-500 font-medium">
+                  Scorri per caricare altri post
+                </div>
+                <div className="w-12 h-0.5 bg-gradient-to-r from-transparent via-sky-300 to-transparent dark:via-sky-700"></div>
               </div>
             ) : (
-              <div className="text-sm text-gray-400 dark:text-gray-500">
-                Hai visto tutti i post disponibili
+              <div className="flex flex-col items-center gap-2">
+                <div className="text-sm text-gray-400 dark:text-gray-500 font-medium">
+                  Hai visto tutti i post disponibili
+                </div>
+                <div className="text-xs text-gray-400 dark:text-gray-500">
+                  {filteredPosts.length} {filteredPosts.length === 1 ? 'post' : 'post'} nel feed
+                </div>
               </div>
             )}
           </div>
