@@ -30,7 +30,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/login?error=expired-token', request.url))
     }
 
-    console.log('✅ Token valid, verifying user:', verificationToken.identifier)
+    // Non loggare l'identifier (email) per sicurezza in produzione
+    if (process.env.NODE_ENV === 'development') {
+      console.log('✅ Token valid, verifying user:', verificationToken.identifier)
+    } else {
+      console.log('✅ Token valid, verifying user')
+    }
 
     // Update user emailVerified
     const user = await prisma.user.update({

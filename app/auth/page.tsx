@@ -72,7 +72,7 @@ export default function AuthPage() {
       } else if (errorType === 'OAuthAccountNotLinked') {
         toast({
           title: 'Account non collegato',
-          description: 'Questo account è già registrato con un altro metodo. Usa email/password o un altro provider.',
+          description: 'Questo account è già registrato con un altro metodo. Usa username/password o un altro provider.',
           variant: 'destructive',
         })
       } else if (errorType === 'Configuration' || errorType === 'AccessDenied') {
