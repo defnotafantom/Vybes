@@ -26,6 +26,10 @@ const envSchema = z.object({
   // Mapillary (optional)
   NEXT_PUBLIC_MAPILLARY_TOKEN: z.string().optional(),
   
+  // Google OAuth (optional)
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  
   // App config
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 })
@@ -110,10 +114,13 @@ export function isBlobStorageConfigured(): boolean {
   return !!process.env.BLOB_READ_WRITE_TOKEN
 }
 
-
-
-
-
-
-
+/**
+ * Check if Google OAuth is configured
+ */
+export function isGoogleOAuthConfigured(): boolean {
+  return !!(
+    process.env.GOOGLE_CLIENT_ID &&
+    process.env.GOOGLE_CLIENT_SECRET
+  )
+}
 

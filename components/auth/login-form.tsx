@@ -236,6 +236,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
             className="bg-white/90 dark:bg-gray-700/90 backdrop-blur-sm border-2 border-sky-200 dark:border-sky-800 focus:border-sky-500 dark:focus:border-sky-500 rounded-xl transition-all shadow-sm hover:shadow-md focus:shadow-lg focus:ring-2 focus:ring-sky-500/20 relative z-10"
+            autoComplete="username"
             required
             disabled={loading}
           />
@@ -269,6 +270,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="pr-12 bg-white/90 dark:bg-gray-700/90 backdrop-blur-sm border-2 border-sky-200 dark:border-sky-800 focus:border-sky-500 dark:focus:border-sky-500 rounded-xl transition-all shadow-sm hover:shadow-md focus:shadow-lg focus:ring-2 focus:ring-sky-500/20 relative z-10"
+            autoComplete="current-password"
             required
             disabled={loading}
           />
