@@ -92,15 +92,16 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         redirect: false,
       })
 
-      if (result?.error) {
+      // Verifica esplicitamente che l'autenticazione sia riuscita
+      if (result?.error || !result?.ok) {
         toast({
           title: t('toast.loginError'),
-          description: result.error === 'CredentialsSignin' 
+          description: result?.error === 'CredentialsSignin' 
             ? t('toast.invalidCredentials')
-            : result.error,
+            : result?.error || t('toast.invalidCredentials'),
           variant: 'destructive',
         })
-      } else {
+      } else if (result?.ok) {
         toast({
           title: t('toast.loginSuccess'),
           description: t('toast.loginRedirect'),
@@ -113,6 +114,13 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
             router.refresh()
           }, 1000)
         }
+      } else {
+        // Caso in cui il risultato non è valido
+        toast({
+          title: t('toast.loginError'),
+          description: t('toast.invalidCredentials'),
+          variant: 'destructive',
+        })
       }
     } catch (error: any) {
       toast({

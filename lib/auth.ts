@@ -38,38 +38,62 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' }
       },
       async authorize(credentials) {
+        // Verifica che le credenziali siano fornite e non vuote
         if (!credentials?.email || !credentials?.password) {
           return null
         }
 
-        // Cerca solo per username (nickname)
-        const user = await prisma.user.findUnique({
-          where: { username: credentials.email }
-        })
+        const email = credentials.email.trim()
+        const password = credentials.password.trim()
 
-        if (!user || !user.password) {
+        if (!email || !password) {
           return null
         }
 
-        if (!user.emailVerified && process.env.NODE_ENV === 'production') {
+        try {
+          // Cerca solo per username (nickname)
+          const user = await prisma.user.findUnique({
+            where: { username: email }
+          })
+
+          // Verifica che l'utente esista
+          if (!user) {
+            return null
+          }
+
+          // Verifica che l'utente abbia una password (non null e non vuota)
+          if (!user.password || user.password.trim() === '') {
+            return null
+          }
+
+          // Verifica che l'email sia verificata in produzione
+          if (!user.emailVerified && process.env.NODE_ENV === 'production') {
+            return null
+          }
+
+          // Confronta la password con bcrypt
+          const isPasswordValid = await bcrypt.compare(
+            password,
+            user.password
+          )
+
+          // Se la password non è valida, restituisci null
+          if (!isPasswordValid) {
+            return null
+          }
+
+          // Restituisci l'utente solo se tutti i controlli sono passati
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            adminRole: user.adminRole,
+          }
+        } catch (error) {
+          // In caso di errore (es. errore database), restituisci null
+          console.error('Error in authorize:', error)
           return null
-        }
-
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        )
-
-        if (!isPasswordValid) {
-          return null
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          adminRole: user.adminRole,
         }
       }
     })
