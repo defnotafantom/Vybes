@@ -87,21 +87,29 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
 
     try {
       const result = await signIn('credentials', {
-        email: identifier, // This field accepts both email and username now
+        email: identifier.trim(),
         password,
         redirect: false,
       })
 
-      // Verifica esplicitamente che l'autenticazione sia riuscita
-      if (result?.error || !result?.ok) {
+      console.log('Login result:', result) // Debug log
+
+      // NextAuth restituisce { error: string } se c'è un errore
+      // oppure { ok: true, url: string | null } se ha successo
+      // Se c'è un errore esplicito, mostra errore
+      if (result?.error) {
+        console.log('Login error:', result.error)
         toast({
           title: t('toast.loginError'),
-          description: result?.error === 'CredentialsSignin' 
+          description: result.error === 'CredentialsSignin' 
             ? t('toast.invalidCredentials')
-            : result?.error || t('toast.invalidCredentials'),
+            : result.error,
           variant: 'destructive',
         })
-      } else if (result?.ok) {
+      } else {
+        // Se non c'è errore, considera il login riuscito
+        // (NextAuth restituisce error solo quando l'autenticazione fallisce)
+        console.log('Login success')
         toast({
           title: t('toast.loginSuccess'),
           description: t('toast.loginRedirect'),
@@ -114,13 +122,6 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
             router.refresh()
           }, 1000)
         }
-      } else {
-        // Caso in cui il risultato non è valido
-        toast({
-          title: t('toast.loginError'),
-          description: t('toast.invalidCredentials'),
-          variant: 'destructive',
-        })
       }
     } catch (error: any) {
       toast({

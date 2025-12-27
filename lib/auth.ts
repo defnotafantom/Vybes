@@ -40,6 +40,7 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         // Verifica che le credenziali siano fornite e non vuote
         if (!credentials?.email || !credentials?.password) {
+          console.log('Authorize: Credenziali mancanti')
           return null
         }
 
@@ -47,27 +48,38 @@ export const authOptions: NextAuthOptions = {
         const password = credentials.password.trim()
 
         if (!email || !password) {
+          console.log('Authorize: Credenziali vuote dopo trim')
           return null
         }
 
         try {
-          // Cerca solo per username (nickname)
-          const user = await prisma.user.findUnique({
+          // Cerca prima per username, poi per email
+          let user = await prisma.user.findUnique({
             where: { username: email }
           })
 
+          // Se non trovato per username, cerca per email
+          if (!user) {
+            user = await prisma.user.findUnique({
+              where: { email: email }
+            })
+          }
+
           // Verifica che l'utente esista
           if (!user) {
+            console.log('Authorize: Utente non trovato per username/email:', email)
             return null
           }
 
           // Verifica che l'utente abbia una password (non null e non vuota)
           if (!user.password || user.password.trim() === '') {
+            console.log('Authorize: Utente senza password')
             return null
           }
 
           // Verifica che l'email sia verificata in produzione
           if (!user.emailVerified && process.env.NODE_ENV === 'production') {
+            console.log('Authorize: Email non verificata')
             return null
           }
 
@@ -79,9 +91,11 @@ export const authOptions: NextAuthOptions = {
 
           // Se la password non è valida, restituisci null
           if (!isPasswordValid) {
+            console.log('Authorize: Password non valida')
             return null
           }
 
+          console.log('Authorize: Login riuscito per utente:', user.email)
           // Restituisci l'utente solo se tutti i controlli sono passati
           return {
             id: user.id,
